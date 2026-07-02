@@ -1,0 +1,31 @@
+# Rust (Cargo) 関連の除外
+/target/
+**/*.rs.bk
+
+# アプリのローカルデータおよび設定ファイル
+/snippets.json
+/settings.json
+
+# Node.js (フロントエンド) 関連の除外
+/node_modules/
+/.pnpm-store/
+.env
+.env.*
+!.env.example
+dist/
+build/
+
+# OS・エディタ関連の除外
+.DS_Store
+Thumbs.db
+/.vscode/
+/.idea/
+
+# エディタの一時ファイル・バックアップファイル
+*.un~
+*~
+*.swp
+
+# Tauri (src-tauri) 関連の除外
+/src-tauri/target/
+/src-tauri/gen/schemas

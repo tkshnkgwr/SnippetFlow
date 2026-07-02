@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'windows-latest'
+            args: ''
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          # windows-latestなので標準ターゲット
+          targets: x86_64-pc-windows-msvc
+
+      - name: Cargo Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+            src-tauri/target/
+          key: ${{ runner.os }}-cargo-release-${{ hashFiles('**/Cargo.lock', 'src-tauri/Cargo.lock') }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      # 1. Rust egui単体版のビルドとパッケージング
+      - name: Build egui standalone app
+        run: cargo build --release
+
+      - name: Package egui standalone app
+        shell: pwsh
+        run: |
+          Compress-Archive -Path target/release/snippet_manager.exe -DestinationPath target/release/snippet_manager-windows-x64.zip
+
+      # 2. Tauri アプリのビルドとリリース作成・アセットアップロード
+      - name: Build Tauri App and Publish Release
+        uses: tauri-apps/tauri-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }} # 例: v1.4.0
+          releaseName: 'SnippetFlow v__VERSION__'
+          releaseBody: 'Please refer to the CHANGELOG.md for details about this release.'
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
+
+      # 3. egui単体版をリリースアセットに追加
+      - name: Upload egui standalone app to Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          # 作成されたリリース（ドラフト）に対して、egui単体版のzipをアップロード
+          gh release upload ${{ github.ref_name }} target/release/snippet_manager-windows-x64.zip --clobber
