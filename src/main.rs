@@ -22,14 +22,28 @@ struct Snippet {
     tags: Vec<String>,          // タグ
 }
 
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Default)]
+enum SortCriterion {
+    #[default]
+    UpdatedAtDesc, // 更新日時が新しい順 (デフォルト)
+    UpdatedAtAsc,  // 更新日時が古い順
+    CreatedAtDesc, // 作成日時が新しい順
+    TitleAsc,      // タイトル順
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct AppSettings {
     is_dark_mode: bool,
+    #[serde(default)]
+    sort_criterion: SortCriterion,
 }
 
 impl Default for AppSettings {
     fn default() -> Self {
-        Self { is_dark_mode: true } // デフォルトはダークモード
+        Self {
+            is_dark_mode: true,
+            sort_criterion: SortCriterion::default(),
+        }
     }
 }
 
@@ -260,9 +274,9 @@ fn count_occurrences(text: &str, word: &str) -> usize {
 
 impl eframe::App for SnippetManagerApp {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        // 初回フレームのみサイズキャッシュを無視して強制的に 800x850 に変更
+        // 初回フレームのみサイズキャッシュを無視して強制的に 1000x900 に変更
         if !self.initialized {
-            frame.set_window_size(egui::vec2(800.0, 850.0));
+            frame.set_window_size(egui::vec2(1000.0, 900.0));
             self.initialized = true;
         }
 
@@ -281,7 +295,14 @@ impl eframe::App for SnippetManagerApp {
         ctx.set_visuals(if self.settings.is_dark_mode {
             egui::Visuals::dark()
         } else {
-            egui::Visuals::light()
+            let mut visuals = egui::Visuals::light();
+            visuals.widgets.noninteractive.bg_fill = egui::Color32::from_rgb(255, 255, 255);
+            visuals.widgets.inactive.bg_fill = egui::Color32::from_rgb(248, 250, 252);
+            visuals.widgets.hovered.bg_fill = egui::Color32::from_rgb(241, 245, 249);
+            visuals.widgets.active.bg_fill = egui::Color32::from_rgb(226, 232, 240);
+            visuals.window_fill = egui::Color32::WHITE;
+            visuals.window_stroke = egui::Stroke::new(1.0, egui::Color32::from_rgb(226, 232, 240));
+            visuals
         });
 
         // 太字・視認性の高いカスタムフォント設定
@@ -304,45 +325,27 @@ impl eframe::App for SnippetManagerApp {
         let panel_color = if self.settings.is_dark_mode {
             egui::Color32::from_rgba_unmultiplied(15, 23, 42, 230) // Slate 900
         } else {
-            egui::Color32::from_rgba_unmultiplied(248, 250, 252, 230) // Slate 50
+            egui::Color32::from_rgba_unmultiplied(255, 255, 255, 245) // 純白に近い透過
         };
 
-        let header_text_color = if self.settings.is_dark_mode {
-            egui::Color32::WHITE
-        } else {
-            egui::Color32::from_rgb(15, 23, 42) // Slate 900
-        };
+        let panel_frame = egui::Frame::none().fill(panel_color).inner_margin(8.0);
 
-        egui::CentralPanel::default()
-            .frame(egui::Frame::none().fill(panel_color))
+        // ヘッダー固定パネル
+        egui::TopBottomPanel::top("top_panel")
+            .frame(panel_frame)
             .show(ctx, |ui| {
-                ui.add_space(8.0);
-
                 // ヘッダー UI
                 ui.horizontal(|ui| {
-                    let version = env!("CARGO_PKG_VERSION");
-                    ui.colored_label(header_text_color, format!("■ 定型文 MANAGER v{}", version));
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        if ui.button("× 閉じる").clicked() {
-                            std::process::exit(0);
-                        }
-
                         // テーマ切り替えボタン
                         let theme_btn_label = if self.settings.is_dark_mode {
-                            "☀ ライト"
+                            "☀ ライトモード"
                         } else {
-                            "🌙 ダーク"
+                            "🌙 ダークモード"
                         };
                         if ui.button(theme_btn_label).clicked() {
                             self.settings.is_dark_mode = !self.settings.is_dark_mode;
                             self.settings.save();
-                        }
-
-                        // ウィンドウドラッグ移動用ボタン
-                        let drag_btn =
-                            ui.add(egui::Button::new("⛶ 移動").sense(egui::Sense::drag()));
-                        if drag_btn.dragged() {
-                            frame.drag_window();
                         }
                     });
                 });
@@ -411,13 +414,29 @@ impl eframe::App for SnippetManagerApp {
                 });
 
                 ui.separator();
+            });
 
-                // コピー完了通知エリア
-                if !self.last_action_message.is_empty() {
-                    ui.colored_label(egui::Color32::LIGHT_GREEN, &self.last_action_message);
-                    ui.add_space(4.0);
-                }
+        // フッター固定パネル
+        let show_footer = self.current_screen == AppScreen::List && !self.selected_ids.is_empty();
+        if show_footer || !self.last_action_message.is_empty() {
+            egui::TopBottomPanel::bottom("bottom_panel")
+                .frame(panel_frame)
+                .show(ctx, |ui| {
+                    // コピー完了通知エリア
+                    if !self.last_action_message.is_empty() {
+                        ui.colored_label(egui::Color32::LIGHT_GREEN, &self.last_action_message);
+                        ui.add_space(4.0);
+                    }
+                    if self.current_screen == AppScreen::List {
+                        self.draw_list_footer(ui);
+                    }
+                });
+        }
 
+        // メインコンテンツエリア
+        egui::CentralPanel::default()
+            .frame(egui::Frame::none().fill(panel_color).inner_margin(8.0))
+            .show(ctx, |ui| {
                 // 画面別の描画分岐
                 match self.current_screen {
                     AppScreen::List => self.draw_list_screen(ui),
@@ -474,13 +493,57 @@ impl SnippetManagerApp {
         sorted_tags.sort();
 
         // 検索フィルターエリア
-        ui.group(|ui| {
+        theme_card_frame(self.settings.is_dark_mode).show(ui, |ui| {
             ui.horizontal(|ui| {
                 ui.label("検索:");
-                ui.text_edit_singleline(&mut self.search_query);
+                ui.add(egui::TextEdit::singleline(&mut self.search_query).desired_width(200.0));
                 ui.add_space(10.0);
                 ui.label("タグ検索:");
-                ui.text_edit_singleline(&mut self.tag_search_query);
+                ui.add(egui::TextEdit::singleline(&mut self.tag_search_query).desired_width(150.0));
+                ui.add_space(10.0);
+                ui.label("並び替え:");
+                let mut changed = false;
+                egui::ComboBox::from_id_source("sort_criterion_select")
+                    .width(180.0)
+                    .selected_text(match self.settings.sort_criterion {
+                        SortCriterion::UpdatedAtDesc => "更新日 (新しい順)",
+                        SortCriterion::UpdatedAtAsc => "更新日 (古い順)",
+                        SortCriterion::CreatedAtDesc => "作成日 (新しい順)",
+                        SortCriterion::TitleAsc => "タイトル順",
+                    })
+                    .show_ui(ui, |ui| {
+                        changed |= ui
+                            .selectable_value(
+                                &mut self.settings.sort_criterion,
+                                SortCriterion::UpdatedAtDesc,
+                                "更新日 (新しい順)",
+                            )
+                            .changed();
+                        changed |= ui
+                            .selectable_value(
+                                &mut self.settings.sort_criterion,
+                                SortCriterion::UpdatedAtAsc,
+                                "更新日 (古い順)",
+                            )
+                            .changed();
+                        changed |= ui
+                            .selectable_value(
+                                &mut self.settings.sort_criterion,
+                                SortCriterion::CreatedAtDesc,
+                                "作成日 (新しい順)",
+                            )
+                            .changed();
+                        changed |= ui
+                            .selectable_value(
+                                &mut self.settings.sort_criterion,
+                                SortCriterion::TitleAsc,
+                                "タイトル順",
+                            )
+                            .changed();
+                    });
+                if changed {
+                    self.settings.save();
+                }
             });
 
             if !sorted_tags.is_empty() {
@@ -515,7 +578,7 @@ impl SnippetManagerApp {
         let tag_query = self.tag_search_query.to_lowercase();
 
         // スニペットをフィルタリング
-        let filtered_snippets: Vec<Snippet> = self
+        let mut filtered_snippets: Vec<Snippet> = self
             .snippets
             .iter()
             .filter(|snip| {
@@ -549,85 +612,109 @@ impl SnippetManagerApp {
             .cloned()
             .collect();
 
+        // ソートの適用
+        match self.settings.sort_criterion {
+            SortCriterion::UpdatedAtDesc => {
+                filtered_snippets.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));
+            }
+            SortCriterion::UpdatedAtAsc => {
+                filtered_snippets.sort_by(|a, b| a.updated_at.cmp(&b.updated_at));
+            }
+            SortCriterion::CreatedAtDesc => {
+                filtered_snippets.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+            }
+            SortCriterion::TitleAsc => {
+                filtered_snippets.sort_by(|a, b| a.title.cmp(&b.title));
+            }
+        }
+
         self.query_time_ms = start_time.elapsed().as_secs_f64() * 1000.0;
 
         // スニペット一覧表示スクロールエリア
-        egui::ScrollArea::vertical()
-            .max_height(380.0)
-            .show(ui, |ui| {
-                if filtered_snippets.is_empty() {
-                    ui.colored_label(egui::Color32::GRAY, "表示する定型文がありません。");
-                } else {
-                    for snip in filtered_snippets {
-                        ui.group(|ui| {
-                            ui.horizontal(|ui| {
-                                // 選択チェックボックス
-                                let mut is_selected = self.selected_ids.contains(&snip.id);
-                                if ui.checkbox(&mut is_selected, "").changed() {
-                                    if is_selected {
-                                        self.selected_ids.insert(snip.id);
-                                    } else {
-                                        self.selected_ids.remove(&snip.id);
-                                    }
-                                }
-
-                                // 削除済みスニペットは打消し・グレー表示
-                                if snip.is_deleted {
-                                    ui.colored_label(
-                                        egui::Color32::LIGHT_RED,
-                                        format!("[削除済] {}", snip.title),
-                                    );
+        egui::ScrollArea::vertical().show(ui, |ui| {
+            if filtered_snippets.is_empty() {
+                ui.colored_label(egui::Color32::GRAY, "表示する定型文がありません。");
+            } else {
+                for snip in filtered_snippets {
+                    theme_card_frame(self.settings.is_dark_mode).show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            // 選択チェックボックス
+                            let mut is_selected = self.selected_ids.contains(&snip.id);
+                            if ui.checkbox(&mut is_selected, "").changed() {
+                                if is_selected {
+                                    self.selected_ids.insert(snip.id);
                                 } else {
-                                    ui.strong(&snip.title);
+                                    self.selected_ids.remove(&snip.id);
                                 }
+                            }
 
-                                // コピー＆編集ボタンの配置
-                                ui.with_layout(
-                                    egui::Layout::right_to_left(egui::Align::Center),
-                                    |ui| {
-                                        if ui.button("✏️ 編集").clicked() {
-                                            self.open_edit_form(snip.id);
-                                        }
-                                        if ui.button("📋 コピー").clicked() {
-                                            if let Some(ref mut cb) = self.clipboard {
-                                                if cb.set_text(snip.content.clone()).is_ok() {
-                                                    self.last_action_message =
-                                                        format!("📋 コピー完了: {}", snip.title);
-                                                    self.last_action_time = Some(Instant::now());
-                                                }
+                            // 削除済みスニペットは打消し・グレー表示
+                            if snip.is_deleted {
+                                ui.add(
+                                    egui::Label::new(format!("[削除済] {}", snip.title)).wrap(true),
+                                );
+                            } else {
+                                let title_job = highlight_text(
+                                    &snip.title,
+                                    &self.search_query,
+                                    egui::FontId::new(16.0, egui::FontFamily::Proportional),
+                                    self.settings.is_dark_mode,
+                                );
+                                ui.add(egui::Label::new(title_job).wrap(true));
+                            }
+
+                            // コピー＆編集ボタンの配置
+                            ui.with_layout(
+                                egui::Layout::right_to_left(egui::Align::Center),
+                                |ui| {
+                                    if ui.button("✏️ 編集").clicked() {
+                                        self.open_edit_form(snip.id);
+                                    }
+                                    if ui.button("📋 コピー").clicked() {
+                                        if let Some(ref mut cb) = self.clipboard {
+                                            if cb.set_text(snip.content.clone()).is_ok() {
+                                                self.last_action_message =
+                                                    format!("📋 コピー完了: {}", snip.title);
+                                                self.last_action_time = Some(Instant::now());
                                             }
                                         }
-                                    },
-                                );
-                            });
-
-                            // 説明
-                            ui.small(&snip.description);
-
-                            // タグ表示と日付
-                            ui.horizontal(|ui| {
-                                for t in &snip.tags {
-                                    ui.colored_label(egui::Color32::LIGHT_BLUE, format!("#{}", t));
-                                }
-                                ui.with_layout(
-                                    egui::Layout::right_to_left(egui::Align::Center),
-                                    |ui| {
-                                        ui.colored_label(
-                                            egui::Color32::GRAY,
-                                            format!("更新: {}", snip.updated_at),
-                                        );
-                                    },
-                                );
-                            });
+                                    }
+                                },
+                            );
                         });
-                        ui.add_space(4.0);
-                    }
+
+                        // 説明
+                        let desc_job = highlight_text(
+                            &snip.description,
+                            &self.search_query,
+                            egui::FontId::new(12.0, egui::FontFamily::Proportional),
+                            self.settings.is_dark_mode,
+                        );
+                        ui.add(egui::Label::new(desc_job).wrap(true));
+
+                        // タグ表示と日付
+                        ui.horizontal(|ui| {
+                            for t in &snip.tags {
+                                ui.colored_label(egui::Color32::LIGHT_BLUE, format!("#{}", t));
+                            }
+                            ui.with_layout(
+                                egui::Layout::right_to_left(egui::Align::Center),
+                                |ui| {
+                                    ui.colored_label(
+                                        egui::Color32::GRAY,
+                                        format!("更新: {}", snip.updated_at),
+                                    );
+                                },
+                            );
+                        });
+                    });
+                    ui.add_space(4.0);
                 }
-            });
+            }
+        });
+    }
 
-        ui.separator();
-
-        // 複数選択アクションエリア
+    fn draw_list_footer(&mut self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             let select_count = self.selected_ids.len();
             ui.label(format!("選択中: {}件", select_count));
@@ -665,7 +752,7 @@ impl SnippetManagerApp {
 
         if let Some(id) = edit_id {
             if let Some(snip) = self.snippets.iter().find(|s| s.id == id) {
-                ui.group(|ui| {
+                theme_card_frame(self.settings.is_dark_mode).show(ui, |ui| {
                     ui.horizontal(|ui| {
                         ui.label(format!("ID: {}", snip.id));
                         ui.label(format!("作成日: {}", snip.created_at));
@@ -679,20 +766,48 @@ impl SnippetManagerApp {
         egui::ScrollArea::vertical()
             .max_height(420.0)
             .show(ui, |ui| {
-                ui.horizontal(|ui| {
-                    ui.label("タイトル:");
-                    ui.text_edit_singleline(&mut self.form_title);
-                });
-                ui.add_space(4.0);
+                egui::Grid::new("edit_form_grid")
+                    .num_columns(2)
+                    .spacing([12.0, 12.0])
+                    .min_row_height(28.0)
+                    .show(ui, |ui| {
+                        ui.label("タイトル:");
+                        ui.add(
+                            egui::TextEdit::singleline(&mut self.form_title)
+                                .desired_width(f32::INFINITY),
+                        );
+                        ui.end_row();
 
-                ui.label("本文:");
-                ui.text_edit_multiline(&mut self.form_content);
-                ui.add_space(4.0);
+                        ui.label("本文:");
+                        ui.add(
+                            egui::TextEdit::multiline(&mut self.form_content)
+                                .desired_width(f32::INFINITY)
+                                .desired_rows(12),
+                        );
+                        ui.end_row();
 
-                ui.horizontal(|ui| {
-                    ui.label("説明文:");
-                    ui.text_edit_singleline(&mut self.form_description);
-                });
+                        ui.label("説明文:");
+                        ui.add(
+                            egui::TextEdit::singleline(&mut self.form_description)
+                                .desired_width(f32::INFINITY),
+                        );
+                        ui.end_row();
+
+                        ui.label("タグ追加:");
+                        ui.horizontal(|ui| {
+                            ui.add(
+                                egui::TextEdit::singleline(&mut self.tag_input)
+                                    .desired_width(200.0),
+                            );
+                            if ui.button("➕ 追加").clicked() && !self.tag_input.is_empty() {
+                                if !self.form_tags.contains(&self.tag_input) {
+                                    self.form_tags.push(self.tag_input.clone());
+                                }
+                                self.tag_input.clear();
+                            }
+                        });
+                        ui.end_row();
+                    });
                 ui.add_space(8.0);
 
                 // おすすめタグ推薦表示
@@ -708,21 +823,8 @@ impl SnippetManagerApp {
                             }
                         }
                     });
-                    ui.add_space(4.0);
+                    ui.add_space(6.0);
                 }
-
-                // タグの追加
-                ui.horizontal(|ui| {
-                    ui.label("タグ追加:");
-                    ui.text_edit_singleline(&mut self.tag_input);
-                    if ui.button("追加").clicked() && !self.tag_input.is_empty() {
-                        if !self.form_tags.contains(&self.tag_input) {
-                            self.form_tags.push(self.tag_input.clone());
-                        }
-                        self.tag_input.clear();
-                    }
-                });
-                ui.add_space(4.0);
 
                 // 付与予定タグ一覧
                 if !self.form_tags.is_empty() {
@@ -915,9 +1017,8 @@ impl SnippetManagerApp {
         let snip_a = snip_a.unwrap();
         let snip_b = snip_b.unwrap();
 
-        // 左右2カラムにタイトルと本文のプレビューを表示
         ui.columns(2, |columns| {
-            columns[0].group(|ui| {
+            theme_card_frame(self.settings.is_dark_mode).show(&mut columns[0], |ui| {
                 ui.colored_label(
                     egui::Color32::LIGHT_BLUE,
                     format!("ID: {} (A) - 変更前", snip_a.id),
@@ -934,7 +1035,7 @@ impl SnippetManagerApp {
                     });
             });
 
-            columns[1].group(|ui| {
+            theme_card_frame(self.settings.is_dark_mode).show(&mut columns[1], |ui| {
                 ui.colored_label(
                     egui::Color32::LIGHT_BLUE,
                     format!("ID: {} (B) - 変更後", snip_b.id),
@@ -961,7 +1062,7 @@ impl SnippetManagerApp {
             .max_height(180.0)
             .show(ui, |ui| {
                 let diff_parts = compute_diff(&snip_a.content, &snip_b.content);
-                ui.group(|ui| {
+                theme_card_frame(self.settings.is_dark_mode).show(ui, |ui| {
                     if diff_parts.is_empty() {
                         ui.colored_label(egui::Color32::GRAY, "本文は完全に一致しています。");
                     } else {
@@ -1017,7 +1118,7 @@ impl SnippetManagerApp {
         ui.columns(2, |columns| {
             // 左カラム: スニペット選択と順序調整
             columns[0].vertical(|ui| {
-                ui.group(|ui| {
+                theme_card_frame(self.settings.is_dark_mode).show(ui, |ui| {
                     ui.strong("1. 結合する定型文を選択");
                     ui.add_space(4.0);
                     egui::ScrollArea::vertical()
@@ -1042,7 +1143,7 @@ impl SnippetManagerApp {
                 ui.add_space(10.0);
 
                 if !self.merge_ids.is_empty() {
-                    ui.group(|ui| {
+                    theme_card_frame(self.settings.is_dark_mode).show(ui, |ui| {
                         ui.strong("2. 結合順序の調整");
                         ui.add_space(4.0);
                         egui::ScrollArea::vertical()
@@ -1086,7 +1187,7 @@ impl SnippetManagerApp {
 
             // 右カラム: 区切り文字選択とプレビュー・コピー
             columns[1].vertical(|ui| {
-                ui.group(|ui| {
+                theme_card_frame(self.settings.is_dark_mode).show(ui, |ui| {
                     ui.strong("3. 区切り文字の選択");
                     ui.add_space(4.0);
                     ui.horizontal_wrapped(|ui| {
@@ -1147,7 +1248,7 @@ impl SnippetManagerApp {
                     merged_text = selected_contents.join(&self.merge_separator);
                 }
 
-                ui.group(|ui| {
+                theme_card_frame(self.settings.is_dark_mode).show(ui, |ui| {
                     ui.strong("4. プレビューとコピー");
                     ui.add_space(4.0);
                     if ui.button("📋 結合してコピー").clicked() && !merged_text.is_empty()
@@ -1194,7 +1295,7 @@ impl SnippetManagerApp {
             .unwrap_or(0);
         let kb_size = json_size as f64 / 1024.0;
 
-        ui.group(|ui| {
+        theme_card_frame(self.settings.is_dark_mode).show(ui, |ui| {
             ui.strong("データベース・メトリクス情報");
             ui.add_space(4.0);
             ui.label(format!(
@@ -1231,7 +1332,7 @@ impl SnippetManagerApp {
 
         ui.add_space(10.0);
 
-        ui.group(|ui| {
+        theme_card_frame(self.settings.is_dark_mode).show(ui, |ui| {
             ui.strong("大量データ負荷テスト（ダミー生成）");
             ui.add_space(4.0);
             ui.label("件数が増えた際、メモリ検索の速度や描画負荷がどう変化するか検証できます。");
@@ -1254,7 +1355,7 @@ impl SnippetManagerApp {
 
         ui.add_space(10.0);
 
-        ui.group(|ui| {
+        theme_card_frame(self.settings.is_dark_mode).show(ui, |ui| {
             ui.strong("JSONデータベースバックアップ & 復元");
             ui.add_space(4.0);
             ui.horizontal(|ui| {
@@ -1379,19 +1480,112 @@ fn setup_custom_fonts(ctx: &egui::Context) {
     ctx.set_fonts(fonts);
 }
 
+fn theme_card_frame(is_dark: bool) -> egui::Frame {
+    let bg = if is_dark {
+        egui::Color32::from_rgb(30, 41, 59) // Slate 800
+    } else {
+        egui::Color32::from_rgb(255, 255, 255) // 純白
+    };
+    let stroke = if is_dark {
+        egui::Stroke::new(1.0, egui::Color32::from_rgb(51, 65, 85)) // Slate 700
+    } else {
+        egui::Stroke::new(1.0, egui::Color32::from_rgb(226, 232, 240)) // Slate 200
+    };
+    egui::Frame::none()
+        .fill(bg)
+        .stroke(stroke)
+        .rounding(8.0)
+        .inner_margin(10.0)
+}
+
+fn highlight_text(
+    text: &str,
+    query: &str,
+    font_id: egui::FontId,
+    is_dark_mode: bool,
+) -> egui::text::LayoutJob {
+    let mut job = egui::text::LayoutJob::default();
+
+    let normal_color = if is_dark_mode {
+        egui::Color32::from_rgb(220, 225, 235)
+    } else {
+        egui::Color32::from_rgb(15, 23, 42)
+    };
+    let normal_format = egui::TextFormat {
+        font_id: font_id.clone(),
+        color: normal_color,
+        ..Default::default()
+    };
+
+    let highlight_bg = if is_dark_mode {
+        egui::Color32::from_rgb(234, 179, 8) // 黄色 (dark)
+    } else {
+        egui::Color32::from_rgb(254, 240, 138) // 薄い黄色 (light)
+    };
+    let highlight_color = if is_dark_mode {
+        egui::Color32::BLACK
+    } else {
+        egui::Color32::from_rgb(133, 77, 14)
+    };
+    let highlight_format = egui::TextFormat {
+        font_id,
+        color: highlight_color,
+        background: highlight_bg,
+        ..Default::default()
+    };
+
+    if query.is_empty() {
+        job.append(text, 0.0, normal_format);
+        return job;
+    }
+
+    let text_lower = text.to_lowercase();
+    let query_lower = query.to_lowercase();
+
+    let mut start_idx = 0;
+    while let Some(match_pos) = text_lower[start_idx..].find(&query_lower) {
+        let actual_match_pos = start_idx + match_pos;
+
+        if actual_match_pos > start_idx {
+            job.append(
+                &text[start_idx..actual_match_pos],
+                0.0,
+                normal_format.clone(),
+            );
+        }
+
+        let end_pos = actual_match_pos + query.len();
+        job.append(
+            &text[actual_match_pos..end_pos],
+            0.0,
+            highlight_format.clone(),
+        );
+
+        start_idx = end_pos;
+    }
+
+    if start_idx < text.len() {
+        job.append(&text[start_idx..], 0.0, normal_format);
+    }
+
+    job
+}
+
 fn main() -> Result<(), eframe::Error> {
     // 常時最前面 (Always on Top) & タイトルバー非表示 (Decorated: false) & 背景透過 (Transparent: true) 設定
     // 初期ウィンドウサイズを 800x850 に拡大してレイアウトの収まりを改善
     let options = eframe::NativeOptions {
         always_on_top: false,
-        decorated: false,
-        transparent: true,
-        initial_window_size: Some(egui::vec2(1200.0, 850.0)),
+        decorated: true,
+        transparent: false,
+        resizable: true,
+        initial_window_size: Some(egui::vec2(1000.0, 900.0)),
         ..Default::default()
     };
 
+    let version = env!("CARGO_PKG_VERSION");
     eframe::run_native(
-        "定型文マネージャー (Rust-egui Native)",
+        &format!("定型文マネージャー v{} (Rust-egui Native)", version),
         options,
         Box::new(|cc| {
             setup_custom_fonts(&cc.egui_ctx);
@@ -1560,5 +1754,52 @@ mod tests {
         assert!(!loaded.is_dark_mode);
 
         std::fs::remove_file(test_file).unwrap();
+    }
+
+    #[test]
+    fn test_highlight_text() {
+        let text = "Hello World rust";
+        let query = "world";
+        let font_id = egui::FontId::proportional(14.0);
+        let job = highlight_text(text, query, font_id, true);
+
+        // 通常部分 ("Hello "), ハイライト部分 ("World"), 通常部分 (" rust")
+        assert_eq!(job.sections.len(), 3);
+    }
+
+    #[test]
+    fn test_sorting_snippets() {
+        let mut snippets = [
+            Snippet {
+                id: 1,
+                title: "B".to_string(),
+                content: "".to_string(),
+                description: "".to_string(),
+                created_at: "2026-07-02 10:00:00".to_string(),
+                updated_at: "2026-07-02 10:00:00".to_string(),
+                deleted_at: None,
+                is_deleted: false,
+                tags: vec![],
+            },
+            Snippet {
+                id: 2,
+                title: "A".to_string(),
+                content: "".to_string(),
+                description: "".to_string(),
+                created_at: "2026-07-02 11:00:00".to_string(),
+                updated_at: "2026-07-02 09:00:00".to_string(),
+                deleted_at: None,
+                is_deleted: false,
+                tags: vec![],
+            },
+        ];
+
+        // タイトル順でソート
+        snippets.sort_by(|a, b| a.title.cmp(&b.title));
+        assert_eq!(snippets[0].title, "A");
+
+        // 更新日順(新しい順)でソート
+        snippets.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));
+        assert_eq!(snippets[0].title, "B");
     }
 }

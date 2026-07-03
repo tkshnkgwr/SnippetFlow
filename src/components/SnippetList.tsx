@@ -21,10 +21,33 @@ import {
   Layers,
   Database
 } from 'lucide-react';
-import { Snippet } from '../types';
+import { Snippet, SortCriterion } from '../types';
+
+const highlightText = (text: string, highlight: string) => {
+  if (!highlight.trim()) {
+    return <span>{text}</span>;
+  }
+  const regex = new RegExp(`(${highlight.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi');
+  const parts = text.split(regex);
+  return (
+    <span>
+      {parts.map((part, i) => 
+        regex.test(part) ? (
+          <mark key={i} className="bg-yellow-250 dark:bg-yellow-800 text-slate-900 dark:text-slate-100 rounded-sm px-0.5">
+            {part}
+          </mark>
+        ) : (
+          part
+        )
+      )}
+    </span>
+  );
+};
 
 interface SnippetListProps {
   snippets: Snippet[];
+  sortCriterion: SortCriterion;
+  onSortCriterionChange: (criterion: SortCriterion) => void;
   onAddSnippet: () => void;
   onEditSnippet: (id: number) => void;
   onCopyText: (text: string, label: string) => void;
@@ -37,6 +60,8 @@ interface SnippetListProps {
 
 export default function SnippetList({
   snippets,
+  sortCriterion,
+  onSortCriterionChange,
   onAddSnippet,
   onEditSnippet,
   onCopyText,
@@ -52,6 +77,13 @@ export default function SnippetList({
   const [showDeleted, setShowDeleted] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+
+  const [isTauri, setIsTauri] = useState(false);
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+      setIsTauri(true);
+    }
+  }, []);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -94,13 +126,25 @@ export default function SnippetList({
       return true;
     });
 
+    // 4. Apply Sorting based on criterion
+    const sortedResult = [...result];
+    if (sortCriterion === 'updated_at_desc') {
+      sortedResult.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    } else if (sortCriterion === 'updated_at_asc') {
+      sortedResult.sort((a, b) => a.updatedAt.localeCompare(b.updatedAt));
+    } else if (sortCriterion === 'created_at_desc') {
+      sortedResult.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    } else if (sortCriterion === 'title_asc') {
+      sortedResult.sort((a, b) => a.title.localeCompare(b.title));
+    }
+
     const end = performance.now();
 
     return {
-      filteredSnippets: result,
+      filteredSnippets: sortedResult,
       queryTime: end - start
     };
-  }, [snippets, searchText, selectedTag, showDeleted]);
+  }, [snippets, searchText, selectedTag, showDeleted, sortCriterion]);
 
   React.useEffect(() => {
     onRecordQueryTime(queryTime);
@@ -136,19 +180,59 @@ export default function SnippetList({
   };
 
   // Export database as JSON file
-  const handleExportJSON = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(snippets, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `定型文バックアップ_${new Date().toISOString().split('T')[0]}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+  const handleExportJSON = async () => {
+    const jsonStr = JSON.stringify(snippets, null, 2);
+    if (isTauri) {
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        await invoke('export_snippets_json', { jsonStr });
+      } catch (err) {
+        if (err !== 'Cancelled') {
+          alert('エクスポートに失敗しました: ' + err);
+        }
+      }
+    } else {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(jsonStr);
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `定型文バックアップ_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
   };
 
   // Import JSON database file
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
+  const handleImportClick = async () => {
+    if (isTauri) {
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        const content = await invoke<string>('import_snippets_json');
+        const parsed = JSON.parse(content);
+        if (Array.isArray(parsed)) {
+          // Rudimentary validation
+          const isValid = parsed.every(item => 
+            typeof item.id === 'number' &&
+            typeof item.title === 'string' &&
+            typeof item.content === 'string'
+          );
+
+          if (isValid) {
+            onImportJSON(parsed);
+          } else {
+            alert('ファイルのデータ仕様が定型文フォーマットと一致しません。');
+          }
+        } else {
+          alert('配列形式のJSONファイルを指定してください。');
+        }
+      } catch (err) {
+        if (err !== 'Cancelled') {
+          alert('インポートに失敗しました: ' + err);
+        }
+      }
+    } else {
+      fileInputRef.current?.click();
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -186,28 +270,41 @@ export default function SnippetList({
   };
 
   return (
-    <div className="space-y-6" id="snippet-list-root">
+    <div className="flex flex-col h-full overflow-hidden p-4 sm:p-6 md:p-8 space-y-6" id="snippet-list-root">
       {/* Search and Control Row */}
       {/* UPDATE 2026-06-30: 検索部カードの背景とボーダーをダークモード（dark:bg-slate-900 dark:border-slate-800）に対応 */}
-      <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4" id="list-search-section">
+      <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-100 dark:border-slate-850 shadow-sm space-y-4 shrink-0" id="list-search-section">
         {/* Top input & add button row */}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
               <Search className="w-4 h-4" />
             </span>
-            {/* UPDATE 2026-06-30: 検索入力フィールドの背景色と文字色をダークモード（dark:bg-slate-800 dark:text-slate-100）に対応 */}
+            {/* UPDATE 2026-06-30: 検索入力フィールドの背景色と文字色をダークモード（dark:bg-slate-800 dark:text-slate-100）に対応。ライトモードではさらにしろ基調へ */}
             <input
               type="text"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               placeholder="タイトル、本文、説明、ID、またはタグでリアルタイム検索..."
-              className="w-full pl-9 pr-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-800 hover:bg-slate-100/70 text-slate-800 dark:text-slate-100 rounded-lg border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 transition font-sans"
+              className="w-full pl-9 pr-4 py-2.5 text-sm bg-slate-50/20 dark:bg-slate-800 hover:bg-slate-50/50 text-slate-800 dark:text-slate-100 rounded-lg border border-slate-100 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-900 transition font-sans"
               id="list-search-input"
             />
           </div>
 
           <div className="flex items-center gap-2">
+            {/* 並び替え用セレクトボックス */}
+            <select
+              value={sortCriterion}
+              onChange={(e) => onSortCriterionChange(e.target.value as SortCriterion)}
+              className="px-3 py-2.5 text-xs bg-slate-50/30 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg border border-slate-100 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer font-sans shrink-0"
+              id="list-sort-select"
+            >
+              <option value="updated_at_desc">更新が新しい順</option>
+              <option value="updated_at_asc">更新が古い順</option>
+              <option value="created_at_desc">作成が新しい順</option>
+              <option value="title_asc">タイトル順</option>
+            </select>
+
             {/* UPDATE 2026-06-30: 追加ボタンの背景色を bg-indigo-650 から bg-indigo-600 へ変更。文字が白色で見えない視認性不良の不具合を解消しました */}
             <button
               onClick={onAddSnippet}
@@ -317,8 +414,9 @@ export default function SnippetList({
       </div>
  
       {/* Main List Grid of Cards */}
-      {filteredSnippets.length > 0 ? (
-        <div className="space-y-3" id="snippet-cards-container">
+      <div className="flex-1 overflow-y-auto min-h-0 space-y-3.5 pr-1" id="list-scroll-container">
+        {filteredSnippets.length > 0 ? (
+          <div className="space-y-3" id="snippet-cards-container">
           {/* List selection helper header */}
           {/* UPDATE 2026-06-30: カード一覧ヘッダーの選択コントロールラベル色をダークモードに対応 */}
           <div className="flex items-center justify-between px-2 text-xs text-slate-400 font-sans shrink-0">
@@ -379,7 +477,7 @@ export default function SnippetList({
                         #{snippet.id}
                       </span>
                       <h3 className={`text-sm font-semibold text-slate-800 dark:text-slate-200 font-sans truncate ${snippet.isDeleted ? 'line-through text-slate-400 dark:text-slate-500' : ''}`}>
-                        {snippet.title}
+                        {highlightText(snippet.title, searchText)}
                       </h3>
                       {snippet.isDeleted && (
                         <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-400 font-sans font-medium">
@@ -390,7 +488,7 @@ export default function SnippetList({
 
                     {/* Preview of content */}
                     <p className={`text-xs text-slate-500 dark:text-slate-400 line-clamp-1 font-mono ${snippet.isDeleted ? 'opacity-50' : ''}`}>
-                      {snippet.content}
+                      {highlightText(snippet.content, searchText)}
                     </p>
 
                     {/* Tag list */}
@@ -491,6 +589,7 @@ export default function SnippetList({
           </div>
         </div>
       )}
+      </div>
 
       {/* Floating Interactive Toolbar for Multi-select Operations */}
       {selectedIds.length > 0 && (

@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "1.4.0"
+version = "1.6.0"
 description = "A Tauri App"
 authors = ["you"]
 license = ""
@@ -23,3 +23,13 @@ serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
 tauri = { version = "2.11.3", features = [] }
 tauri-plugin-log = "2"
+rfd = "0.12"
+
+
+[profile.release]
+opt-level = "z"      # サイズ最優先の最適化
+lto = true           # Link-Time Optimization の有効化
+codegen-units = 1    # コードジェネレータのユニット数を1にして最適化を保護
+panic = "abort"      # パニック時の巻き戻しコードを除外してサイズ削減
+strip = true         # デバッグシンボルとシンボルテーブルの自動削除
+

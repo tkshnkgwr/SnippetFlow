@@ -21,7 +21,7 @@ import {
   Moon,
   X
 } from 'lucide-react';
-import { Snippet, ActiveTab } from './types';
+import { Snippet, ActiveTab, SortCriterion } from './types';
 import { DEFAULT_SNIPPETS, generateMockSnippets } from './utils';
 import packageJson from '../package.json';
 
@@ -70,6 +70,11 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem('theme_dark_mode', String(isDarkMode));
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   }, [isDarkMode]);
 
   // --- DATABASE STATE ---
@@ -98,6 +103,21 @@ export default function App() {
   const [selectedSnippetId, setSelectedSnippetId] = useState<number | undefined>(undefined);
   const [selectedMergeIds, setSelectedMergeIds] = useState<number[]>([]);
   const [compareIds, setCompareIds] = useState<{ idA?: number; idB?: number }>({});
+
+  // --- SORT CRITERION STATE ---
+  const [sortCriterion, setSortCriterion] = useState<SortCriterion>(() => {
+    try {
+      const saved = localStorage.getItem('snippets_sort_criterion');
+      return (saved as SortCriterion) || 'updated_at_desc';
+    } catch {
+      return 'updated_at_desc';
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('snippets_sort_criterion', sortCriterion);
+  }, [sortCriterion]);
+
 
   // --- PERFORMANCE METRIC STATE ---
   const [queryTimeMs, setQueryTimeMs] = useState<number>(0);
@@ -268,7 +288,7 @@ export default function App() {
 
   return (
     // UPDATE 2026-06-30: isDarkMode変数に応じて .dark クラスをルートに追加。Tailwind v4のダークモード制御を有効化します。
-    <div className={`min-h-screen ${isDarkMode ? 'bg-slate-950 text-slate-100 dark' : 'bg-slate-50 text-slate-800'} flex flex-col font-sans transition-colors duration-200`} id="app-container">
+    <div className={`h-screen overflow-hidden ${isDarkMode ? 'bg-slate-950 text-slate-100 dark' : 'bg-slate-50/20 text-slate-800'} flex flex-col font-sans transition-colors duration-200`} id="app-container">
       
       {/* Dynamic Toast Notifications container */}
       <div className="fixed top-5 right-5 space-y-2 z-50 max-w-sm w-full" id="toast-container">
@@ -292,7 +312,7 @@ export default function App() {
         ))}
       </div>
  
-      <header data-tauri-drag-region className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-950 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 shadow-sm dark:shadow-md cursor-default select-none">
+      <header data-tauri-drag-region className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 border-b border-slate-100 dark:border-slate-950 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 shadow-sm dark:shadow-md cursor-default select-none">
         <div data-tauri-drag-region className="flex items-center space-x-3">
           <div className="p-2 bg-indigo-600 rounded-lg text-white shadow-inner">
             <ClipboardList className="w-6 h-6" id="app-logo-icon" />
@@ -406,10 +426,12 @@ export default function App() {
       </header>
 
       {/* Main Application Shell Stage */}
-      <main className="flex-1 p-4 sm:p-6 md:p-8 max-w-7xl w-full mx-auto overflow-y-auto">
-        {activeTab === 'list' && (
+      <main className="flex-1 max-w-7xl w-full mx-auto flex flex-col overflow-hidden">
+        {activeTab === 'list' ? (
           <SnippetList
             snippets={snippets}
+            sortCriterion={sortCriterion}
+            onSortCriterionChange={setSortCriterion}
             onAddSnippet={() => {
               setSelectedSnippetId(undefined);
               setActiveTab('create');
@@ -431,61 +453,63 @@ export default function App() {
             onImportJSON={handleImportJSON}
             onRecordQueryTime={setQueryTimeMs}
           />
-        )}
+        ) : (
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 min-h-0">
+            {/* Create / Edit Form screen */}
+            {(activeTab === 'create' || activeTab === 'edit') && (
+              <SnippetForm
+                snippet={snippets.find(s => s.id === selectedSnippetId)}
+                onSave={handleSaveSnippet}
+                onSoftDelete={handleSoftDeleteSnippet}
+                onRestore={handleRestoreSnippet}
+                onHardDelete={handleHardDeleteSnippet}
+                onCancel={() => {
+                  setActiveTab('list');
+                  setSelectedSnippetId(undefined);
+                }}
+                nextId={nextId}
+                // UPDATE 2026-06-30: タグ自動提案機能に既存のすべての定型文データを渡す
+                snippets={snippets}
+              />
+            )}
 
-        {/* Create / Edit Form screen */}
-        {(activeTab === 'create' || activeTab === 'edit') && (
-          <SnippetForm
-            snippet={snippets.find(s => s.id === selectedSnippetId)}
-            onSave={handleSaveSnippet}
-            onSoftDelete={handleSoftDeleteSnippet}
-            onRestore={handleRestoreSnippet}
-            onHardDelete={handleHardDeleteSnippet}
-            onCancel={() => {
-              setActiveTab('list');
-              setSelectedSnippetId(undefined);
-            }}
-            nextId={nextId}
-            // UPDATE 2026-06-30: タグ自動提案機能に既存のすべての定型文データを渡す
-            snippets={snippets}
-          />
-        )}
+            {/* Side by side compare view */}
+            {activeTab === 'compare' && (
+              <SnippetCompare
+                snippets={snippets}
+                initialSnippetAId={compareIds.idA}
+                initialSnippetBId={compareIds.idB}
+                onBack={() => {
+                  setCompareIds({});
+                  setActiveTab('list');
+                }}
+                onCopyText={handleCopyText}
+              />
+            )}
 
-        {/* Side by side compare view */}
-        {activeTab === 'compare' && (
-          <SnippetCompare
-            snippets={snippets}
-            initialSnippetAId={compareIds.idA}
-            initialSnippetBId={compareIds.idB}
-            onBack={() => {
-              setCompareIds({});
-              setActiveTab('list');
-            }}
-            onCopyText={handleCopyText}
-          />
-        )}
+            {/* Combined templates view */}
+            {activeTab === 'merge' && (
+              <SnippetMerge
+                snippets={snippets}
+                selectedSnippetIds={selectedMergeIds}
+                onBack={() => {
+                  setSelectedMergeIds([]);
+                  setActiveTab('list');
+                }}
+                onCopyText={handleCopyText}
+              />
+            )}
 
-        {/* Combined templates view */}
-        {activeTab === 'merge' && (
-          <SnippetMerge
-            snippets={snippets}
-            selectedSnippetIds={selectedMergeIds}
-            onBack={() => {
-              setSelectedMergeIds([]);
-              setActiveTab('list');
-            }}
-            onCopyText={handleCopyText}
-          />
-        )}
-
-        {/* Performance metrics dashboard */}
-        {activeTab === 'performance' && (
-          <StatsPanel
-            snippets={snippets}
-            onGenerateMock={handleGenerateMock}
-            onClearMock={handleClearMock}
-            queryTimeMs={queryTimeMs}
-          />
+            {/* Performance metrics dashboard */}
+            {activeTab === 'performance' && (
+              <StatsPanel
+                snippets={snippets}
+                onGenerateMock={handleGenerateMock}
+                onClearMock={handleClearMock}
+                queryTimeMs={queryTimeMs}
+              />
+            )}
+          </div>
         )}
       </main>
 

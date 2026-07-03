@@ -1,6 +1,6 @@
 [package]
 name = "snippet_manager"
-version = "1.4.0"
+version = "1.6.0"
 edition = "2021"
 publish = false
 
@@ -13,4 +13,12 @@ arboard = "3.2" # クリップボードへのセーフコピー用
 winapi = { version = "0.3.9", features = ["winuser"] }
 chrono = { version = "0.4.39", features = ["serde"] }
 rfd = "0.12"
+
+[profile.release]
+opt-level = "z"      # サイズ最優先の最適化
+lto = true           # Link-Time Optimization の有効化
+codegen-units = 1    # コードジェネレータのユニット数を1にして最適化を保護
+panic = "abort"      # パニック時の巻き戻しコードを除外してサイズ削減
+strip = true         # デバッグシンボルとシンボルテーブルの自動削除
+
 

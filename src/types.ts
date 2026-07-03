@@ -17,6 +17,9 @@ export interface Snippet {
 
 export type ActiveTab = 'list' | 'create' | 'edit' | 'compare' | 'merge' | 'performance';
 
+export type SortCriterion = 'updated_at_desc' | 'updated_at_asc' | 'created_at_desc' | 'title_asc';
+
+
 export interface PerformanceStats {
   queryTimeMs: number;
   totalRecords: number;
