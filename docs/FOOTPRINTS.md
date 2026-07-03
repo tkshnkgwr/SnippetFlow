@@ -9,7 +9,7 @@
 リリースビルドで生成されたバイナリサイズおよび最適化フラグの構成を記録します。
 * **ビルドコマンド (egui版)**: `cargo build --release`
 * **生成バイナリ (egui版)**: `target/release/snippet_manager.exe`
-* **バイナリサイズ (egui版)**: **2.88 MB** (3,024,384 bytes)
+* **バイナリサイズ (egui版)**: **2.92 MB** (3,063,296 bytes) ※ 共有クレート `common_lib` 導入に伴うマルチクレート化（リンク境界）の影響で約 38 KB 微増
 * **ビルドコマンド (Tauri版)**: `npx tauri build --no-bundle`
 * **生成バイナリ (Tauri版)**: `src-tauri/target/release/app.exe`
 * **バイナリサイズ (Tauri版)**: **2.62 MB** (2,751,488 bytes)

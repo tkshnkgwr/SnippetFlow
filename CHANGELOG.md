@@ -4,6 +4,21 @@
 
 ---
 
+## [1.7.0] - 2026-07-03
+
+### Added
+- **共有クレート `common_lib` への依存関係の追加**:
+  - 隣接する共有ライブラリ `common_lib` を `Cargo.toml` の依存関係に登録。
+
+### Optimized
+- **文字列処理および差分計算アルゴリズムの共通化**:
+  - `main.rs` から汎用ユーティリティ `count_occurrences`、および LCS 差分計算ロジック（`compute_diff`、`DiffType`）を `common_lib` 側に移行。
+  - 重複コードを排除し、コードの再利用性を向上。
+- **[FOOTPRINTS.md](file:///c:/Users/632792/Documents/自作/SnippetFlow/docs/FOOTPRINTS.md) の更新**:
+  - `common_lib` 導入後のリリースバイナリサイズ（2.88 MB -> 2.92 MB）を実測・反映。
+- **Tauri インストーラー日本語化設定の追加 (`tauri.conf.json`)**:
+  - Windows でのインストーラービルド時（WiX / NSIS）に日本語のウィザードが表示されるように言語設定を追加。
+
 ## [1.6.0] - 2026-07-02
 
 ### Added

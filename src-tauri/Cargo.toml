@@ -24,7 +24,8 @@ log = "0.4"
 tauri = { version = "2.11.3", features = [] }
 tauri-plugin-log = "2"
 rfd = "0.12"
-
+# 2026-07-03: 共有ライブラリの参照追加
+common_lib = { path = "../../common_lib" }
 
 [profile.release]
 opt-level = "z"      # サイズ最優先の最適化
