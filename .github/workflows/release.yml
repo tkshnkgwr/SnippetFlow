@@ -17,28 +17,23 @@ jobs:
             args: ''
 
     runs-on: ${{ matrix.platform }}
-    defaults:
-      run:
-        working-directory: SnippetFlow
     steps:
       - name: Checkout SnippetFlow
         uses: actions/checkout@v4
-        with:
-          path: SnippetFlow
 
       - name: Checkout common_lib
         uses: actions/checkout@v4
         with:
           repository: tkshnkgwr/common_lib
-          path: common_lib
-          token: ${{ secrets.GH_PAT || github.token }}
+          path: ../common_lib
+          token: ${{ secrets.PAT || github.token }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: SnippetFlow/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -54,9 +49,9 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            SnippetFlow/target/
-            SnippetFlow/src-tauri/target/
-          key: ${{ runner.os }}-cargo-release-${{ hashFiles('SnippetFlow/Cargo.lock', 'SnippetFlow/src-tauri/Cargo.lock') }}
+            target/
+            src-tauri/target/
+          key: ${{ runner.os }}-cargo-release-${{ hashFiles('Cargo.lock', 'src-tauri/Cargo.lock') }}
 
       - name: Install dependencies
         run: npm ci
@@ -82,13 +77,13 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
-          projectPath: SnippetFlow
+          projectPath: .
 
       # 3. egui単体版をリリースアセットに追加
       - name: Upload egui standalone app to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: target/release/snippet_manager-windows-x64.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: pwsh
-        run: |
-          # 作成されたリリース（ドラフト）に対して、egui単体版のzipをアップロード
-          gh release upload ${{ github.ref_name }} target/release/snippet_manager-windows-x64.zip --clobber

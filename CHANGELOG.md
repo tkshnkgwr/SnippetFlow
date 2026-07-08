@@ -4,6 +4,26 @@
 
 ---
 
+## [Unreleased]
+
+### Added
+- **READMEへのスニペット活用例の追加 (`README.md`, `README.ja.md`)**:
+  - アプリケーションの利用イメージを促進するため、日程調整定型文（PlainText）、打合せ議事録（Markdown）、AIリファクタリングプロンプト、Gitコミットテンプレート、SQLクエリテンプレートの具体例を追加。
+- **GitHub Releaseバッジの追加 (`README.md`, `README.ja.md`)**:
+  - README上部にGitHub最新リリースのステータスバッジを追加。
+
+### Fixed
+- **GitHub Actions ワークフローにおける共有ライブラリ依存関係の解決エラー修正 (`ci.yml`, `release.yml`)**:
+  - リポジトリのチェックアウトパスを調整し、`SnippetFlow` をルートに直接展開した上で、`common_lib` を親ディレクトリ `../common_lib` に配置するように修正。
+  - これにより、`Cargo.toml` に定義された相対パスと一致しないために発生していた clippy ジョブのビルドエラーを解消。
+- **GitHub Actions ワークフロー定義の修正 (`ci.yml`, `release.yml`)**:
+  - 共有ライブラリ `common_lib` チェックアウト時のPATトークンにフォールバック (`secrets.PAT || github.token`) を設定し、シークレット未設定時でもエラーで停止しないように改善。
+- **リリースアセットのアップロード処理およびパスの修正 (`release.yml`)**:
+  - egui単体版のリリースアセット追加ステップにて、従来の `gh` CLIから `softprops/action-gh-release@v2` アクションに変更し、安定版のバージョンを指定。
+  - アセットファイルの指定パスを実際の出力先である `SnippetFlow/target/release/...` に修正。
+
+---
+
 ## [1.7.0] - 2026-07-03
 
 ### Added
@@ -14,7 +34,7 @@
 - **文字列処理および差分計算アルゴリズムの共通化**:
   - `main.rs` から汎用ユーティリティ `count_occurrences`、および LCS 差分計算ロジック（`compute_diff`、`DiffType`）を `common_lib` 側に移行。
   - 重複コードを排除し、コードの再利用性を向上。
-- **[FOOTPRINTS.md](file:///c:/Users/632792/Documents/自作/SnippetFlow/docs/FOOTPRINTS.md) の更新**:
+- **[FOOTPRINTS.md](docs/FOOTPRINTS.md) の更新**:
   - `common_lib` 導入後のリリースバイナリサイズ（2.88 MB -> 2.92 MB）を実測・反映。
 - **Tauri インストーラー日本語化設定の追加 (`tauri.conf.json`)**:
   - Windows でのインストーラービルド時（WiX / NSIS）に日本語のウィザードが表示されるように言語設定を追加。

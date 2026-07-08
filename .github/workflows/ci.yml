@@ -9,20 +9,15 @@ on:
 jobs:
   frontend:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: SnippetFlow
     steps:
       - name: Checkout SnippetFlow
         uses: actions/checkout@v4
-        with:
-          path: SnippetFlow
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: SnippetFlow/package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Install dependencies
         run: npm ci
       - name: Build frontend
@@ -30,20 +25,15 @@ jobs:
 
   rust-egui:
     runs-on: windows-latest
-    defaults:
-      run:
-        working-directory: SnippetFlow
     steps:
       - name: Checkout SnippetFlow
         uses: actions/checkout@v4
-        with:
-          path: SnippetFlow
       - name: Checkout common_lib
         uses: actions/checkout@v4
         with:
           repository: tkshnkgwr/common_lib
-          path: common_lib
-          token: ${{ secrets.GH_PAT || github.token }}
+          path: ../common_lib
+          token: ${{ secrets.PAT || github.token }}
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -56,8 +46,8 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            SnippetFlow/target/
-          key: ${{ runner.os }}-cargo-egui-${{ hashFiles('SnippetFlow/**/Cargo.lock') }}
+            target/
+          key: ${{ runner.os }}-cargo-egui-${{ hashFiles('**/Cargo.lock') }}
       - name: Check formatting
         run: cargo fmt --check
       - name: Run clippy
@@ -67,20 +57,15 @@ jobs:
 
   rust-tauri:
     runs-on: windows-latest
-    defaults:
-      run:
-        working-directory: SnippetFlow
     steps:
       - name: Checkout SnippetFlow
         uses: actions/checkout@v4
-        with:
-          path: SnippetFlow
       - name: Checkout common_lib
         uses: actions/checkout@v4
         with:
           repository: tkshnkgwr/common_lib
-          path: common_lib
-          token: ${{ secrets.GH_PAT || github.token }}
+          path: ../common_lib
+          token: ${{ secrets.PAT || github.token }}
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -99,8 +84,8 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            SnippetFlow/src-tauri/target/
-          key: ${{ runner.os }}-cargo-tauri-${{ hashFiles('SnippetFlow/src-tauri/Cargo.lock') }}
+            src-tauri/target/
+          key: ${{ runner.os }}-cargo-tauri-${{ hashFiles('src-tauri/Cargo.lock') }}
       - name: Check formatting (Tauri)
         run: |
           cd src-tauri

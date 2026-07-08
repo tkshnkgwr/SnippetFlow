@@ -1,5 +1,5 @@
 [package]
-name = "app"
+name = "Snippetflow"
 version = "1.6.0"
 description = "A Tauri App"
 authors = ["you"]

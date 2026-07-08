@@ -1,6 +1,7 @@
 # SnippetFlow (SnippetManager)
 
 [![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)](Cargo.toml)
+[![GitHub Release](https://img.shields.io/github/v/release/tkshnkgwr/SnippetFlow)](https://github.com/tkshnkgwr/SnippetFlow/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license)
 [![Platform](https://img.shields.io/badge/platform-windows-lightgrey.svg)](#prerequisites)
 [![Rust Version](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](#prerequisites)
@@ -102,6 +103,105 @@ npx tauri build --no-bundle
 ```
 The compiled release binary can be found under `src-tauri/target/release/app.exe`. You can directly run this executable to start the application.
 
+
+---
+
+## Snippet Examples (Usage Scenarios)
+
+Here are some practical snippet examples that you can register in SnippetFlow to boost your daily productivity. Feel free to copy and import them.
+
+### 1. Meeting Scheduler (Plain Text)
+*   **Title**: `Schedule Meeting (Candidate Dates)`
+*   **Tags**: `Business, Email, Schedule`
+*   **Content**:
+    ```text
+    Dear [Client Name],
+    
+    I hope this email finds you well. I would like to schedule a brief meeting to discuss the project updates. 
+    
+    Could you please let me know if any of the following time slots work for you? (All times in JST)
+    
+    - [Month/Date] (Day) 10:00 - 12:00
+    - [Month/Date] (Day) 13:00 - 15:00
+    - [Month/Date] (Day) 15:00 - 17:00
+    
+    If none of these times are convenient, please suggest 2 or 3 alternatives that work better for you.
+    I will send a calendar invite with a Zoom/Teams link once confirmed.
+    
+    Best regards,
+    [Your Name]
+    ```
+
+### 2. Meeting Minutes Template (Markdown)
+*   **Title**: `Meeting Minutes`
+*   **Tags**: `Meeting, Markdown, Template`
+*   **Content**:
+    ```markdown
+    # [Meeting Minutes] [Project Name] Weekly Sync
+    
+    - **Date/Time**: 2026-MM-DD 10:00 - 11:00
+    - **Location**: Zoom / Online
+    - **Attendees**: [Name A], [Name B], [Your Name]
+    
+    ## Agenda
+    1. Status Update
+    2. Discuss current bottlenecks
+    3. Action items for next week
+    
+    ## Decisions Made
+    - Decision 1
+    - Decision 2
+    
+    ## Action Items (Task, Deadline, Owner)
+    - [ ] Task A (Deadline: MM/DD, Owner: [Name A])
+    - [ ] Task B (Deadline: MM/DD, Owner: [Your Name])
+    
+    ## Notes
+    - Record details of discussion here.
+    ```
+
+### 3. AI Refactoring Prompt (Plain Text)
+*   **Title**: `AI Code Refactoring Prompt`
+*   **Tags**: `AI, Prompt, Dev`
+*   **Content**:
+    ```text
+    Please refactor the following code.
+    
+    # Requirements:
+    - Improve readability (rename variables, split functions if necessary)
+    - Optimize performance
+    - Enhance error handling and edge cases
+    
+    # Code:
+    ```
+
+### 4. Git Commit Template (Plain Text)
+*   **Title**: `Git Commit Message Template`
+*   **Tags**: `Git, Dev, Template`
+*   **Content**:
+    ```text
+    feat: [short description of new feature]
+
+    - [detailed change 1]
+    - [detailed change 2]
+
+    Ref: #[issue number]
+    ```
+
+### 5. SQL Query Template (SQL / Plain Text)
+*   **Title**: `SQL Sales Aggregation`
+*   **Tags**: `SQL, Database, Dev`
+*   **Content**:
+    ```sql
+    SELECT 
+        DATE(created_at) AS order_date,
+        COUNT(id) AS total_orders,
+        SUM(total_amount) AS total_sales
+    FROM orders
+    WHERE created_at >= '2026-01-01'
+    GROUP BY DATE(created_at)
+    ORDER BY order_date DESC;
+    ```
 
 ---
 

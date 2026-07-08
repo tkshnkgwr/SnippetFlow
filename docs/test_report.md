@@ -4,7 +4,7 @@
 
 ---
 
-## 1. 検証結果サマリー (2026-07-03 更新)
+## 1. 検証結果サマリー (2026-07-08 更新)
 
 | 対象プロトコル | 項目 | 実行コマンド | 結果 | ステータス | 備考 |
 | :--- | :--- | :--- | :---: | :---: | :--- |
@@ -27,8 +27,8 @@
 #### SnippetFlow (SnippetManager) のテストログ:
 ```text
 running 6 tests
-test tests::test_logical_deletion ... ok
 test tests::test_highlight_text ... ok
+test tests::test_logical_deletion ... ok
 test tests::test_sorting_snippets ... ok
 test tests::test_get_suggested_tags ... ok
 test tests::test_snippet_default_data ... ok
@@ -66,9 +66,9 @@ test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 Clippy を使用した厳格な静的解析結果です。警告をすべてコンパイルエラーとして扱うオプションで実施しています。
 
 ```text
-    Checking common_lib v0.1.0 (C:\Users\632792\Documents\自作\common_lib)
-    Checking snippet_manager v1.7.0 (C:\Users\632792\Documents\自作\SnippetFlow)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.48s
+    Checking common_lib v0.1.0 (../common_lib)
+    Checking snippet_manager v1.7.0 (.)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 39.99s
 ```
 - ※未使用インポート（`DiffPart`）警告を含め、clippy 指摘はすべて完全修正・解消済み。
 

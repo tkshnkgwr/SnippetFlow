@@ -1,6 +1,7 @@
 # SnippetFlow (SnippetManager)
 
 [![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)](Cargo.toml)
+[![GitHub Release](https://img.shields.io/github/v/release/tkshnkgwr/SnippetFlow)](https://github.com/tkshnkgwr/SnippetFlow/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#ライセンス)
 [![Platform](https://img.shields.io/badge/platform-windows-lightgrey.svg)](#動作環境)
 [![Rust Version](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](#動作環境)
@@ -106,6 +107,100 @@ npx tauri build --no-bundle
 ```
 ビルドが完了すると、`src-tauri/target/release/app.exe` に実行可能バイナリが生成されます。これを直接実行して起動できます。
 
+
+---
+
+## 活用例（スニペット・サンプル）
+
+SnippetFlowで管理・再利用するのに適したスニペットのサンプル例です。コピー＆ペーストしてアプリに登録し、日々の業務にご活用ください。
+
+### 1. 日程調整の定型文 (Plain Text)
+*   **タイトル**: `日程調整（候補日提示）`
+*   **タグ**: `Business, Email, Schedule`
+*   **本文**:
+    ```text
+    お世話になっております。〇〇株式会社の[自分の名前]です。
+    お打ち合わせの件につきまして、以下の日程でご都合いかがでしょうか。
+    
+    ・〇月〇日（〇） 10:00 - 12:00
+    ・〇月〇日（〇） 13:00 - 15:00
+    ・〇月〇日（〇） 15:00 - 17:00
+    
+    上記でご都合が悪い場合は、恐れ入りますが候補日を2〜3挙げていただけますと幸いです。
+    オンライン（Teams / Zoom）での実施を希望いたします。
+    何卒よろしくお願い申し上げます。
+    ```
+
+### 2. 打合せ議事録テンプレート (Markdown)
+*   **タイトル**: `打合せ議事録`
+*   **タグ**: `Meeting, Markdown, Template`
+*   **本文**:
+    ```markdown
+    # 【打合せ議事録】[プロジェクト名] 定例ミーティング
+    
+    - **日時**: 202X年MM月DD日（水） 10:00 - 11:00
+    - **場所**: Teams
+    - **出席者**: [名前A], [名前B], [自分]
+    
+    ## ■ アジェンダ
+    1. 進捗報告
+    2. 課題およびボトルネックの共有
+    3. 次週のアクションプラン
+    
+    ## ■ 決定事項
+    - 決定事項1
+    - 決定事項2
+    
+    ## ■ ToDo（タスク・期限・担当）
+    - [ ] タスクA（期限: MM/DD, 担当: [名前A]）
+    - [ ] タスクB（期限: MM/DD, 担当: [自分]）
+    
+    ## ■ メモ
+    - 議論の詳細や特記事項をここに記載します。
+    ```
+
+### 3. AIのプロンプト (Plain Text)
+*   **タイトル**: `コードリファクタリング用プロンプト`
+*   **タグ**: `AI, Prompt, Dev`
+*   **本文**:
+    ```text
+    以下のコードをリファクタリングしてください。
+    
+    # 満たしてほしい要件：
+    - 可読性の向上（変数名、関数分割など）
+    - パフォーマンスの最適化
+    - エラーハンドリングの強化
+    
+    # 対象コード：
+    ```
+
+### 4. Gitコミットメッセージ (Plain Text)
+*   **タイトル**: `Gitコミットメッセージテンプレート`
+*   **タグ**: `Git, Dev, Template`
+*   **本文**:
+    ```text
+    feat: [新機能の短い説明]
+
+    - [変更点1の詳細]
+    - [変更点2の詳細]
+
+    Ref: #[イシュー番号]
+    ```
+
+### 5. SQLクエリテンプレート (SQL / Plain Text)
+*   **タイトル**: `日付指定集計クエリ`
+*   **タグ**: `SQL, Database, Dev`
+*   **本文**:
+    ```sql
+    SELECT 
+        DATE(created_at) AS order_date,
+        COUNT(id) AS total_orders,
+        SUM(total_amount) AS total_sales
+    FROM orders
+    WHERE created_at >= '2026-01-01'
+    GROUP BY DATE(created_at)
+    ORDER BY order_date DESC;
+    ```
 
 ---
 
