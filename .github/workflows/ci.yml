@@ -32,8 +32,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tkshnkgwr/common_lib
-          path: ../common_lib
+          path: common_lib
           token: ${{ secrets.PAT || github.token }}
+      - name: Move common_lib to parent directory
+        shell: pwsh
+        run: Move-Item -Path common_lib -Destination ..\common_lib
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -64,8 +67,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tkshnkgwr/common_lib
-          path: ../common_lib
+          path: common_lib
           token: ${{ secrets.PAT || github.token }}
+      - name: Move common_lib to parent directory
+        shell: pwsh
+        run: Move-Item -Path common_lib -Destination ..\common_lib
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:

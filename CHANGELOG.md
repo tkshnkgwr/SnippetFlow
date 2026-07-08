@@ -14,7 +14,8 @@
 
 ### Fixed
 - **GitHub Actions ワークフローにおける共有ライブラリ依存関係の解決エラー修正 (`ci.yml`, `release.yml`)**:
-  - リポジトリのチェックアウトパスを調整し、`SnippetFlow` をルートに直接展開した上で、`common_lib` を親ディレクトリ `../common_lib` に配置するように修正。
+  - リポジトリのチェックアウトパスを調整し、`SnippetFlow` をルートに直接展開。
+  - `actions/checkout` のセキュリティ制約（ワークスペース外への直接チェックアウトの制限）を回避するため、`common_lib` を一旦ワークスペース内にチェックアウト後、PowerShell コマンドを用いて親ディレクトリ `../common_lib` に配置するように修正。
   - これにより、`Cargo.toml` に定義された相対パスと一致しないために発生していた clippy ジョブのビルドエラーを解消。
 - **GitHub Actions ワークフロー定義の修正 (`ci.yml`, `release.yml`)**:
   - 共有ライブラリ `common_lib` チェックアウト時のPATトークンにフォールバック (`secrets.PAT || github.token`) を設定し、シークレット未設定時でもエラーで停止しないように改善。
