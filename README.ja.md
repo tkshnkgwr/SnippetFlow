@@ -1,6 +1,6 @@
 # SnippetFlow (SnippetManager)
 
-[![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)](Cargo.toml)
+[![Version](https://img.shields.io/badge/version-1.8.0-blue.svg)](Cargo.toml)
 [![GitHub Release](https://img.shields.io/github/v/release/tkshnkgwr/SnippetFlow)](https://github.com/tkshnkgwr/SnippetFlow/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#ライセンス)
 [![Platform](https://img.shields.io/badge/platform-windows-lightgrey.svg)](#動作環境)

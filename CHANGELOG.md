@@ -6,6 +6,8 @@
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-07-09
+
 ### Added
 - **お気に入り（ピン留め）機能の実装 (`src/types.ts`, `src/App.tsx`, `src/components/SnippetList.tsx`, `src/main.rs`)**:
   - 定型文カードにピン留めボタン（📌）を追加し、ピン留めされた定型文がリストの最上部に固定されるように実装。

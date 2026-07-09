@@ -15,24 +15,23 @@
 ```text
 running 6 tests
 test tests::test_highlight_text ... ok
-test tests::test_logical_deletion ... ok
 test tests::test_sorting_snippets ... ok
+test tests::test_logical_deletion ... ok
+test tests::test_settings_persistence ... ok
 test tests::test_snippet_default_data ... ok
 test tests::test_get_suggested_tags ... ok
-test tests::test_settings_persistence ... ok
 
-test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
 ```
 
 ---
 
 ## 3. 静的解析実行結果 (`cargo clippy`)
 Clippy静的解析において、警告およびエラーは検出されませんでした（警告ゼロ）。
-`sort_by` から `sort_by_key` への最適化修正を含め、クリーンなコード状態を確認しています。
 
 ```text
-    Checking snippet_manager v1.7.0 (C:\Users\632792\Documents\自作\SnippetFlow)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.69s
+    Checking snippet_manager v1.8.0 (C:\Users\632792\Documents\自作\SnippetFlow)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.40s
 ```
 
 ---

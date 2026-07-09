@@ -2791,7 +2791,7 @@ dependencies = [
 
 [[package]]
 name = "snippet_manager"
-version = "1.7.0"
+version = "1.8.0"
 dependencies = [
  "arboard",
  "chrono",
