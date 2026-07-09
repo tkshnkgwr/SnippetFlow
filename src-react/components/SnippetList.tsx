@@ -74,7 +74,7 @@ export default function SnippetList({
   onImportJSON,
   onRecordQueryTime,
 }: SnippetListProps) {
-  // Local States
+  // ローカル（コンポーネント内）状態管理
   const [searchText, setSearchText] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
@@ -90,7 +90,7 @@ export default function SnippetList({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Collect all unique tags across all available snippets
+  // 登録されているすべてのスニペットから一意なタグを収集する（タグクラウド表示用）
   const allTags = useMemo(() => {
     const tagsSet = new Set<string>();
     snippets.forEach(s => {
@@ -104,19 +104,19 @@ export default function SnippetList({
   // UPDATE 2026-07-01: 子コンポーネントのレンダーフェーズ中に親コンポーネントの setState (onRecordQueryTime) を
   // 直接呼び出すと React の「Cannot update a component while rendering a different component」警告が発生するため、
   // 計算処理 (useMemo) から計測時間を返し、useEffect を介して安全に親コンポーネントのステートを更新するように修正。
-  // Compute filtered list and measure performance
+  // 検索条件に基づきフィルタリングを行い、かつ検索にかかった処理時間を計測する
   const { filteredSnippets, queryTime } = useMemo(() => {
     const start = performance.now();
     
     const lowerSearch = searchText.toLowerCase().trim();
     const result = snippets.filter(s => {
-      // 1. Check deletion flag
+      // 1. 論理削除フラグの検証（非表示設定の場合はスキップ）
       if (s.isDeleted && !showDeleted) return false;
 
-      // 2. Check tag filter
+      // 2. 選択されたタグに一致するか検証
       if (selectedTag && !s.tags.includes(selectedTag)) return false;
 
-      // 3. Check search text
+      // 3. 検索キーワード（部分一致・ID一致など）を検証
       if (lowerSearch) {
         const matchesTitle = s.title.toLowerCase().includes(lowerSearch);
         const matchesContent = s.content.toLowerCase().includes(lowerSearch);
@@ -129,17 +129,17 @@ export default function SnippetList({
       return true;
     });
 
-    // 4. Apply Sorting based on criterion
+    // 4. ソート基準（並び替え条件）の適用
     const sortedResult = [...result];
     sortedResult.sort((a, b) => {
-      // Prioritize pinned snippets
+      // ピン留め（お気に入り）されているスニペットを常に最優先する
       const pinA = a.isPinned ? 1 : 0;
       const pinB = b.isPinned ? 1 : 0;
       if (pinB !== pinA) {
         return pinB - pinA;
       }
       
-      // Fallback to selected sort criterion
+      // 指定されたソート条件で並び替えを行う
       if (sortCriterion === 'updated_at_desc') {
         return b.updatedAt.localeCompare(a.updatedAt);
       } else if (sortCriterion === 'updated_at_asc') {
@@ -167,7 +167,7 @@ export default function SnippetList({
   }, [queryTime, onRecordQueryTime]);
   // END UPDATE 2026-07-01
 
-  // Handle Copy of a single item
+  // 単一スニペットのコピー処理を行う関数
   const handleCopySingle = (e: React.MouseEvent, snippet: Snippet) => {
     e.stopPropagation();
     onCopyText(snippet.content, snippet.title, snippet.id);
@@ -177,7 +177,7 @@ export default function SnippetList({
     }, 2000);
   };
 
-  // Handle multi-select toggle
+  // 複数選択用のチェックボックス制御処理
   const handleToggleSelect = (id: number) => {
     setSelectedIds(prev =>
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
@@ -195,7 +195,7 @@ export default function SnippetList({
     }
   };
 
-  // Export database as JSON file
+  // データベース（スニペットデータ）をJSONファイルとしてエクスポート保存する関数
   const handleExportJSON = async () => {
     const jsonStr = JSON.stringify(snippets, null, 2);
     if (isTauri) {
@@ -218,7 +218,7 @@ export default function SnippetList({
     }
   };
 
-  // Import JSON database file
+  // JSONデータベースファイルのインポート処理を開始する関数
   const handleImportClick = async () => {
     if (isTauri) {
       try {
@@ -226,7 +226,7 @@ export default function SnippetList({
         const content = await invoke<string>('import_snippets_json');
         const parsed = JSON.parse(content);
         if (Array.isArray(parsed)) {
-          // Rudimentary validation
+          // 簡易的なデータ整合性のバリデーションチェック
           const isValid = parsed.every(item => 
             typeof item.id === 'number' &&
             typeof item.title === 'string' &&
@@ -260,7 +260,7 @@ export default function SnippetList({
       try {
         const parsed = JSON.parse(event.target?.result as string);
         if (Array.isArray(parsed)) {
-          // Rudimentary validation
+          // 簡易的なデータ整合性のバリデーションチェック
           const isValid = parsed.every(item => 
             typeof item.id === 'number' &&
             typeof item.title === 'string' &&
@@ -281,7 +281,7 @@ export default function SnippetList({
       }
     };
     reader.readAsText(file);
-    // Reset file input
+    // ファイル選択フォームの入力値をリセット
     if (e.target) e.target.value = '';
   };
 

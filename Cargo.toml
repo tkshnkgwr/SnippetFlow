@@ -4,6 +4,10 @@ version = "1.8.0"
 edition = "2021"
 publish = false
 
+[[bin]]
+name = "snippet_manager"
+path = "src-egui/main.rs"
+
 [dependencies]
 # UPDATE 2026-07-01: Windows低リソース・透過ウィンドウに対応した egui と eframe の定義
 eframe = { version = "0.22.0", features = ["persistence"] }

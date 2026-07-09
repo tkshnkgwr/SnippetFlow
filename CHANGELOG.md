@@ -6,6 +6,13 @@
 
 ## [Unreleased]
 
+### Added
+- **ソースコードフォルダの完全分離 (`src-egui/`, `src-react/`)**:
+  - 混在していた `src/` ディレクトリを解体し、egui版（Rust）を `src-egui/`、React版（TypeScript/CSS）を `src-react/` にそれぞれ分離配置。
+  - エントリーポイントやビルド定義（`Cargo.toml`, `index.html`, `vite.config.ts`）を新構成に追従。
+- **各種プログラムソースコードのコメント日本語化**:
+  - `src-egui/main.rs`、`src-react/` 配下の TypeScript ファイル等、主要なコード内の英語コメントをすべて日本語に翻訳。
+
 ## [1.8.0] - 2026-07-09
 
 ### Added

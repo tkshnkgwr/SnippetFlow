@@ -629,13 +629,13 @@ impl SnippetManagerApp {
 
         // ソートの適用
         filtered_snippets.sort_by(|a, b| {
-            // Pinned items first
+            // ピン留めされたアイテムを最優先とする
             let pin_cmp = b.is_pinned.cmp(&a.is_pinned);
             if pin_cmp != std::cmp::Ordering::Equal {
                 return pin_cmp;
             }
 
-            // Apply selected criterion
+            // 選択された基準でソート順を決定する
             match self.settings.sort_criterion {
                 SortCriterion::UpdatedAtDesc => b.updated_at.cmp(&a.updated_at),
                 SortCriterion::UpdatedAtAsc => a.updated_at.cmp(&b.updated_at),
@@ -1317,7 +1317,7 @@ impl SnippetManagerApp {
                                     "📋 結合コピーが完了しました！".to_string();
                                 self.last_action_time = Some(Instant::now());
 
-                                // Update stats for merged snippets
+                                // 結合された各スニペットの使用統計を更新する
                                 for &id in &self.merge_ids {
                                     if let Some(target) =
                                         self.snippets.iter_mut().find(|s| s.id == id)

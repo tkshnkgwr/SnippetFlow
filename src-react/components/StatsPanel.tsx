@@ -27,11 +27,11 @@ export default function StatsPanel({
   const activeCount = snippets.filter(s => !s.isDeleted).length;
   const deletedCount = snippets.filter(s => s.isDeleted).length;
 
-  // Calculate approximate database size in bytes
+  // 概算のデータベースファイルサイズ（バイト数）を算出
   const serializedSize = JSON.stringify(snippets).length;
   const kbSize = (serializedSize / 1024).toFixed(2);
 
-  // Analytics Calculations
+  // 使用統計（アナリティクス）の集計計算
   const totalCopies = snippets.reduce((sum, s) => sum + (s.copyCount || 0), 0);
   const totalSavedSec = snippets.reduce((sum, s) => sum + (s.savedTimeSec || 0), 0);
 
@@ -53,13 +53,13 @@ export default function StatsPanel({
     .sort((a, b) => (b.copyCount || 0) - (a.copyCount || 0))
     .slice(0, 3);
 
-  // Simple benchmark runner: runs search 100 times to get average speed
+  // 簡易ベンチマーク機能: 検索処理を100回繰り返し平均実行速度を算出する
   const runBenchmark = () => {
     setBenchmarking(true);
     setTimeout(() => {
       const start = performance.now();
       for (let i = 0; i < 100; i++) {
-        // Mock a complex search query: filtering by tag 'ビジネス' and title contains 'テスト'
+        // 複雑な検索クエリのシミュレーション: タグ「ビジネス」かつタイトルに「テスト」が含まれるデータをフィルタリングする負荷再現
         snippets.filter(s => 
           (s.title.toLowerCase().includes('自動生成') || s.content.includes('〇〇')) &&
           s.tags.some(t => t.includes('ビジネス') || t.includes('開発'))

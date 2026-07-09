@@ -20,26 +20,26 @@ export default function SnippetMerge({
   onBack,
   onCopyText,
 }: SnippetMergeProps) {
-  // Only active snippets can be merged
+  // アーカイブ（論理削除）されていない有効なスニペットのみ結合対象とする
   const activeSnippets = snippets.filter(s => !s.isDeleted);
 
-  // Maintain ordered list of selected IDs
+  // 選択されたスニペットIDの順序リストを保持
   const [orderedIds, setOrderedIds] = useState<number[]>([]);
   const [separator, setSeparator] = useState<string>('\n\n');
   const [copied, setCopied] = useState(false);
 
-  // Initialize ordered list from props or first 2 items if empty
+  // 初期表示時、propsから渡された選択リストがある場合はそれをセットし、無ければ最初の2件をデフォルトにする
   useEffect(() => {
     if (selectedSnippetIds.length > 0) {
       setOrderedIds(selectedSnippetIds);
     } else {
-      // Pick first two active items as default selection to make it intuitive
+      // 直感的に使い始められるよう、有効なスニペットの最初の2件をデフォルト選択とする
       const defaults = activeSnippets.slice(0, 2).map(s => s.id);
       setOrderedIds(defaults);
     }
   }, [selectedSnippetIds]);
 
-  // Toggle selection
+  // 選択/非選択の切り替え処理
   const handleToggleSelect = (id: number) => {
     if (orderedIds.includes(id)) {
       setOrderedIds(prev => prev.filter(item => item !== id));
@@ -48,7 +48,7 @@ export default function SnippetMerge({
     }
   };
 
-  // Move item up in order
+  // リスト内での表示順を1つ上に移動する
   const handleMoveUp = (index: number) => {
     if (index === 0) return;
     setOrderedIds(prev => {
@@ -60,7 +60,7 @@ export default function SnippetMerge({
     });
   };
 
-  // Move item down in order
+  // リスト内での表示順を1つ下に移動する
   const handleMoveDown = (index: number) => {
     if (index === orderedIds.length - 1) return;
     setOrderedIds(prev => {
@@ -72,7 +72,7 @@ export default function SnippetMerge({
     });
   };
 
-  // Construct combined text
+  // 選択された順序で区切り文字を用いてテキストを結合する
   const getMergedText = () => {
     const selectedSnippets = orderedIds
       .map(id => snippets.find(s => s.id === id))

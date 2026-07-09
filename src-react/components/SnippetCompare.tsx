@@ -23,7 +23,7 @@ export default function SnippetCompare({
   onBack,
   onCopyText,
 }: SnippetCompareProps) {
-  // Only non-deleted snippets are compared by default, unless they choose from all
+  // デフォルトではアーカイブ（論理削除）されていないスニペット同士を比較対象とします（初期ロード時を除く）
   const availableSnippets = snippets.filter(s => !s.isDeleted || s.id === initialSnippetAId || s.id === initialSnippetBId);
 
   const [snippetAId, setSnippetAId] = useState<number>(

@@ -18,7 +18,7 @@ export default defineConfig(() => {
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       // Otherwise ignore Rust target build directory and sources to prevent lock conflicts.
       watch: process.env.DISABLE_HMR === 'true' ? null : {
-        ignored: ['**/target/**', '**/docs/**', '**/src/main.rs', '**/Cargo.toml', '**/Cargo.lock'],
+        ignored: ['**/target/**', '**/docs/**', '**/src-egui/main.rs', '**/Cargo.toml', '**/Cargo.lock'],
       },
     },
   };

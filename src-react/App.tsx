@@ -25,7 +25,7 @@ import { Snippet, ActiveTab, SortCriterion } from './types';
 import { DEFAULT_SNIPPETS, generateMockSnippets } from './utils';
 import packageJson from '../package.json';
 
-// Import our modular custom components
+// モジュール化されたカスタムコンポーネントをインポート
 import SnippetList from './components/SnippetList';
 import SnippetForm from './components/SnippetForm';
 import SnippetCompare from './components/SnippetCompare';
@@ -39,7 +39,7 @@ interface Toast {
 }
 
 export default function App() {
-  // --- TAURI ENVIRONMENT CHECK ---
+  // --- Tauri環境の検出チェック ---
   const [isTauri, setIsTauri] = useState(false);
 
   useEffect(() => {
@@ -57,7 +57,7 @@ export default function App() {
     }
   };
 
-  // --- THEME STATE ---
+  // --- テーマ（ライト/ダーク）の状態管理 ---
   // UPDATE 2026-06-30: ユーザーが選択したダークモード状態の永続化と管理を追加
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     try {
@@ -77,7 +77,7 @@ export default function App() {
     }
   }, [isDarkMode]);
 
-  // --- DATABASE STATE ---
+  // --- データベース（スニペット一覧）の状態管理 ---
   const [snippets, setSnippets] = useState<Snippet[]>(() => {
     try {
       const saved = localStorage.getItem('snippets_db');
@@ -93,18 +93,18 @@ export default function App() {
     return DEFAULT_SNIPPETS;
   });
 
-  // Save changes to client-side storage whenever snippets database updates
+  // スニペットデータベースが更新されたらローカルストレージ（クライアント側）に保存する
   useEffect(() => {
     localStorage.setItem('snippets_db', JSON.stringify(snippets));
   }, [snippets]);
 
-  // --- NAVIGATION STATE ---
+  // --- 画面遷移（ナビゲーション）の状態管理 ---
   const [activeTab, setActiveTab] = useState<ActiveTab>('list');
   const [selectedSnippetId, setSelectedSnippetId] = useState<number | undefined>(undefined);
   const [selectedMergeIds, setSelectedMergeIds] = useState<number[]>([]);
   const [compareIds, setCompareIds] = useState<{ idA?: number; idB?: number }>({});
 
-  // --- SORT CRITERION STATE ---
+  // --- ソラト順の選択状態管理 ---
   const [sortCriterion, setSortCriterion] = useState<SortCriterion>(() => {
     try {
       const saved = localStorage.getItem('snippets_sort_criterion');
@@ -119,10 +119,10 @@ export default function App() {
   }, [sortCriterion]);
 
 
-  // --- PERFORMANCE METRIC STATE ---
+  // --- 性能指標（検索クエリ速度等）の状態管理 ---
   const [queryTimeMs, setQueryTimeMs] = useState<number>(0);
 
-  // --- TOAST NOTIFICATIONS SYSTEM ---
+  // --- トースト通知システム（ポップアップ表示） ---
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const addToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
@@ -133,10 +133,10 @@ export default function App() {
     }, 3500);
   };
 
-  // Calculate next sequential ID to assign
+  // 次に割り当てるスニペットIDを算出
   const nextId = snippets.length > 0 ? Math.max(...snippets.map(s => s.id)) + 1 : 1001;
 
-  // --- BULLETPROOF CLIPBOARD COPYING UTILITY ---
+  // --- 安全なクリップボードコピー用ユーティリティ関数 ---
   const handleCopyText = async (text: string, label: string, id?: number | number[]) => {
     let success = false;
     try {
@@ -149,7 +149,7 @@ export default function App() {
     }
 
     if (!success) {
-      // Robust fallback for sandboxed iframes
+      // サンドボックス化されたiframe用のフォールバック処理
       const textarea = document.createElement('textarea');
       textarea.value = text;
       textarea.style.position = 'fixed';
@@ -168,7 +168,7 @@ export default function App() {
     if (success) {
       addToast(`「${label.length > 15 ? label.slice(0, 15) + '...' : label}」をクリップボードにコピーしました！`, 'success');
       
-      // Update statistics
+      // 使用統計データの更新（コピー回数と累計短縮時間）
       if (id !== undefined) {
         const ids = Array.isArray(id) ? id : [id];
         setSnippets(prev =>
@@ -192,9 +192,9 @@ export default function App() {
     }
   };
 
-  // --- DATABASE ACTIONS (C.R.U.D) ---
+  // --- データベース操作（C.R.U.D機能） ---
 
-  // Create or Update Snippet
+  // スニペットの新規作成または更新処理
   const handleSaveSnippet = (formData: Omit<Snippet, 'createdAt' | 'updatedAt' | 'isDeleted'> & { id?: number }) => {
     const now = new Date().toISOString();
 
@@ -236,7 +236,7 @@ export default function App() {
     setSelectedSnippetId(undefined);
   };
 
-  // Soft Delete Snippet (Trash bin migration)
+  // スニペットの論理削除（アーカイブ移動）
   const handleSoftDeleteSnippet = (id: number) => {
     setSnippets(prev =>
       prev.map(item => {
@@ -255,7 +255,7 @@ export default function App() {
     setSelectedSnippetId(undefined);
   };
 
-  // Restore Soft-deleted Snippet
+  // 論理削除されたスニペットの復元
   const handleRestoreSnippet = (id: number) => {
     setSnippets(prev =>
       prev.map(item => {
@@ -275,7 +275,7 @@ export default function App() {
     setSelectedSnippetId(undefined);
   };
 
-  // Hard Delete (Permanent Purge)
+  // データベースからの完全物理削除（復元不可）
   const handleHardDeleteSnippet = (id: number) => {
     setSnippets(prev => prev.filter(item => item.id !== id));
     addToast('定型文をデータベースから永久削除しました。', 'error');
@@ -283,7 +283,7 @@ export default function App() {
     setSelectedSnippetId(undefined);
   };
 
-  // Toggle Pin Status
+  // ピン留め（お気に入り）状態の切り替え
   const handleTogglePin = (id: number) => {
     setSnippets(prev =>
       prev.map(item => {
@@ -302,7 +302,7 @@ export default function App() {
 
   // --- PERFORMANCE TESTING ACTIONS ---
 
-  // Generate large volume of mock items
+  // パフォーマンステスト用の大量のモックデータ生成
   const handleGenerateMock = (count: number) => {
     const start = performance.now();
     const mockData = generateMockSnippets(count);
@@ -311,7 +311,7 @@ export default function App() {
     addToast(`${count}件の検証用ダミーデータを ${(end - start).toFixed(1)}ms で追加しました！`, 'success');
   };
 
-  // Clear simulated datasets (keep defaults)
+  // モックデータの一括削除（デフォルトデータは維持）
   const handleClearMock = () => {
     setSnippets(prev => prev.filter(item => item.id < 2000));
     addToast('検証用ダミーデータを一括削除しました。', 'info');
@@ -327,7 +327,7 @@ export default function App() {
     // UPDATE 2026-06-30: isDarkMode変数に応じて .dark クラスをルートに追加。Tailwind v4のダークモード制御を有効化します。
     <div className={`h-screen overflow-hidden ${isDarkMode ? 'bg-slate-950 text-slate-100 dark' : 'bg-slate-50/20 text-slate-800'} flex flex-col font-sans transition-colors duration-200`} id="app-container">
       
-      {/* Dynamic Toast Notifications container */}
+      {/* トースト通知のポップアップ表示コンテナ */}
       <div className="fixed top-5 right-5 space-y-2 z-50 max-w-sm w-full" id="toast-container">
         {toasts.map(toast => (
           <div
@@ -364,7 +364,7 @@ export default function App() {
           </div>
         </div>
  
-        {/* Global Desktop App Navigation Tabs */}
+        {/* アプリ上部の共通ナビゲーションタブ */}
         <div className="flex items-center gap-3">
           <nav className="flex flex-wrap items-center bg-slate-100 dark:bg-slate-950 p-1 rounded-lg border border-slate-200 dark:border-slate-800 text-xs">
             <button
@@ -462,7 +462,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Application Shell Stage */}
+      {/* メインのアプリケーション表示エリア */}
       <main className="flex-1 max-w-7xl w-full mx-auto flex flex-col overflow-hidden">
         {activeTab === 'list' ? (
           <SnippetList
@@ -493,7 +493,7 @@ export default function App() {
           />
         ) : (
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 min-h-0">
-            {/* Create / Edit Form screen */}
+            {/* スニペットの新規登録・編集フォーム画面 */}
             {(activeTab === 'create' || activeTab === 'edit') && (
               <SnippetForm
                 snippet={snippets.find(s => s.id === selectedSnippetId)}
@@ -511,7 +511,7 @@ export default function App() {
               />
             )}
 
-            {/* Side by side compare view */}
+            {/* 2つの定型文の差分比較画面 */}
             {activeTab === 'compare' && (
               <SnippetCompare
                 snippets={snippets}
@@ -525,7 +525,7 @@ export default function App() {
               />
             )}
 
-            {/* Combined templates view */}
+            {/* 複数定型文の結合マージ画面 */}
             {activeTab === 'merge' && (
               <SnippetMerge
                 snippets={snippets}
@@ -538,7 +538,7 @@ export default function App() {
               />
             )}
 
-            {/* Performance metrics dashboard */}
+            {/* 性能メーター・パフォーマンステスト画面 */}
             {activeTab === 'performance' && (
               <StatsPanel
                 snippets={snippets}
@@ -551,7 +551,7 @@ export default function App() {
         )}
       </main>
 
-      {/* Styled Human-Literal Desktop footer */}
+      {/* デスクトップアプリ用のフッター */}
       {/* UPDATE 2026-06-30: フッターの配色をダークモード（dark:bg-slate-900 dark:border-slate-800）に対応。全体のトーンを均一にします */}
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-150 dark:border-slate-800 py-3.5 px-6 text-center text-xs text-slate-400 dark:text-slate-500 font-sans flex flex-col sm:flex-row items-center justify-between gap-2 shrink-0">
         <span>© 2026 定型文クリップボード・マネージャー • すべてのデータは安全にローカル保存されます</span>

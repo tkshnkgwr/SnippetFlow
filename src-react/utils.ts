@@ -5,14 +5,14 @@
 
 import { Snippet } from './types';
 
-// Simple Word/Character-level Diffing Algorithm (LCS-based)
+// 簡易的な行単位・文字単位の差分計算アルゴリズム（LCS: 最長共通部分列アルゴリズムに基づく）
 export interface DiffPart {
   type: 'added' | 'removed' | 'unchanged';
   value: string;
 }
 
 export function computeDiff(oldText: string, newText: string): DiffPart[] {
-  // Split by lines for a clean line-by-line comparison
+  // 行ごとに分割して綺麗な行単位の比較を行う
   const oldLines = oldText.split('\n');
   const newLines = newText.split('\n');
 
@@ -51,7 +51,7 @@ export function computeDiff(oldText: string, newText: string): DiffPart[] {
   return result;
 }
 
-// Initial default Japanese templates
+// 初期データの日本語テンプレート
 export const DEFAULT_SNIPPETS: Snippet[] = [
   {
     id: 1001,
@@ -106,7 +106,7 @@ export const DEFAULT_SNIPPETS: Snippet[] = [
   }
 ];
 
-// Helper to generate large amounts of mock data to test JSON rendering & search speed performance
+// JSONの描画や検索処理のパフォーマンス速度をテストするための大量のダミーデータを生成するヘルパー関数
 export function generateMockSnippets(count: number): Snippet[] {
   const baseTags = ["ビジネス", "開発", "サポート", "マーケティング", "プライベート", "テンプレ", "SNS", "重要"];
   const templates = [

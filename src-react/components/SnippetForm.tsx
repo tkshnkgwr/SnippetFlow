@@ -9,7 +9,7 @@ import { Snippet } from '../types';
 
 // UPDATE 2026-06-30: タグ提案機能に必要な snippets リストを props に追加
 interface SnippetFormProps {
-  snippet?: Snippet; // If undefined, we are in 'Create' mode
+  snippet?: Snippet; // 未定義の場合は「新規作成」モードになります
   onSave: (snippet: Omit<Snippet, 'createdAt' | 'updatedAt' | 'isDeleted'> & { id?: number }) => void;
   onSoftDelete: (id: number) => void;
   onRestore: (id: number) => void;
@@ -31,7 +31,7 @@ export default function SnippetForm({
 }: SnippetFormProps) {
   const isEditMode = !!snippet;
 
-  // Form States
+  // フォームの入力項目状態管理
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [description, setDescription] = useState('');
@@ -39,7 +39,7 @@ export default function SnippetForm({
   const [tags, setTags] = useState<string[]>([]);
   const [error, setError] = useState('');
 
-  // Populate form if in edit mode
+  // 編集モードの場合、フォームに入力初期値をロードする
   useEffect(() => {
     if (snippet) {
       setTitle(snippet.title);
@@ -56,7 +56,7 @@ export default function SnippetForm({
     }
   }, [snippet]);
 
-  // Handle adding a tag chip
+  // タグチップを追加する処理
   const handleAddTag = () => {
     const trimmed = tagInput.trim();
     if (trimmed && !tags.includes(trimmed)) {
@@ -134,7 +134,7 @@ export default function SnippetForm({
     }
 
     onSave({
-      id: snippet?.id, // Will be undefined for new items
+      id: snippet?.id, // 新規作成時は undefined になります
       title: title.trim(),
       content: content.trim(),
       description: description.trim(),
@@ -145,7 +145,7 @@ export default function SnippetForm({
   return (
     <div className="max-w-3xl mx-auto bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden" id="snippet-form-root">
       {/* UPDATE 2026-06-30: フォーム外枠コンテナーの背景とボーダーをダークモードに対応 */}
-      {/* Header Bar */}
+      {/* ヘッダーバー */}
       {/* UPDATE 2026-06-30: フォームヘッダーの背景とボーダーをダークモード（dark:bg-slate-950 dark:border-slate-850）に対応 */}
       <div className="bg-slate-50 dark:bg-slate-950 px-6 py-4 border-b border-slate-100 dark:border-slate-850 flex items-center justify-between">
         <div className="flex items-center space-x-3">
