@@ -27,6 +27,8 @@
   - README上部にGitHub最新リリースのステータスバッジを追加。
 
 ### Fixed
+- **GitHub Actions リリースワークフローのエラー修正 (`.github/workflows/release.yml`)**:
+  - `tauri-apps/tauri-action` のバージョン指定を誤って存在しない `@v2` と記述していたため、正式にサポートされている `@v0` に修正。
 - **Tauri ビルド設定ファイルのスキーマエラー修正 (`src-tauri/tauri.conf.json`)**:
   - `cargo tauri build` 実行時にスキーマバリデーションエラーを引き起こしていた、Tauri v2 で廃止済みの `bundle > android > debugApplicationIdSuffix` 設定を削除。
 - **Tauri 実行バイナリ名（パッケージ名）の競合防止およびドキュメント修正 (`src-tauri/Cargo.toml`, `README.md`, `README.ja.md`, `docs/FOOTPRINTS.md`)**:
