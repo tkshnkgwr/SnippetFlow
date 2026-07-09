@@ -19,7 +19,8 @@ import {
   History,
   Info,
   Layers,
-  Database
+  Database,
+  Pin
 } from 'lucide-react';
 import { Snippet, SortCriterion } from '../types';
 
@@ -50,7 +51,8 @@ interface SnippetListProps {
   onSortCriterionChange: (criterion: SortCriterion) => void;
   onAddSnippet: () => void;
   onEditSnippet: (id: number) => void;
-  onCopyText: (text: string, label: string) => void;
+  onCopyText: (text: string, label: string, id?: number | number[]) => void;
+  onTogglePin: (id: number) => void;
   onGoToCompare: (idA?: number, idB?: number) => void;
   onGoToMerge: (ids: number[]) => void;
   onGoToPerformance: () => void;
@@ -65,6 +67,7 @@ export default function SnippetList({
   onAddSnippet,
   onEditSnippet,
   onCopyText,
+  onTogglePin,
   onGoToCompare,
   onGoToMerge,
   onGoToPerformance,
@@ -128,15 +131,28 @@ export default function SnippetList({
 
     // 4. Apply Sorting based on criterion
     const sortedResult = [...result];
-    if (sortCriterion === 'updated_at_desc') {
-      sortedResult.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-    } else if (sortCriterion === 'updated_at_asc') {
-      sortedResult.sort((a, b) => a.updatedAt.localeCompare(b.updatedAt));
-    } else if (sortCriterion === 'created_at_desc') {
-      sortedResult.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    } else if (sortCriterion === 'title_asc') {
-      sortedResult.sort((a, b) => a.title.localeCompare(b.title));
-    }
+    sortedResult.sort((a, b) => {
+      // Prioritize pinned snippets
+      const pinA = a.isPinned ? 1 : 0;
+      const pinB = b.isPinned ? 1 : 0;
+      if (pinB !== pinA) {
+        return pinB - pinA;
+      }
+      
+      // Fallback to selected sort criterion
+      if (sortCriterion === 'updated_at_desc') {
+        return b.updatedAt.localeCompare(a.updatedAt);
+      } else if (sortCriterion === 'updated_at_asc') {
+        return a.updatedAt.localeCompare(b.updatedAt);
+      } else if (sortCriterion === 'created_at_desc') {
+        return b.createdAt.localeCompare(a.createdAt);
+      } else if (sortCriterion === 'title_asc') {
+        return a.title.localeCompare(b.title);
+      } else if (sortCriterion === 'copy_count_desc') {
+        return (b.copyCount || 0) - (a.copyCount || 0);
+      }
+      return 0;
+    });
 
     const end = performance.now();
 
@@ -154,7 +170,7 @@ export default function SnippetList({
   // Handle Copy of a single item
   const handleCopySingle = (e: React.MouseEvent, snippet: Snippet) => {
     e.stopPropagation();
-    onCopyText(snippet.content, snippet.title);
+    onCopyText(snippet.content, snippet.title, snippet.id);
     setCopiedId(snippet.id);
     setTimeout(() => {
       setCopiedId(null);
@@ -303,6 +319,7 @@ export default function SnippetList({
               <option value="updated_at_asc">更新が古い順</option>
               <option value="created_at_desc">作成が新しい順</option>
               <option value="title_asc">タイトル順</option>
+              <option value="copy_count_desc">よく使う順 (コピー数)</option>
             </select>
 
             {/* UPDATE 2026-06-30: 追加ボタンの背景色を bg-indigo-650 から bg-indigo-600 へ変更。文字が白色で見えない視認性不良の不具合を解消しました */}
@@ -448,6 +465,8 @@ export default function SnippetList({
                     ? 'border-amber-200/60 bg-amber-50/20 dark:bg-amber-950/10 dark:border-amber-900/40'
                     : isSelected
                     ? 'border-indigo-400 dark:border-indigo-500/80 bg-indigo-50/10 dark:bg-indigo-950/20 shadow-sm'
+                    : snippet.isPinned
+                    ? 'border-indigo-300 dark:border-indigo-500 bg-indigo-50/5 dark:bg-indigo-950/10 shadow-sm'
                     : 'border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
                 }`}
               >
@@ -553,6 +572,24 @@ export default function SnippetList({
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
+
+                    {/* Pin button */}
+                    {!snippet.isDeleted && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onTogglePin(snippet.id);
+                        }}
+                        title={snippet.isPinned ? "ピン留め解除" : "ピン留め"}
+                        className={`p-1.5 rounded-lg transition cursor-pointer ${
+                          snippet.isPinned
+                            ? 'text-amber-500 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900'
+                            : 'text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        <Pin className={`w-3.5 h-3.5 ${snippet.isPinned ? 'fill-current text-amber-500' : ''}`} />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

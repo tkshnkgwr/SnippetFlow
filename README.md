@@ -101,7 +101,7 @@ npx tauri dev
 # Build the release binary without creating installers
 npx tauri build --no-bundle
 ```
-The compiled release binary can be found under `src-tauri/target/release/app.exe`. You can directly run this executable to start the application.
+The compiled release binary can be found under `src-tauri/target/release/Snippetflow.exe`. You can directly run this executable to start the application.
 
 
 ---

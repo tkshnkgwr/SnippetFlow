@@ -13,7 +13,7 @@ interface SnippetCompareProps {
   initialSnippetAId?: number;
   initialSnippetBId?: number;
   onBack: () => void;
-  onCopyText: (text: string, label: string) => void;
+  onCopyText: (text: string, label: string, id?: number | number[]) => void;
 }
 
 export default function SnippetCompare({
@@ -58,7 +58,7 @@ export default function SnippetCompare({
 
   const handleCopyA = () => {
     if (snippetA) {
-      onCopyText(snippetA.content, '比較元(A)の定型文');
+      onCopyText(snippetA.content, '比較元(A)の定型文', snippetA.id);
       setCopiedA(true);
       setTimeout(() => setCopiedA(false), 2000);
     }
@@ -66,7 +66,7 @@ export default function SnippetCompare({
 
   const handleCopyB = () => {
     if (snippetB) {
-      onCopyText(snippetB.content, '比較先(B)の定型文');
+      onCopyText(snippetB.content, '比較先(B)の定型文', snippetB.id);
       setCopiedB(true);
       setTimeout(() => setCopiedB(false), 2000);
     }

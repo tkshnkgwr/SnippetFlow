@@ -11,7 +11,7 @@ interface SnippetMergeProps {
   snippets: Snippet[];
   selectedSnippetIds: number[];
   onBack: () => void;
-  onCopyText: (text: string, label: string) => void;
+  onCopyText: (text: string, label: string, id?: number | number[]) => void;
 }
 
 export default function SnippetMerge({
@@ -84,7 +84,7 @@ export default function SnippetMerge({
   const handleCopy = () => {
     const text = getMergedText();
     if (text) {
-      onCopyText(text, '結合された定型文');
+      onCopyText(text, '結合された定型文', orderedIds);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }

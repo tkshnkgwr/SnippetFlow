@@ -31,6 +31,28 @@ export default function StatsPanel({
   const serializedSize = JSON.stringify(snippets).length;
   const kbSize = (serializedSize / 1024).toFixed(2);
 
+  // Analytics Calculations
+  const totalCopies = snippets.reduce((sum, s) => sum + (s.copyCount || 0), 0);
+  const totalSavedSec = snippets.reduce((sum, s) => sum + (s.savedTimeSec || 0), 0);
+
+  const formatSavedTime = (totalSeconds: number) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    if (hours > 0) {
+      return `${hours}時間 ${minutes}分 ${seconds}秒`;
+    } else if (minutes > 0) {
+      return `${minutes}分 ${seconds}秒`;
+    } else {
+      return `${seconds}秒`;
+    }
+  };
+
+  const topSnippets = [...snippets]
+    .filter(s => (s.copyCount || 0) > 0)
+    .sort((a, b) => (b.copyCount || 0) - (a.copyCount || 0))
+    .slice(0, 3);
+
   // Simple benchmark runner: runs search 100 times to get average speed
   const runBenchmark = () => {
     setBenchmarking(true);
@@ -71,6 +93,46 @@ export default function StatsPanel({
           <Zap className="w-3 h-3 mr-1" />
           現在最適化済み
         </span>
+      </div>
+
+      {/* Analytics Section */}
+      <div className="bg-slate-50 dark:bg-slate-950 rounded-xl p-5 border border-slate-100 dark:border-slate-800 mb-6" id="stats-analytics">
+        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center space-x-2 mb-3 font-sans">
+          <BarChart3 className="w-4 h-4 text-indigo-500" />
+          <span>📈 使用統計 (アナリティクス)</span>
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-150 dark:border-slate-850">
+            <div className="text-xs text-slate-400 font-sans">総コピー回数</div>
+            <div className="text-xl font-bold text-slate-700 dark:text-slate-200 mt-1 font-mono">{totalCopies} 回</div>
+          </div>
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-150 dark:border-slate-850">
+            <div className="text-xs text-slate-400 font-sans">累計短縮（節約）時間</div>
+            <div className="text-xl font-bold text-slate-700 dark:text-slate-200 mt-1 font-mono">{formatSavedTime(totalSavedSec)}</div>
+            <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">※1文字あたり0.3秒のタイピング時間を想定</div>
+          </div>
+        </div>
+        
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-150 dark:border-slate-850">
+          <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 font-sans">よく使う定型文トップ3</h4>
+          {topSnippets.length > 0 ? (
+            <div className="space-y-2">
+              {topSnippets.map((s, index) => (
+                <div key={s.id} className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-350 border-b border-slate-100 dark:border-slate-850 pb-1.5 last:border-0 last:pb-0">
+                  <div className="flex items-center space-x-2 truncate">
+                    <span className="font-bold text-indigo-500 font-mono w-4">{index + 1}.</span>
+                    <span className="truncate font-sans font-medium">{s.title}</span>
+                  </div>
+                  <div className="shrink-0 text-slate-450 dark:text-slate-550 text-[11px] font-mono">
+                    {s.copyCount}回コピー (短縮: {formatSavedTime(s.savedTimeSec || 0)})
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-xs text-slate-400 text-center py-2 font-sans">まだコピーされた定型文はありません。</div>
+          )}
+        </div>
       </div>
 
       {/* Metrics Grid */}

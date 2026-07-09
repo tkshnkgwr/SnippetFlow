@@ -137,7 +137,7 @@ export default function App() {
   const nextId = snippets.length > 0 ? Math.max(...snippets.map(s => s.id)) + 1 : 1001;
 
   // --- BULLETPROOF CLIPBOARD COPYING UTILITY ---
-  const handleCopyText = async (text: string, label: string) => {
+  const handleCopyText = async (text: string, label: string, id?: number | number[]) => {
     let success = false;
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -167,6 +167,26 @@ export default function App() {
 
     if (success) {
       addToast(`「${label.length > 15 ? label.slice(0, 15) + '...' : label}」をクリップボードにコピーしました！`, 'success');
+      
+      // Update statistics
+      if (id !== undefined) {
+        const ids = Array.isArray(id) ? id : [id];
+        setSnippets(prev =>
+          prev.map(item => {
+            if (ids.includes(item.id)) {
+              const charCount = item.content.length;
+              // 0.3 seconds per character
+              const savedSec = Math.round(charCount * 0.3);
+              return {
+                ...item,
+                copyCount: (item.copyCount || 0) + 1,
+                savedTimeSec: (item.savedTimeSec || 0) + savedSec,
+              };
+            }
+            return item;
+          })
+        );
+      }
     } else {
       addToast('コピーに失敗しました。ブラウザのアクセス権限を確認してください。', 'error');
     }
@@ -261,6 +281,23 @@ export default function App() {
     addToast('定型文をデータベースから永久削除しました。', 'error');
     setActiveTab('list');
     setSelectedSnippetId(undefined);
+  };
+
+  // Toggle Pin Status
+  const handleTogglePin = (id: number) => {
+    setSnippets(prev =>
+      prev.map(item => {
+        if (item.id === id) {
+          return {
+            ...item,
+            isPinned: !item.isPinned,
+            updatedAt: new Date().toISOString(),
+          };
+        }
+        return item;
+      })
+    );
+    addToast('定型文のピン留め状態を変更しました。', 'success');
   };
 
   // --- PERFORMANCE TESTING ACTIONS ---
@@ -441,6 +478,7 @@ export default function App() {
               setActiveTab('edit');
             }}
             onCopyText={handleCopyText}
+            onTogglePin={handleTogglePin}
             onGoToCompare={(idA, idB) => {
               setCompareIds({ idA, idB });
               setActiveTab('compare');

@@ -7,12 +7,31 @@
 ## [Unreleased]
 
 ### Added
+- **お気に入り（ピン留め）機能の実装 (`src/types.ts`, `src/App.tsx`, `src/components/SnippetList.tsx`, `src/main.rs`)**:
+  - 定型文カードにピン留めボタン（📌）を追加し、ピン留めされた定型文がリストの最上部に固定されるように実装。
+  - ピン留めされたスニペットのカード全体の枠線と背景をIndigo調で強調表示するUIデザインをReact版およびRust/egui版の双方に導入。
+- **使用統計（アナリティクス）機能の実装 (`src/types.ts`, `src/App.tsx`, `src/components/SnippetList.tsx`, `src/components/SnippetMerge.tsx`, `src/components/SnippetCompare.tsx`, `src/components/StatsPanel.tsx`, `src/main.rs`)**:
+  - コピー回数 (`copyCount`) と累計短縮時間 (`savedTimeSec`) をスニペット情報に追加。
+  - 1文字コピーあたり「0.3秒」の短縮と仮定して統計情報を算出。
+  - 「よく使う順（コピー数）」でのソート基準を追加。
+  - 性能メーター画面に「使用統計（アナリティクス）」カードを追加し、総コピー回数、累計短縮時間、よく使う定型文トップ3のランキングを表示。
+- **多重起動防止機能（Single Instance）の実装 (`Cargo.toml`, `src/main.rs`, `src-tauri/Cargo.toml`, `src-tauri/src/lib.rs`)**:
+  - アプリケーションが複数同時に起動されることを防止する機能を egui版および Tauri版の双方に導入。
+  - egui版では `single-instance` クレートを用い、多重起動時にプロセスを静かに終了する設計を導入。
+  - Tauri版では `tauri-plugin-single-instance` プラグインを用い、2つ目のインスタンス起動時に既存のウィンドウを前面に呼び出してフォーカスさせる設計を実装。
 - **READMEへのスニペット活用例の追加 (`README.md`, `README.ja.md`)**:
   - アプリケーションの利用イメージを促進するため、日程調整定型文（PlainText）、打合せ議事録（Markdown）、AIリファクタリングプロンプト、Gitコミットテンプレート、SQLクエリテンプレートの具体例を追加。
 - **GitHub Releaseバッジの追加 (`README.md`, `README.ja.md`)**:
   - README上部にGitHub最新リリースのステータスバッジを追加。
 
 ### Fixed
+- **Tauri ビルド設定ファイルのスキーマエラー修正 (`src-tauri/tauri.conf.json`)**:
+  - `cargo tauri build` 実行時にスキーマバリデーションエラーを引き起こしていた、Tauri v2 で廃止済みの `bundle > android > debugApplicationIdSuffix` 設定を削除。
+- **Tauri 実行バイナリ名（パッケージ名）の競合防止およびドキュメント修正 (`src-tauri/Cargo.toml`, `README.md`, `README.ja.md`, `docs/FOOTPRINTS.md`)**:
+  - Windows でのアプリ起動時にデフォルト名（`app.exe`）と競合し、インストーラー起動時にアプリが強制終了してしまう問題を防止するため、パッケージ名を `Snippetflow` に変更。
+  - これに伴い、各種ドキュメント（README、FOOTPRINTS）内に残っていた `app.exe` の記述をすべて `Snippetflow.exe` に更新。
+- **大賢者向けガイドラインファイルの更新 (`.agents/AGENTS.md`)**:
+  - 他プロジェクトとの衝突やインストーラーの誤動作を防ぐため、Tauri のパッケージ名としてデフォルト値 `"app"` の指定を禁止する品質管理ルールを追記。
 - **GitHub Actions ワークフローにおける共有ライブラリ依存関係の解決エラー修正 (`ci.yml`, `release.yml`)**:
   - リポジトリのチェックアウトパスを調整し、`SnippetFlow` をルートに直接展開。
   - `actions/checkout` のセキュリティ制約（ワークスペース外への直接チェックアウトの制限）を回避するため、`common_lib` を一旦ワークスペース内にチェックアウト後、PowerShell コマンドを用いて親ディレクトリ `../common_lib` に配置するように修正。

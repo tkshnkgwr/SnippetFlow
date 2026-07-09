@@ -21,6 +21,12 @@ struct Snippet {
     deleted_at: Option<String>, // 削除日
     is_deleted: bool,           // 削除フラグ
     tags: Vec<String>,          // タグ
+    #[serde(default)]
+    is_pinned: bool, // ピン留めフラグ
+    #[serde(default)]
+    copy_count: u32, // コピー累計回数
+    #[serde(default)]
+    saved_time_sec: u32, // 累計短縮時間 (秒)
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Default)]
@@ -30,6 +36,7 @@ enum SortCriterion {
     UpdatedAtAsc,  // 更新日時が古い順
     CreatedAtDesc, // 作成日時が新しい順
     TitleAsc,      // タイトル順
+    CopyCountDesc, // コピー回数 (多い順)
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -143,6 +150,9 @@ impl SnippetManagerApp {
                 deleted_at: None,
                 is_deleted: false,
                 tags: vec!["メール".to_string(), "ビジネス".to_string()],
+                is_pinned: false,
+                copy_count: 0,
+                saved_time_sec: 0,
             },
             Snippet {
                 id: 2,
@@ -154,6 +164,9 @@ impl SnippetManagerApp {
                 deleted_at: None,
                 is_deleted: false,
                 tags: vec!["メール".to_string(), "緊急".to_string()],
+                is_pinned: false,
+                copy_count: 0,
+                saved_time_sec: 0,
             },
         ];
 
@@ -504,6 +517,7 @@ impl SnippetManagerApp {
                         SortCriterion::UpdatedAtAsc => "更新日 (古い順)",
                         SortCriterion::CreatedAtDesc => "作成日 (新しい順)",
                         SortCriterion::TitleAsc => "タイトル順",
+                        SortCriterion::CopyCountDesc => "よく使う順 (コピー数)",
                     })
                     .show_ui(ui, |ui| {
                         changed |= ui
@@ -532,6 +546,13 @@ impl SnippetManagerApp {
                                 &mut self.settings.sort_criterion,
                                 SortCriterion::TitleAsc,
                                 "タイトル順",
+                            )
+                            .changed();
+                        changed |= ui
+                            .selectable_value(
+                                &mut self.settings.sort_criterion,
+                                SortCriterion::CopyCountDesc,
+                                "よく使う順 (コピー数)",
                             )
                             .changed();
                     });
@@ -607,20 +628,22 @@ impl SnippetManagerApp {
             .collect();
 
         // ソートの適用
-        match self.settings.sort_criterion {
-            SortCriterion::UpdatedAtDesc => {
-                filtered_snippets.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));
+        filtered_snippets.sort_by(|a, b| {
+            // Pinned items first
+            let pin_cmp = b.is_pinned.cmp(&a.is_pinned);
+            if pin_cmp != std::cmp::Ordering::Equal {
+                return pin_cmp;
             }
-            SortCriterion::UpdatedAtAsc => {
-                filtered_snippets.sort_by(|a, b| a.updated_at.cmp(&b.updated_at));
+
+            // Apply selected criterion
+            match self.settings.sort_criterion {
+                SortCriterion::UpdatedAtDesc => b.updated_at.cmp(&a.updated_at),
+                SortCriterion::UpdatedAtAsc => a.updated_at.cmp(&b.updated_at),
+                SortCriterion::CreatedAtDesc => b.created_at.cmp(&a.created_at),
+                SortCriterion::TitleAsc => a.title.cmp(&b.title),
+                SortCriterion::CopyCountDesc => b.copy_count.cmp(&a.copy_count),
             }
-            SortCriterion::CreatedAtDesc => {
-                filtered_snippets.sort_by(|a, b| b.created_at.cmp(&a.created_at));
-            }
-            SortCriterion::TitleAsc => {
-                filtered_snippets.sort_by(|a, b| a.title.cmp(&b.title));
-            }
-        }
+        });
 
         self.query_time_ms = start_time.elapsed().as_secs_f64() * 1000.0;
 
@@ -630,78 +653,116 @@ impl SnippetManagerApp {
                 ui.colored_label(egui::Color32::GRAY, "表示する定型文がありません。");
             } else {
                 for snip in filtered_snippets {
-                    theme_card_frame(self.settings.is_dark_mode).show(ui, |ui| {
-                        ui.horizontal(|ui| {
-                            // 選択チェックボックス
-                            let mut is_selected = self.selected_ids.contains(&snip.id);
-                            if ui.checkbox(&mut is_selected, "").changed() {
-                                if is_selected {
-                                    self.selected_ids.insert(snip.id);
-                                } else {
-                                    self.selected_ids.remove(&snip.id);
-                                }
-                            }
-
-                            // 削除済みスニペットは打消し・グレー表示
-                            if snip.is_deleted {
-                                ui.add(
-                                    egui::Label::new(format!("[削除済] {}", snip.title)).wrap(true),
-                                );
-                            } else {
-                                let title_job = highlight_text(
-                                    &snip.title,
-                                    &self.search_query,
-                                    egui::FontId::new(16.0, egui::FontFamily::Proportional),
-                                    self.settings.is_dark_mode,
-                                );
-                                ui.add(egui::Label::new(title_job).wrap(true));
-                            }
-
-                            // コピー＆編集ボタンの配置
-                            ui.with_layout(
-                                egui::Layout::right_to_left(egui::Align::Center),
-                                |ui| {
-                                    if ui.button("✏️ 編集").clicked() {
-                                        self.open_edit_form(snip.id);
+                    theme_card_frame_ext(self.settings.is_dark_mode, snip.is_pinned).show(
+                        ui,
+                        |ui| {
+                            ui.horizontal(|ui| {
+                                // 選択チェックボックス
+                                let mut is_selected = self.selected_ids.contains(&snip.id);
+                                if ui.checkbox(&mut is_selected, "").changed() {
+                                    if is_selected {
+                                        self.selected_ids.insert(snip.id);
+                                    } else {
+                                        self.selected_ids.remove(&snip.id);
                                     }
-                                    if ui.button("📋 コピー").clicked() {
-                                        if let Some(ref mut cb) = self.clipboard {
-                                            if cb.set_text(snip.content.clone()).is_ok() {
-                                                self.last_action_message =
-                                                    format!("📋 コピー完了: {}", snip.title);
-                                                self.last_action_time = Some(Instant::now());
+                                }
+
+                                // 削除済みスニペットは打消し・グレー表示
+                                if snip.is_deleted {
+                                    ui.add(
+                                        egui::Label::new(format!("[削除済] {}", snip.title))
+                                            .wrap(true),
+                                    );
+                                } else {
+                                    let title_job = highlight_text(
+                                        &snip.title,
+                                        &self.search_query,
+                                        egui::FontId::new(16.0, egui::FontFamily::Proportional),
+                                        self.settings.is_dark_mode,
+                                    );
+                                    ui.add(egui::Label::new(title_job).wrap(true));
+                                }
+
+                                // コピー＆編集ボタンの配置
+                                ui.with_layout(
+                                    egui::Layout::right_to_left(egui::Align::Center),
+                                    |ui| {
+                                        if ui.button("✏️ 編集").clicked() {
+                                            self.open_edit_form(snip.id);
+                                        }
+                                        if !snip.is_deleted {
+                                            let pin_label = if snip.is_pinned {
+                                                "📌 ピン解除"
+                                            } else {
+                                                "📌 ピン留め"
+                                            };
+                                            if ui.button(pin_label).clicked() {
+                                                if let Some(target) = self
+                                                    .snippets
+                                                    .iter_mut()
+                                                    .find(|s| s.id == snip.id)
+                                                {
+                                                    target.is_pinned = !target.is_pinned;
+                                                    target.updated_at = Local::now()
+                                                        .format("%Y-%m-%d %H:%M:%S")
+                                                        .to_string();
+                                                    self.save_data();
+                                                }
                                             }
                                         }
-                                    }
-                                },
-                            );
-                        });
+                                        if ui.button("📋 コピー").clicked() {
+                                            if let Some(ref mut cb) = self.clipboard {
+                                                if cb.set_text(snip.content.clone()).is_ok() {
+                                                    self.last_action_message =
+                                                        format!("📋 コピー完了: {}", snip.title);
+                                                    self.last_action_time = Some(Instant::now());
 
-                        // 説明
-                        let desc_job = highlight_text(
-                            &snip.description,
-                            &self.search_query,
-                            egui::FontId::new(12.0, egui::FontFamily::Proportional),
-                            self.settings.is_dark_mode,
-                        );
-                        ui.add(egui::Label::new(desc_job).wrap(true));
+                                                    // 統計更新
+                                                    if let Some(target) = self
+                                                        .snippets
+                                                        .iter_mut()
+                                                        .find(|s| s.id == snip.id)
+                                                    {
+                                                        target.copy_count += 1;
+                                                        let char_count =
+                                                            snip.content.chars().count();
+                                                        target.saved_time_sec +=
+                                                            (char_count as f64 * 0.3) as u32;
+                                                        self.save_data();
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                );
+                            });
 
-                        // タグ表示と日付
-                        ui.horizontal(|ui| {
-                            for t in &snip.tags {
-                                ui.colored_label(egui::Color32::LIGHT_BLUE, format!("#{}", t));
-                            }
-                            ui.with_layout(
-                                egui::Layout::right_to_left(egui::Align::Center),
-                                |ui| {
-                                    ui.colored_label(
-                                        egui::Color32::GRAY,
-                                        format!("更新: {}", snip.updated_at),
-                                    );
-                                },
+                            // 説明
+                            let desc_job = highlight_text(
+                                &snip.description,
+                                &self.search_query,
+                                egui::FontId::new(12.0, egui::FontFamily::Proportional),
+                                self.settings.is_dark_mode,
                             );
-                        });
-                    });
+                            ui.add(egui::Label::new(desc_job).wrap(true));
+
+                            // タグ表示と日付
+                            ui.horizontal(|ui| {
+                                for t in &snip.tags {
+                                    ui.colored_label(egui::Color32::LIGHT_BLUE, format!("#{}", t));
+                                }
+                                ui.with_layout(
+                                    egui::Layout::right_to_left(egui::Align::Center),
+                                    |ui| {
+                                        ui.colored_label(
+                                            egui::Color32::GRAY,
+                                            format!("更新: {}", snip.updated_at),
+                                        );
+                                    },
+                                );
+                            });
+                        },
+                    );
                     ui.add_space(4.0);
                 }
             }
@@ -869,6 +930,9 @@ impl SnippetManagerApp {
                         deleted_at: None,
                         is_deleted: false,
                         tags: self.form_tags.clone(),
+                        is_pinned: false,
+                        copy_count: 0,
+                        saved_time_sec: 0,
                     };
                     self.snippets.push(new_snip);
                     self.last_action_message = "✅ 新しい定型文を追加しました。".to_string();
@@ -1252,6 +1316,18 @@ impl SnippetManagerApp {
                                 self.last_action_message =
                                     "📋 結合コピーが完了しました！".to_string();
                                 self.last_action_time = Some(Instant::now());
+
+                                // Update stats for merged snippets
+                                for &id in &self.merge_ids {
+                                    if let Some(target) =
+                                        self.snippets.iter_mut().find(|s| s.id == id)
+                                    {
+                                        target.copy_count += 1;
+                                        let char_count = target.content.chars().count();
+                                        target.saved_time_sec += (char_count as f64 * 0.3) as u32;
+                                    }
+                                }
+                                self.save_data();
                             }
                         }
                     }
@@ -1326,6 +1402,59 @@ impl SnippetManagerApp {
 
         ui.add_space(10.0);
 
+        let total_copies: u32 = self.snippets.iter().map(|s| s.copy_count).sum();
+        let total_saved_sec: u32 = self.snippets.iter().map(|s| s.saved_time_sec).sum();
+
+        let format_saved_time = |total_seconds: u32| -> String {
+            let hours = total_seconds / 3600;
+            let minutes = (total_seconds % 3600) / 60;
+            let seconds = total_seconds % 60;
+            if hours > 0 {
+                format!("{} 時間 {} 分 {} 秒", hours, minutes, seconds)
+            } else if minutes > 0 {
+                format!("{} 分 {} 秒", minutes, seconds)
+            } else {
+                format!("{} 秒", seconds)
+            }
+        };
+
+        let mut ranked_snippets = self.snippets.clone();
+        ranked_snippets.sort_by_key(|b| std::cmp::Reverse(b.copy_count));
+        let top_snippets: Vec<&Snippet> = ranked_snippets
+            .iter()
+            .filter(|s| s.copy_count > 0)
+            .take(3)
+            .collect();
+
+        theme_card_frame(self.settings.is_dark_mode).show(ui, |ui| {
+            ui.strong("📈 使用統計 (アナリティクス)");
+            ui.add_space(4.0);
+            ui.label(format!("総コピー回数: {} 回", total_copies));
+            ui.label(format!(
+                "累計短縮時間: {}",
+                format_saved_time(total_saved_sec)
+            ));
+            ui.label("※1文字あたり0.3秒のタイピング時間を想定");
+
+            ui.add_space(6.0);
+            ui.strong("よく使う定型文トップ3:");
+            if !top_snippets.is_empty() {
+                for (i, snip) in top_snippets.iter().enumerate() {
+                    ui.label(format!(
+                        "{}. {} ({}回コピー / 短縮: {})",
+                        i + 1,
+                        snip.title,
+                        snip.copy_count,
+                        format_saved_time(snip.saved_time_sec)
+                    ));
+                }
+            } else {
+                ui.label("まだコピーされた定型文はありません。");
+            }
+        });
+
+        ui.add_space(10.0);
+
         theme_card_frame(self.settings.is_dark_mode).show(ui, |ui| {
             ui.strong("大量データ負荷テスト（ダミー生成）");
             ui.add_space(4.0);
@@ -1387,6 +1516,9 @@ impl SnippetManagerApp {
                 deleted_at: None,
                 is_deleted: false,
                 tags: vec!["テストデータ".to_string(), "自動生成".to_string()],
+                is_pinned: false,
+                copy_count: 0,
+                saved_time_sec: 0,
             });
         }
         self.save_data();
@@ -1492,6 +1624,34 @@ fn theme_card_frame(is_dark: bool) -> egui::Frame {
         .inner_margin(10.0)
 }
 
+fn theme_card_frame_ext(is_dark: bool, is_pinned: bool) -> egui::Frame {
+    let bg = if is_dark {
+        if is_pinned {
+            egui::Color32::from_rgb(30, 41, 70) // Pinned (slightly blue slate)
+        } else {
+            egui::Color32::from_rgb(30, 41, 59) // Slate 800
+        }
+    } else {
+        if is_pinned {
+            egui::Color32::from_rgb(240, 244, 255) // Pinned (soft Indigo/Blue)
+        } else {
+            egui::Color32::from_rgb(255, 255, 255) // 純白
+        }
+    };
+    let stroke = if is_pinned {
+        egui::Stroke::new(1.5, egui::Color32::from_rgb(99, 102, 241)) // Indigo 500
+    } else if is_dark {
+        egui::Stroke::new(1.0, egui::Color32::from_rgb(51, 65, 85)) // Slate 700
+    } else {
+        egui::Stroke::new(1.0, egui::Color32::from_rgb(226, 232, 240)) // Slate 200
+    };
+    egui::Frame::none()
+        .fill(bg)
+        .stroke(stroke)
+        .rounding(8.0)
+        .inner_margin(10.0)
+}
+
 fn highlight_text(
     text: &str,
     query: &str,
@@ -1566,6 +1726,13 @@ fn highlight_text(
 }
 
 fn main() -> Result<(), eframe::Error> {
+    // 多重起動防止 (Single Instance) のチェック
+    let instance = single_instance::SingleInstance::new("com.snippetflow.app").unwrap();
+    if !instance.is_single() {
+        // すでに起動している場合は静かに終了する
+        return Ok(());
+    }
+
     // 常時最前面 (Always on Top) & タイトルバー非表示 (Decorated: false) & 背景透過 (Transparent: true) 設定
     // 初期ウィンドウサイズを 800x850 に拡大してレイアウトの収まりを改善
     let options = eframe::NativeOptions {
@@ -1610,6 +1777,9 @@ mod tests {
             deleted_at: None,
             is_deleted: false,
             tags: vec![],
+            is_pinned: false,
+            copy_count: 0,
+            saved_time_sec: 0,
         };
 
         let now_str = "2026-07-01 12:00:00".to_string();
@@ -1682,6 +1852,9 @@ mod tests {
                 deleted_at: None,
                 is_deleted: false,
                 tags: vec![],
+                is_pinned: false,
+                copy_count: 0,
+                saved_time_sec: 0,
             },
             Snippet {
                 id: 2,
@@ -1693,6 +1866,9 @@ mod tests {
                 deleted_at: None,
                 is_deleted: false,
                 tags: vec![],
+                is_pinned: false,
+                copy_count: 0,
+                saved_time_sec: 0,
             },
         ];
 

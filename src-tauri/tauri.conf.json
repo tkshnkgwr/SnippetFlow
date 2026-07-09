@@ -43,9 +43,6 @@
       "nsis": {
         "languages": ["Japanese"]
       }
-    },
-    "android": {
-      "debugApplicationIdSuffix": ".debug"
     }
   }
 }

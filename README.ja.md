@@ -105,7 +105,7 @@ npx tauri dev
 # リリースビルドの生成 (インストーラーを生成しない場合)
 npx tauri build --no-bundle
 ```
-ビルドが完了すると、`src-tauri/target/release/app.exe` に実行可能バイナリが生成されます。これを直接実行して起動できます。
+ビルドが完了すると、`src-tauri/target/release/Snippetflow.exe` に実行可能バイナリが生成されます。これを直接実行して起動できます。
 
 
 ---

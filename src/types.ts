@@ -13,11 +13,14 @@ export interface Snippet {
   deletedAt?: string;   // 削除日 (ISO 8601)
   isDeleted: boolean;   // 削除フラグ
   tags: string[];       // タグ
+  isPinned?: boolean;   // ピン留めフラグ
+  copyCount?: number;   // コピー累計回数
+  savedTimeSec?: number; // 累計短縮時間 (秒)
 }
 
 export type ActiveTab = 'list' | 'create' | 'edit' | 'compare' | 'merge' | 'performance';
 
-export type SortCriterion = 'updated_at_desc' | 'updated_at_asc' | 'created_at_desc' | 'title_asc';
+export type SortCriterion = 'updated_at_desc' | 'updated_at_asc' | 'created_at_desc' | 'title_asc' | 'copy_count_desc';
 
 
 export interface PerformanceStats {
