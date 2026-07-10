@@ -151,7 +151,8 @@ impl eframe::App for SnippetManagerApp {
             visuals.widgets.hovered.bg_fill = egui::Color32::from_rgb(241, 245, 249);
             visuals.widgets.active.bg_fill = egui::Color32::from_rgb(226, 232, 240);
             visuals.window_fill = egui::Color32::WHITE;
-            visuals.window_stroke = egui::Stroke::new(1.0_f32, egui::Color32::from_rgb(226, 232, 240));
+            visuals.window_stroke =
+                egui::Stroke::new(1.0_f32, egui::Color32::from_rgb(226, 232, 240));
             visuals
         });
 
