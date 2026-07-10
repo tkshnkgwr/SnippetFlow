@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   ClipboardList,
   Layers,
@@ -21,8 +21,7 @@ import {
   Moon,
   X
 } from 'lucide-react';
-import { Snippet, ActiveTab, SortCriterion } from './types';
-import { DEFAULT_SNIPPETS, generateMockSnippets } from './utils';
+import { useSnippets } from './hooks/useSnippets';
 import packageJson from '../package.json';
 
 // モジュール化されたカスタムコンポーネントをインポート
@@ -32,296 +31,37 @@ import SnippetCompare from './components/SnippetCompare';
 import SnippetMerge from './components/SnippetMerge';
 import StatsPanel from './components/StatsPanel';
 
-interface Toast {
-  id: string;
-  message: string;
-  type: 'success' | 'info' | 'error';
-}
-
 export default function App() {
-  // --- Tauri環境の検出チェック ---
-  const [isTauri, setIsTauri] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
-      setIsTauri(true);
-    }
-  }, []);
-
-  const handleCloseApp = async () => {
-    try {
-      const { getCurrentWebviewWindow } = await import('@tauri-apps/api/webviewWindow');
-      getCurrentWebviewWindow().close();
-    } catch (e) {
-      console.error('Failed to close window via Tauri API:', e);
-    }
-  };
-
-  // --- テーマ（ライト/ダーク）の状態管理 ---
-  // UPDATE 2026-06-30: ユーザーが選択したダークモード状態の永続化と管理を追加
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    try {
-      const saved = localStorage.getItem('theme_dark_mode');
-      return saved === 'true';
-    } catch {
-      return false;
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem('theme_dark_mode', String(isDarkMode));
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDarkMode]);
-
-  // --- データベース（スニペット一覧）の状態管理 ---
-  const [snippets, setSnippets] = useState<Snippet[]>(() => {
-    try {
-      const saved = localStorage.getItem('snippets_db');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
-      }
-    } catch (e) {
-      console.error('Failed to load snippets database from localStorage:', e);
-    }
-    return DEFAULT_SNIPPETS;
-  });
-
-  // スニペットデータベースが更新されたらローカルストレージ（クライアント側）に保存する
-  useEffect(() => {
-    localStorage.setItem('snippets_db', JSON.stringify(snippets));
-  }, [snippets]);
-
-  // --- 画面遷移（ナビゲーション）の状態管理 ---
-  const [activeTab, setActiveTab] = useState<ActiveTab>('list');
-  const [selectedSnippetId, setSelectedSnippetId] = useState<number | undefined>(undefined);
-  const [selectedMergeIds, setSelectedMergeIds] = useState<number[]>([]);
-  const [compareIds, setCompareIds] = useState<{ idA?: number; idB?: number }>({});
-
-  // --- ソラト順の選択状態管理 ---
-  const [sortCriterion, setSortCriterion] = useState<SortCriterion>(() => {
-    try {
-      const saved = localStorage.getItem('snippets_sort_criterion');
-      return (saved as SortCriterion) || 'updated_at_desc';
-    } catch {
-      return 'updated_at_desc';
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem('snippets_sort_criterion', sortCriterion);
-  }, [sortCriterion]);
-
-
-  // --- 性能指標（検索クエリ速度等）の状態管理 ---
-  const [queryTimeMs, setQueryTimeMs] = useState<number>(0);
-
-  // --- トースト通知システム（ポップアップ表示） ---
-  const [toasts, setToasts] = useState<Toast[]>([]);
-
-  const addToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
-    const id = Math.random().toString(36).substr(2, 9);
-    setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 3500);
-  };
-
-  // 次に割り当てるスニペットIDを算出
-  const nextId = snippets.length > 0 ? Math.max(...snippets.map(s => s.id)) + 1 : 1001;
-
-  // --- 安全なクリップボードコピー用ユーティリティ関数 ---
-  const handleCopyText = async (text: string, label: string, id?: number | number[]) => {
-    let success = false;
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(text);
-        success = true;
-      }
-    } catch (err) {
-      console.warn('Modern Clipboard API failed, attempting fallback.', err);
-    }
-
-    if (!success) {
-      // サンドボックス化されたiframe用のフォールバック処理
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.focus();
-      textarea.select();
-      try {
-        success = document.execCommand('copy');
-      } catch (err) {
-        console.error('Fallback clipboard copy failed:', err);
-      }
-      textarea.remove();
-    }
-
-    if (success) {
-      addToast(`「${label.length > 15 ? label.slice(0, 15) + '...' : label}」をクリップボードにコピーしました！`, 'success');
-      
-      // 使用統計データの更新（コピー回数と累計短縮時間）
-      if (id !== undefined) {
-        const ids = Array.isArray(id) ? id : [id];
-        setSnippets(prev =>
-          prev.map(item => {
-            if (ids.includes(item.id)) {
-              const charCount = item.content.length;
-              // 0.3 seconds per character
-              const savedSec = Math.round(charCount * 0.3);
-              return {
-                ...item,
-                copyCount: (item.copyCount || 0) + 1,
-                savedTimeSec: (item.savedTimeSec || 0) + savedSec,
-              };
-            }
-            return item;
-          })
-        );
-      }
-    } else {
-      addToast('コピーに失敗しました。ブラウザのアクセス権限を確認してください。', 'error');
-    }
-  };
-
-  // --- データベース操作（C.R.U.D機能） ---
-
-  // スニペットの新規作成または更新処理
-  const handleSaveSnippet = (formData: Omit<Snippet, 'createdAt' | 'updatedAt' | 'isDeleted'> & { id?: number }) => {
-    const now = new Date().toISOString();
-
-    if (formData.id) {
-      // --- UPDATE MODE ---
-      setSnippets(prev =>
-        prev.map(item => {
-          if (item.id === formData.id) {
-            return {
-              ...item,
-              title: formData.title,
-              content: formData.content,
-              description: formData.description,
-              tags: formData.tags,
-              updatedAt: now,
-            };
-          }
-          return item;
-        })
-      );
-      addToast('定型文を更新しました。', 'success');
-    } else {
-      // --- CREATE MODE ---
-      const newSnippet: Snippet = {
-        id: nextId,
-        title: formData.title,
-        content: formData.content,
-        description: formData.description,
-        tags: formData.tags,
-        createdAt: now,
-        updatedAt: now,
-        isDeleted: false,
-      };
-      setSnippets(prev => [newSnippet, ...prev]);
-      addToast('新規定型文を登録しました。', 'success');
-    }
-
-    setActiveTab('list');
-    setSelectedSnippetId(undefined);
-  };
-
-  // スニペットの論理削除（アーカイブ移動）
-  const handleSoftDeleteSnippet = (id: number) => {
-    setSnippets(prev =>
-      prev.map(item => {
-        if (item.id === id) {
-          return {
-            ...item,
-            isDeleted: true,
-            deletedAt: new Date().toISOString(),
-          };
-        }
-        return item;
-      })
-    );
-    addToast('定型文を削除し、ゴミ箱（過去ログ）に移動しました。', 'info');
-    setActiveTab('list');
-    setSelectedSnippetId(undefined);
-  };
-
-  // 論理削除されたスニペットの復元
-  const handleRestoreSnippet = (id: number) => {
-    setSnippets(prev =>
-      prev.map(item => {
-        if (item.id === id) {
-          const { deletedAt, ...rest } = item;
-          return {
-            ...rest,
-            isDeleted: false,
-            updatedAt: new Date().toISOString(),
-          };
-        }
-        return item;
-      })
-    );
-    addToast('定型文をアーカイブから元通りに復元しました！', 'success');
-    setActiveTab('list');
-    setSelectedSnippetId(undefined);
-  };
-
-  // データベースからの完全物理削除（復元不可）
-  const handleHardDeleteSnippet = (id: number) => {
-    setSnippets(prev => prev.filter(item => item.id !== id));
-    addToast('定型文をデータベースから永久削除しました。', 'error');
-    setActiveTab('list');
-    setSelectedSnippetId(undefined);
-  };
-
-  // ピン留め（お気に入り）状態の切り替え
-  const handleTogglePin = (id: number) => {
-    setSnippets(prev =>
-      prev.map(item => {
-        if (item.id === id) {
-          return {
-            ...item,
-            isPinned: !item.isPinned,
-            updatedAt: new Date().toISOString(),
-          };
-        }
-        return item;
-      })
-    );
-    addToast('定型文のピン留め状態を変更しました。', 'success');
-  };
-
-  // --- PERFORMANCE TESTING ACTIONS ---
-
-  // パフォーマンステスト用の大量のモックデータ生成
-  const handleGenerateMock = (count: number) => {
-    const start = performance.now();
-    const mockData = generateMockSnippets(count);
-    setSnippets(prev => [...prev, ...mockData]);
-    const end = performance.now();
-    addToast(`${count}件の検証用ダミーデータを ${(end - start).toFixed(1)}ms で追加しました！`, 'success');
-  };
-
-  // モックデータの一括削除（デフォルトデータは維持）
-  const handleClearMock = () => {
-    setSnippets(prev => prev.filter(item => item.id < 2000));
-    addToast('検証用ダミーデータを一括削除しました。', 'info');
-    setActiveTab('list');
-  };
-
-  const handleImportJSON = (newData: Snippet[]) => {
-    setSnippets(newData);
-    addToast('JSONデータを正常に読み込み完了。', 'success');
-  };
+  const {
+    isTauri,
+    isDarkMode,
+    setIsDarkMode,
+    snippets,
+    activeTab,
+    setActiveTab,
+    selectedSnippetId,
+    setSelectedSnippetId,
+    selectedMergeIds,
+    setSelectedMergeIds,
+    compareIds,
+    setCompareIds,
+    sortCriterion,
+    setSortCriterion,
+    queryTimeMs,
+    setQueryTimeMs,
+    toasts,
+    nextId,
+    handleCloseApp,
+    handleCopyText,
+    handleSaveSnippet,
+    handleSoftDeleteSnippet,
+    handleRestoreSnippet,
+    handleHardDeleteSnippet,
+    handleTogglePin,
+    handleGenerateMock,
+    handleClearMock,
+    handleImportJSON,
+  } = useSnippets();
 
   return (
     // UPDATE 2026-06-30: isDarkMode変数に応じて .dark クラスをルートに追加。Tailwind v4のダークモード制御を有効化します。

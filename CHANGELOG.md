@@ -13,9 +13,17 @@
 - **各種プログラムソースコードのコメント日本語化**:
   - `src-egui/main.rs`、`src-react/` 配下の TypeScript ファイル等、主要なコード内の英語コメントをすべて日本語に翻訳。
 
+### Optimized
+- **二重起動防止機能の common_lib 移行 (`Cargo.toml`, `src-egui/main.rs`)**:
+  - `single-instance` 外部クレートへの直接依存を排除。
+  - `common_lib` に実装された Win32 API 制御の Named Mutex 二重起動防止関数 (`check_single_instance`) に移行し、依存関係を整理。
+
 ## [1.8.0] - 2026-07-09
 
 ### Added
+- **開発ドキュメントの一括整備およびエージェント指示書の更新 (`docs/DEVELOPING.md`, `docs/RELEASE.md`, `docs/USER_GUIDE.md`, `docs/ARCHITECTURE.md`, `.agents/AGENTS.md`)**:
+  - 開発者ガイド (`DEVELOPING.md`)、リリース手順書 (`RELEASE.md`)、操作マニュアル (`USER_GUIDE.md`)、アーキテクチャ設計書 (`ARCHITECTURE.md`) を新規追加。
+  - 大賢者用のドキュメント自動更新ルール (`AGENTS.md`) に対象ファイルとして上記4点と更新ポリシーを追記。
 - **お気に入り（ピン留め）機能の実装 (`src/types.ts`, `src/App.tsx`, `src/components/SnippetList.tsx`, `src/main.rs`)**:
   - 定型文カードにピン留めボタン（📌）を追加し、ピン留めされた定型文がリストの最上部に固定されるように実装。
   - ピン留めされたスニペットのカード全体の枠線と背景をIndigo調で強調表示するUIデザインをReact版およびRust/egui版の双方に導入。
