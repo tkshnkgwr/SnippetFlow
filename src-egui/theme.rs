@@ -43,9 +43,9 @@ pub fn theme_card_frame(is_dark: bool) -> egui::Frame {
         egui::Color32::from_rgb(255, 255, 255) // 純白
     };
     let stroke = if is_dark {
-        egui::Stroke::new(1.0, egui::Color32::from_rgb(51, 65, 85)) // Slate 700
+        egui::Stroke::new(1.0_f32, egui::Color32::from_rgb(51, 65, 85)) // Slate 700
     } else {
-        egui::Stroke::new(1.0, egui::Color32::from_rgb(226, 232, 240)) // Slate 200
+        egui::Stroke::new(1.0_f32, egui::Color32::from_rgb(226, 232, 240)) // Slate 200
     };
     egui::Frame::none()
         .fill(bg)
@@ -69,11 +69,11 @@ pub fn theme_card_frame_ext(is_dark: bool, is_pinned: bool) -> egui::Frame {
         }
     };
     let stroke = if is_pinned {
-        egui::Stroke::new(1.5, egui::Color32::from_rgb(99, 102, 241)) // Indigo 500
+        egui::Stroke::new(1.5_f32, egui::Color32::from_rgb(99, 102, 241)) // Indigo 500
     } else if is_dark {
-        egui::Stroke::new(1.0, egui::Color32::from_rgb(51, 65, 85)) // Slate 700
+        egui::Stroke::new(1.0_f32, egui::Color32::from_rgb(51, 65, 85)) // Slate 700
     } else {
-        egui::Stroke::new(1.0, egui::Color32::from_rgb(226, 232, 240)) // Slate 200
+        egui::Stroke::new(1.0_f32, egui::Color32::from_rgb(226, 232, 240)) // Slate 200
     };
     egui::Frame::none()
         .fill(bg)
