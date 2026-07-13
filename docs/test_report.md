@@ -30,26 +30,28 @@ test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 Clippy静的解析において、警告およびエラーは検出されませんでした（警告ゼロ）。
 
 ```text
-    Updating common_lib v0.2.0 (C:\Users\632792\Documents\自作\common_lib) -> v0.2.1
-    Checking common_lib v0.2.1 (C:\Users\632792\Documents\自作\common_lib)
-    Checking snippet_manager v1.9.0 (C:\Users\632792\Documents\自作\SnippetFlow)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.70s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.82s
 
     (Tauri版)
-    Checking tao v0.35.3
-    Checking webview2-com v0.38.2
-    Checking tauri-runtime v2.11.3
-    Checking wry v0.55.1
-    Checking tauri-runtime-wry v2.11.4
-    Checking tauri-plugin-single-instance v2.4.2
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2m 02s
+    Checking Snippetflow v1.9.0 (C:\Users\632792\Documents\自作\SnippetFlow\src-tauri)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.69s
 ```
 
 ---
 
-## 4. フロントエンドビルド検証結果 (`npm run build`)
-React/TypeScriptのフォルダ分離（`src-react/`）に伴うViteビルドも、エラーなく完全にパスしたことを確認しました。
+## 4. フロントエンドビルドおよび型チェック検証結果 (`npm run lint` / `npm run build`)
+`tsconfig.json` に `include` と `exclude` を設定したことにより、`npm run lint` (`tsc --noEmit`) が `src-tauri/target/` 以下の自動生成アセットを検査範囲から正しく除外し、型エラーゼロで正常に通過することを確認しました。
+また、React/TypeScript（`src-react/`）のViteビルドも、エラーなく完全にパスしたことを確認しました。
 
+* **型チェック (`npm run lint`)**:
+```text
+> snippetflow@1.9.0 lint
+> tsc --noEmit
+
+(エラー出力なし、正常終了)
+```
+
+* **ビルド (`npm run build`)**:
 ```text
 vite v6.4.3 building for production...
 transforming...
@@ -60,8 +62,8 @@ dist/index.html                          0.41 kB │ gzip:  0.28 kB
 dist/assets/index-DyqWuIVf.css          44.28 kB │ gzip:  8.00 kB
 dist/assets/core-DhEqZVGG.js             2.44 kB │ gzip:  0.98 kB
 dist/assets/webviewWindow-Dn9rmk0h.js   19.06 kB │ gzip:  4.18 kB
-dist/assets/index-Bg0OSy_F.js          291.35 kB │ gzip: 85.22 kB
-✓ built in 9.22s
+dist/assets/index-BHGKOyVL.js          291.35 kB │ gzip: 85.22 kB
+✓ built in 4.27s
 ```
 
 ---

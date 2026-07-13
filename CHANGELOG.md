@@ -22,6 +22,12 @@
 - **GitHub Actions CI設定の最適化 (`.github/workflows/ci.yml`)**:
   - Markdownファイルのみの修正時にはGitHub ActionsのCIビルド（frontend、rust-egui、rust-tauriのジョブ）が起動しないように `paths-ignore` を設定。
 
+### Fixed
+- **TypeScript の検証範囲制限 (`tsconfig.json`)**:
+  - `npm run lint` (`tsc --noEmit`) が `src-tauri/target/` 以下の自動生成されたビルドアセットなどを検査して型エラーを引き起こす問題を修正するため、検査対象を `src-react` 以下に限定し、不要なディレクトリを除外。
+- **プロジェクト全体のバージョン情報の不整合修正 (`package.json`, `src-tauri/Cargo.toml`, `README.md`, `README.ja.md`)**:
+  - ルート `Cargo.toml` の `1.9.0` に合わせ、`package.json` および `src-tauri/Cargo.toml` のバージョン、ならびに `README` 内のバージョンバッジを `1.9.0` に統一。
+
 ## [1.8.0] - 2026-07-09
 
 ### Added
