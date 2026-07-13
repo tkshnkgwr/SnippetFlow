@@ -4,7 +4,7 @@ version = 3
 
 [[package]]
 name = "Snippetflow"
-version = "1.6.0"
+version = "1.8.0"
 dependencies = [
  "common_lib",
  "log",
@@ -608,7 +608,7 @@ dependencies = [
 
 [[package]]
 name = "common_lib"
-version = "0.1.0"
+version = "0.2.1"
 dependencies = [
  "serde",
  "windows 0.62.2",

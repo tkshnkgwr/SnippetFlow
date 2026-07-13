@@ -12,11 +12,15 @@
   - エントリーポイントやビルド定義（`Cargo.toml`, `index.html`, `vite.config.ts`）を新構成に追従。
 - **各種プログラムソースコードのコメント日本語化**:
   - `src-egui/main.rs`、`src-react/` 配下の TypeScript ファイル等、主要なコード内の英語コメントをすべて日本語に翻訳。
+- **Markdownのみの修正におけるドキュメント自動更新の除外ルール定義 (`.agents/AGENTS.md`)**:
+  - プログラムコードの変更がないMarkdownファイルのみの修正のときは、大賢者によるCHANGELOG.mdや各種設計書の自動ドキュメンテーションおよび自動更新処理をスキップする例外ルールを記述。
 
 ### Optimized
 - **二重起動防止機能の common_lib 移行 (`Cargo.toml`, `src-egui/main.rs`)**:
   - `single-instance` 外部クレートへの直接依存を排除。
   - `common_lib` に実装された Win32 API 制御の Named Mutex 二重起動防止関数 (`check_single_instance`) に移行し、依存関係を整理。
+- **GitHub Actions CI設定の最適化 (`.github/workflows/ci.yml`)**:
+  - Markdownファイルのみの修正時にはGitHub ActionsのCIビルド（frontend、rust-egui、rust-tauriのジョブ）が起動しないように `paths-ignore` を設定。
 
 ## [1.8.0] - 2026-07-09
 

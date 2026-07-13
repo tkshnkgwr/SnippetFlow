@@ -5,7 +5,7 @@
 ## 1. 実行環境
 * **OS**: Windows (Local Environment)
 * **Rust Version**: `rustc 1.80.0` (or local stable version)
-* **実行日時**: 2026-07-10
+* **実行日時**: 2026-07-13
 
 ---
 
@@ -30,9 +30,19 @@ test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 Clippy静的解析において、警告およびエラーは検出されませんでした（警告ゼロ）。
 
 ```text
-    Checking common_lib v0.2.0 (C:\Users\632792\Documents\自作\common_lib)
-    Checking snippet_manager v1.8.0 (C:\Users\632792\Documents\自作\SnippetFlow)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.01s
+    Updating common_lib v0.2.0 (C:\Users\632792\Documents\自作\common_lib) -> v0.2.1
+    Checking common_lib v0.2.1 (C:\Users\632792\Documents\自作\common_lib)
+    Checking snippet_manager v1.9.0 (C:\Users\632792\Documents\自作\SnippetFlow)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.70s
+
+    (Tauri版)
+    Checking tao v0.35.3
+    Checking webview2-com v0.38.2
+    Checking tauri-runtime v2.11.3
+    Checking wry v0.55.1
+    Checking tauri-runtime-wry v2.11.4
+    Checking tauri-plugin-single-instance v2.4.2
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2m 02s
 ```
 
 ---
