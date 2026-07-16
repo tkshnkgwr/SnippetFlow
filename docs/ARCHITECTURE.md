@@ -1,80 +1,175 @@
 # システムアーキテクチャ設計書 (ARCHITECTURE.md)
 
-本ドキュメントは、「定型文クリップボード・マネージャー (SnippetFlow)」のシステム構造、ハイブリッド動作環境における設計思想、およびコンポーネント間の境界とデータ永続化設計について定義します。
+本ドキュメントは、「定型文クリップボード・マネージャー (SnippetFlow)」のシステム構造、ハイブリッド動作環境における設計思想、コンポーネント間の境界、およびデータフロー・永続化設計について定義します。
 
 ---
 
-## 1. 全体構造とハイブリッド動作モデル
+## 1. システムの概要と目的
 
-本アプリは、同一のコードベースの中に **Tauri版 (React/TS + Rust)** と **egui版 (純Rust)** という2つのデスクトップ実行環境を内包するハイブリッド構成をとっています。
+### 1.1. 概要
+SnippetFlowは、日常のビジネスメールや定型業務で多用される定型テキスト（挨拶文、日程調整、謝罪文、PRテンプレート等）をローカル環境で安全に蓄積し、必要なときに瞬時に呼び出してクリップボードにコピーできる超軽量デスクトップ・ユーティリティです。
+
+### 1.2. 目的
+- **業務効率化**: 数クリックまたはショートカット操作で定型文を選択・結合・差分比較し、クリップボード経由で任意のアプリケーションに貼り付け可能にする。
+- **データプライバシーの確保**: クラウドサーバーを介さず、すべての定型文データや設定情報をユーザーのローカルディスクにのみ保存する。
+- **低リソース動作の追求**: バックグラウンドでの常時起動を想定し、CPU・メモリ消費を極限まで抑えたネイティブ動作を実現する。
+
+---
+
+## 2. 技術スタック
+
+本プロジェクトは、適材適所で技術を使い分けるためにハイブリッド構成を採用しています。
+
+### 2.1. 共通コア言語
+- **Rust**: 高いパフォーマンス、メモリ安全性、低フットプリントを実現するバックエンドおよび単体デスクトップアプリ用言語。
+- **TypeScript / JavaScript**: フロントエンドUIロジックおよび型安全性の確保。
+
+### 2.2. アプリケーション別フレームワーク＆ライブラリ
+| 分類 | Tauri / Web版 (リッチUI) | egui版 (超軽量ネイティブ) |
+| :--- | :--- | :--- |
+| **GUIフレームワーク** | **Tauri v2** + **Vite 6** + **React 19** | **egui / eframe** (v0.22.0) |
+| **言語・実行環境** | TS (React) / Rust (Tauri Backend) | 純Rust (Windows ネイティブ描画) |
+| **スタイリング** | TailwindCSS v4 / Vanilla CSS | eguiカスタムテーマ (カスタムフレーム) |
+| **クリップボードI/O** | `navigator.clipboard` / 簡易フォールバック | `arboard` (v3.2) |
+| **シリアライズ** | `JSON.stringify` / `parse` | `serde` (v1.0) / `serde_json` (v1.0) |
+| **日付・時刻** | `new Date().toISOString()` | `chrono` (v0.4) |
+| **ダイアログI/O** | `rfd` (v0.12) ※Tauri Rust側で仲介 | `rfd` (v0.12) |
+| **アイコン** | `lucide-react` | プレーンテキスト/Unicode絵文字 |
+
+---
+
+## 3. アーキテクチャ・ディレクトリ構造の意図
+
+プロジェクトは以下のように整理されており、Web技術による生産性とRustによる高性能・低フットプリントという双方の強みを活かせるように設計されています。
 
 ```text
-                  +----------------------------------------------+
-                  |                 SnippetFlow                  |
-                  +-----------------------+----------------------+
-                                          |
-                +-------------------------+-------------------------+
-                |                                                   |
-      [ Tauri版 (React/TS + Rust) ]                           [ egui版 (純Rust) ]
-      ・UI: React 19 / TS / Tailwind v4                       ・UI: egui / eframe (Rust)
-      ・Core: Vite 6 / HTML Webview                           ・Core: ネイティブウィンドウ描画
-      ・Backend: Rust (Tauri Command / API)                   ・I/O: Rust 標準ファイル I/O
-                |                                                   |
-                +-------------------------+-------------------------+
-                                          |
-                                          v
-                              +-----------------------+
-                              |      common_lib       | (ローカル依存Rustクレート)
-                              +-----------------------+
-                              ・最長共通部分列 (LCS) アルゴリズム
-                              ・出現回数カウント等の文字列処理ユーティリティ
+SnippetFlow/
+├── .agents/             # エージェント用指示書（AGENTS.md等）の配置
+├── common_lib/          # 両実行環境で共通して使用するRust共有ライブラリ
+├── docs/                # 仕様書、アーキテクチャ、リリース手順等のドキュメント類
+├── src-egui/            # egui版（純Rust）のソースコード
+├── src-react/           # Tauri版のフロントエンド（React/TypeScript）ソースコード
+└── src-tauri/           # Tauri版のデスクトップアプリバックエンド（Rust）ソースコード
 ```
 
-### 1.1. 両実行環境の特徴と棲み分け
-* **Tauri版 (製品版プロトタイプ & Web統合)**:
-  豊富なWebエコシステム（React, TypeScript, CSS）を活用し、流麗なアニメーションや洗練されたUIコンポーネントを表現します。OSネイティブ操作が必要な箇所（ファイルダイアログ等）のみTauri Commandを介してRustバックエンドへ処理を委譲します。
-* **egui版 (製品版超軽量デスクトップユーティリティ)**:
-  メモリフットプリントとCPU使用率を極限まで抑えたいWindows動作環境向けに最適化された純Rust版です。Webviewエンジン（Chromium/Edge等）を立ち上げないため、バイナリサイズが小さく、アイドル時のCPU消費率はほぼ0.0%〜0.1%で動作します。
+### 3.1. 各ディレクトリの役割と詳細
+- **`src-react/` (Vite / React UI)**:
+  - リッチなUI表現、スムーズなアニメーション、および快適なUXを提供する役割を持ちます。
+  - `components/` にて各画面（一覧、フォーム、マージ、比較、性能診断）をコンポーネント化し、状態管理はカスタムフック `hooks/useSnippets.ts` に集約しています。
+- **`src-tauri/` (Tauri Rust Backend)**:
+  - Webview（React側）から要求されたOS固有の機能（ネイティブファイルダイアログによるインポート/エクスポート等）を安全に実行するブリッジとしての役割を持ちます。
+- **`src-egui/` (純Rust GUI App)**:
+  - Webviewエンジンすら起動させない「極限の低リソース」で動作する実行環境です。
+  - Windows環境での常時最前面・低リソースユーティリティとしての品質を保証するため、即時モード描画（Immediate Mode）のレンダリング頻度を制限し、アイドルCPU使用率 0.0%〜0.1% を達成しています。
+- **`common_lib/` (共通ロジッククレート)**:
+  - フロントエンドと言語を越えて、完全に同一の動作を保証すべき「アルゴリズム」や「スコアリング」を共通Rustコードとして一元管理します。
+  - これにより、二重実装によるバグの混入を防ぎ、テスト容易性を高めています。
 
 ---
 
-## 2. データの永続化と同期設計
+## 4. データフローと主要モジュール間の連携
 
-定型文スニペットデータおよびアプリ設定情報の保存・永続化は、それぞれの環境に合わせて境界を定義しています。
+### 4.1. モジュール構成と依存関係
+アプリケーションは、共有アルゴリズムを格納した `common_lib` をコアとして、以下のように依存し合っています。
 
-| 項目 | Tauri / Web版 | egui (純Rust) 版 |
-|:---|:---|:---|
-| **保存場所** | ブラウザ `localStorage` | ローカルファイル `snippets.json` / `settings.json` |
-| **I/O手段** | JavaScript `JSON.stringify` / `parse` | Rust `serde_json` による直接ファイルシリアライズ |
-| **バックアップ/復元** | Tauri Rustコマンド（`rfd`ダイアログ経由） | 直接 `rfd` ダイアログから指定ファイルをI/O |
+```mermaid
+graph TD
+    subgraph Client Environments
+        A[src-react: React/TS UI]
+        B[src-egui: egui GUI App]
+    end
 
-### 2.1. データモデルの同一性
-双方の環境でデータをインポート・エクスポートして相互に利用できるよう、スニペットのJSONスキーマは完全な互換性を維持しています。
-Rust側の `serde` に `#[serde(default)]` アトリビュートを付与することで、Web（キャメルケース）と Rust（スネークケース）の差異を吸収し、お気に入り（`is_pinned`）や使用統計（`copy_count`）といった新規追加されたフィールドが以前の古いバックアップデータに存在しない場合でも、パースエラーを起こさずデフォルト値（`false`, `0`）で正常補完ロードされます。
+    subgraph Desktop Platforms
+        C[src-tauri: Tauri Rust Backend]
+    end
+
+    subgraph Shared Core
+        D[common_lib: Rust Shared logic]
+    end
+
+    A -- "IPC (Tauri Command)" --> C
+    C -- "Dependency" --> D
+    B -- "Dependency" --> D
+
+    style D fill:#f9f,stroke:#333,stroke-width:2px
+```
+
+### 4.2. Tauri版（React/TS + Rust）のデータフロー
+Tauri版では、通常時の定型文データの保存やテーマ設定の永続化はブラウザの `localStorage` で完結します。
+OSのネイティブ機能（ファイルダイアログ）を用いたバックアップ（エクスポート）および復元（インポート）の処理時のみ、TauriのIPC（Tauri Command）を介してRustバックエンドへ一時的にデータを渡し、Rust側が `rfd` ダイアログを呼んでローカルファイルへ直接書き込み・読み込みを行います。
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant UI as React UI (src-react)
+    participant LocalStorage as Local Storage (Webview)
+    participant Backend as Tauri Backend (src-tauri)
+    participant OS as OS File System (rfd)
+
+    Note over UI, LocalStorage: 通常動作時（データの保存・参照）
+    UI->>LocalStorage: JSON.stringify(snippets) を書き込み
+    LocalStorage-->>UI: snippets.json データをロード
+
+    Note over UI, OS: バックアップ（エクスポート）実行時
+    UI->>Backend: export_snippets_json(json_str) 呼び出し
+    Backend->>OS: RFD セーブダイアログを開く
+    OS-->>Backend: ファイルパスの決定
+    Backend->>OS: std::fs::write(path, json_str)
+    Backend-->>UI: 処理結果 (Success / Cancelled)
+
+    Note over UI, OS: 復元（インポート）実行時
+    UI->>Backend: import_snippets_json() 呼び出し
+    Backend->>OS: RFD オープンダイアログを開く
+    OS-->>Backend: 選択されたファイルパス
+    Backend->>OS: std::fs::read_to_string(path)
+    Backend-->>UI: 読み込んだ JSON データを返却
+    UI->>LocalStorage: 新しいデータを localStorage に上書き保存
+```
+
+### 4.3. egui版（純Rust）のデータフロー
+egui版では、すべての処理がRustのネイティブスレッド内で動作します。
+起動時にローカルのカレントディレクトリから `snippets.json` および `settings.json` をロードします。もしファイルが存在しない場合は、組み込まれた初期テンプレートデータを自動生成してファイル保存します。
+データのインポートおよびエクスポートも、UIイベントをトリガーにRust内の `rfd` クレートを呼び出して直接ファイルをI/Oします。
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant UI as egui App (src-egui)
+    participant Storage as storage.rs / settings.rs
+    participant File as Local Config Files (snippets/settings.json)
+    participant OS as OS File System (rfd)
+
+    Note over UI, File: アプリ起動時
+    UI->>Storage: load_data() / AppSettings::load() 呼び出し
+    Storage->>File: 存在チェックと読み込み
+    alt 設定ファイルが存在しない場合
+        Storage->>File: デフォルトテンプレート/設定の書き込み
+    end
+    File-->>Storage: JSONデータを読み込みデシリアライズ
+    Storage-->>UI: アプリケーション状態の構築
+
+    Note over UI, File: 定型文の編集・保存・コピー統計加算時
+    UI->>Storage: save_data() / settings.save()
+    Storage->>File: std::fs::write() (同期書き込み)
+
+    Note over UI, OS: バックアップ / 復元実行時 (性能メーター画面)
+    UI->>OS: RFD ダイアログの呼び出し
+    OS-->>UI: ファイルパスの決定
+    UI->>OS: 直接ファイル I/O を実行 (std::fs)
+    UI->>File: snippets.json に書き込み / 読み込んで状態更新
+```
 
 ---
 
-## 3. 共有ロジッククレート (`common_lib`) の役割
+## 5. 共有ロジック（`common_lib`）のアルゴリズム詳細
 
-本プロジェクトと隣接する `common_lib` 共有ライブラリは、言語間の重複コードを排除し、テストの正確性を一元化するために機能分割されています。
+### 5.1. LCS (最長共通部分列) 差分計算
+`common_lib` は差分比較機能の核となる LCS アルゴリズムを含んでいます。テキストAとテキストBを文字単位・行単位で比較し、同一の最長部分シーケンスを決定します。
+動的計画法（DP）テーブルを構築し、そこからバックトラックを行うことで、追加されたテキスト（Green）と削除されたテキスト（Red）を最小限の差分として検出し、UI側に返します。
 
-* **LCS (最長共通部分列) 差分計算**:
-  定型文を2件選択した際に差分表示する機能のコアロジックです。動的プログラミングを用いて比較元と変更後のテキスト間の追加・削除・変更箇所を計算します。
-* **文字列出現頻度ユーティリティ**:
-  インテリジェントタグ提案で入力中テキストからおすすめタグをスコアリング計算する際、キーワードの出現回数を検出・カウントするために使用されます。
-
----
-
-## 4. 付加機能（お気に入り・使用統計・多重起動防止）の設計
-
-### 4.1. 使用統計 (アナリティクス)
-* **短縮時間算出ロジック**: 
-  タイピングにおける標準打鍵速度から算出した係数を用い、**「1文字 = 0.3秒」**の短縮と仮定します。
-  * `saved_time_sec = copied_content.chars().count() * 0.3`
-* **インクリメントタイミング**: 
-  カードリストからのコピーだけでなく、複数結合（マージ）コピーの実行時にも、選択された各スニペットに対して一括してコピー数と短縮時間を加算し、永続化します。
-
-### 4.2. 多重起動防止 (Single Instance)
-常時起動のクリップボードマネージャーという性質上、多重にプロセスが起動されるのを防止しています。
-* **Tauri版**: プラグイン `tauri-plugin-single-instance` を使用し、2つ目のインスタンスが起動された際、既存のメインウィンドウにフォーカスを移して自プロセスは静かに終了します。
-* **egui版**: `single-instance` クレートのミューテックス機構を用いて、起動時に他インスタンスの存在を検知し、即座に起動を制限します。
+### 5.2. インテリジェント・タグ提案
+定型文の新規追加や編集の際、入力中の「タイトル」「本文」「説明」に含まれる単語を形態素レベルに分類し（※軽量化のため単語の出現頻度カウントをベースとした処理）、既存のデータベースにある全タグとの関連度を算出します。
+- **算出式**:
+  各既存タグについて、入力中テキスト内に該当タグそのもの、または関連キーワードが含まれる回数を算出。
+  $$Score = (TitleMatches \times 2) + ContentMatches + DescriptionMatches$$
+  このスコアが一定値以上のタグのうち、まだ付与されていないものを最大5つ提案します。

@@ -7,6 +7,11 @@
 ## [Unreleased]
 
 ### Added
+- **開発ドキュメントおよびエージェント向け指示書の整備・リファクタリング (`docs/ARCHITECTURE.md`, `docs/INSTRUCTIONS.md`, `docs/TODO.md`, `.agents/AGENTS.md`)**:
+  - システムアーキテクチャ設計書 (`docs/ARCHITECTURE.md`) を見直し、データフロー解説を Mermaid ダイアグラムで強化。
+  - プロジェクト全体の命名規則、エラーハンドリング方針、コンポーネント分割基準、AI用出力フォーマットを明文化した開発用指示書 (`docs/INSTRUCTIONS.md`) を新規作成。
+  - 実装済み機能、直近のタスク、拡張提案のバックログを一元管理するタスク管理ドキュメント (`docs/TODO.md`) を新規作成。
+  - エージェント用指示書 (`.agents/AGENTS.md`) に新規ドキュメント（`INSTRUCTIONS.md`, `TODO.md`）の更新ポリシーを追記し、自動ドキュメンテーションのルールをアップデート。
 - **ソースコードフォルダの完全分離 (`src-egui/`, `src-react/`)**:
   - 混在していた `src/` ディレクトリを解体し、egui版（Rust）を `src-egui/`、React版（TypeScript/CSS）を `src-react/` にそれぞれ分離配置。
   - エントリーポイントやビルド定義（`Cargo.toml`, `index.html`, `vite.config.ts`）を新構成に追従。

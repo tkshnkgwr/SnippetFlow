@@ -42,7 +42,7 @@
 - [機能仕様書 (SPEC.md)](docs/SPEC.md)
 - [システム構成・設計図面 (DIAGRAM.md)](docs/DIAGRAM.md)
 - [リソース測定記録 (FOOTPRINTS.md)](docs/FOOTPRINTS.md)
-- [品質検証・テストレポート (test_report.md)](docs/test_report.md)
+- [品質検証・テストレポート (TEST_REPORT.md)](docs/TEST_REPORT.md)
 
 ---
 

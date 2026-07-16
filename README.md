@@ -42,7 +42,7 @@ For detailed functional specifications and Mermaid diagrams, please refer to the
 - [Functional Specifications (SPEC.md)](docs/SPEC.md)
 - [Architecture & Sequence Diagrams (DIAGRAM.md)](docs/DIAGRAM.md)
 - [Resource Footprints & Performance (FOOTPRINTS.md)](docs/FOOTPRINTS.md)
-- [Quality Verification & Test Report (test_report.md)](docs/test_report.md)
+- [Quality Verification & Test Report (TEST_REPORT.md)](docs/TEST_REPORT.md)
 
 ---
 
