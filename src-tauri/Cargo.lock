@@ -6,6 +6,7 @@ version = 3
 name = "Snippetflow"
 version = "1.9.0"
 dependencies = [
+ "chrono",
  "common_lib",
  "log",
  "rfd",
@@ -591,8 +592,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1aa79e62e7697b8e29b513a68abacf485adcd1fe8284a4316c5ae868e6633327"
 dependencies = [
  "iana-time-zone",
+ "js-sys",
  "num-traits",
  "serde",
+ "wasm-bindgen",
  "windows-link 0.2.1",
 ]
 
@@ -608,7 +611,7 @@ dependencies = [
 
 [[package]]
 name = "common_lib"
-version = "0.2.1"
+version = "0.2.4"
 dependencies = [
  "serde",
  "windows 0.62.2",

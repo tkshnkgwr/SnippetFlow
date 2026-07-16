@@ -95,20 +95,26 @@ graph TD
 ```
 
 ### 4.2. Tauri版（React/TS + Rust）のデータフロー
-Tauri版では、通常時の定型文データの保存やテーマ設定の永続化はブラウザの `localStorage` で完結します。
-OSのネイティブ機能（ファイルダイアログ）を用いたバックアップ（エクスポート）および復元（インポート）の処理時のみ、TauriのIPC（Tauri Command）を介してRustバックエンドへ一時的にデータを渡し、Rust側が `rfd` ダイアログを呼んでローカルファイルへ直接書き込み・読み込みを行います。
+Tauri版では、起動時にTauriのIPC（Tauri Command）を介してRustバックエンドの `load_snippets` コマンドを呼び出し、カレントディレクトリの `snippets.json` からデータをロードします。
+データの保存時も同様に `save_snippets` コマンドを通じて、Rust側がローカルの `snippets.json` へ書き込みを行います。これにより、egui版と全く同一のデータファイルをリアルタイムに共有・同期します。
+なお、テーマ設定の永続化については現在もブラウザの `localStorage` で完結しています（将来的に `settings.json` へ一元化予定）。
 
 ```mermaid
 sequenceDiagram
     autonumber
     participant UI as React UI (src-react)
-    participant LocalStorage as Local Storage (Webview)
     participant Backend as Tauri Backend (src-tauri)
+    participant File as Local File (snippets.json)
     participant OS as OS File System (rfd)
 
-    Note over UI, LocalStorage: 通常動作時（データの保存・参照）
-    UI->>LocalStorage: JSON.stringify(snippets) を書き込み
-    LocalStorage-->>UI: snippets.json データをロード
+    Note over UI, File: 通常動作時（データのロード・保存）
+    UI->>Backend: load_snippets() 呼び出し
+    Backend->>File: snippets.json をロード
+    File-->>Backend: 保存データ (snake_case)
+    Backend-->>UI: camelCase 変換した snippets データを返却
+    
+    UI->>Backend: save_snippets(snippets) 呼び出し
+    Backend->>File: snake_case 変換した snippets データを書き込み
 
     Note over UI, OS: バックアップ（エクスポート）実行時
     UI->>Backend: export_snippets_json(json_str) 呼び出し
@@ -123,7 +129,7 @@ sequenceDiagram
     OS-->>Backend: 選択されたファイルパス
     Backend->>OS: std::fs::read_to_string(path)
     Backend-->>UI: 読み込んだ JSON データを返却
-    UI->>LocalStorage: 新しいデータを localStorage に上書き保存
+    UI->>Backend: save_snippets(snippets) を呼び出して snippets.json を更新
 ```
 
 ### 4.3. egui版（純Rust）のデータフロー

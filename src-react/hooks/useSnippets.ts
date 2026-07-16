@@ -9,7 +9,8 @@ interface Toast {
 }
 
 export function useSnippets() {
-  const [isTauri, setIsTauri] = useState(false);
+  const [isTauri] = useState(() => typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     try {
       const saved = localStorage.getItem('theme_dark_mode');
@@ -20,12 +21,6 @@ export function useSnippets() {
   });
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
-      setIsTauri(true);
-    }
-  }, []);
-
-  useEffect(() => {
     localStorage.setItem('theme_dark_mode', String(isDarkMode));
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -34,24 +29,64 @@ export function useSnippets() {
     }
   }, [isDarkMode]);
 
-  const [snippets, setSnippets] = useState<Snippet[]>(() => {
-    try {
-      const saved = localStorage.getItem('snippets_db');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
-      }
-    } catch (e) {
-      console.error('Failed to load snippets database from localStorage:', e);
-    }
-    return DEFAULT_SNIPPETS;
-  });
+  const [snippets, setSnippets] = useState<Snippet[]>(DEFAULT_SNIPPETS);
 
+  // 起動時のJSONロード処理
   useEffect(() => {
-    localStorage.setItem('snippets_db', JSON.stringify(snippets));
-  }, [snippets]);
+    const loadInitialData = async () => {
+      if (isTauri) {
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          const data = await invoke<Snippet[]>('load_snippets');
+          if (Array.isArray(data)) {
+            setSnippets(data);
+          }
+        } catch (e) {
+          console.error('Failed to load snippets from Rust backend:', e);
+          addToast('バックエンドからのデータロードに失敗しました。', 'error');
+        }
+      } else {
+        try {
+          const saved = localStorage.getItem('snippets_db');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setSnippets(parsed);
+              setIsLoaded(true);
+              return;
+            }
+          }
+        } catch (e) {
+          console.error('Failed to load snippets database from localStorage:', e);
+        }
+        setSnippets(DEFAULT_SNIPPETS);
+      }
+      setIsLoaded(true);
+    };
+
+    loadInitialData();
+  }, [isTauri]);
+
+  // JSON保存処理
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const saveData = async () => {
+      if (isTauri) {
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          await invoke('save_snippets', { snippets });
+        } catch (e) {
+          console.error('Failed to save snippets to Rust backend:', e);
+          addToast('バックエンドへのデータ保存に失敗しました。', 'error');
+        }
+      } else {
+        localStorage.setItem('snippets_db', JSON.stringify(snippets));
+      }
+    };
+
+    saveData();
+  }, [snippets, isLoaded, isTauri]);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('list');
   const [selectedSnippetId, setSelectedSnippetId] = useState<number | undefined>(undefined);

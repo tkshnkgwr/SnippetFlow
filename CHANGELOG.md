@@ -7,6 +7,10 @@
 ## [Unreleased]
 
 ### Added
+- **Tauriバックエンドへのデータ保存の完全移行 (`src-tauri/Cargo.toml`, `src-tauri/src/lib.rs`, `src-react/hooks/useSnippets.ts`)**:
+  - Tauri起動時に Rust バックエンドを介してカレントディレクトリの `snippets.json` からデータをロードし、保存時も Rust 側でファイル書き込みを行う設計へアップグレード。
+  - バックエンドでのデータ保存形式（`snake_case`）とフロントエンドでのオブジェクト仕様（`camelCase`）の間の差異を吸収するため、Rust側に `DbSnippet` と `TauriSnippet` を定義し、相互変換を実装。
+  - `useSnippets.ts` にて、非同期でのデータロード完了前に空データやデフォルトデータで `snippets.json` を上書き保存してしまう競合を防ぐための `isLoaded` ステート制御を追加。
 - **開発ドキュメントおよびエージェント向け指示書の整備・リファクタリング (`docs/ARCHITECTURE.md`, `docs/INSTRUCTIONS.md`, `docs/TODO.md`, `.agents/AGENTS.md`)**:
   - システムアーキテクチャ設計書 (`docs/ARCHITECTURE.md`) を見直し、データフロー解説を Mermaid ダイアグラムで強化。
   - プロジェクト全体の命名規則、エラーハンドリング方針、コンポーネント分割基準、AI用出力フォーマットを明文化した開発用指示書 (`docs/INSTRUCTIONS.md`) を新規作成。
