@@ -28,6 +28,7 @@
 * **Serialization**: `serde` (v1.0), `serde_json` (v1.0)
 * **DateTime**: `chrono` (v0.4)
 * **Native Dialogs**: `rfd` (v0.12) - OS標準のファイルダイアログ呼び出し用
+* **Cargo Features**: `windows_desktop` (Win32 API/Single Instance 等の Windows 固有機能連携用。`common_lib` の機能フラグと連動)
 
 ---
 

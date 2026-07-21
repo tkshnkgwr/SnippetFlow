@@ -4,37 +4,41 @@
 
 ## 1. 実行環境
 * **OS**: Windows (Local Environment)
-* **Rust Version**: `rustc 1.80.0` (or local stable version)
-* **実行日時**: 2026-07-13
+* **Rust Version**: `rustc 1.80+` (local stable version)
+* **実行日時**: 2026-07-21
 
 ---
 
 ## 2. ユニットテスト実行結果 (`cargo test`)
-スニペットデータのシリアライズ互換性確認、論理削除、検索タグ提案、ソート機能のユニットテストがすべて無事に合格しました（ソースフォルダ分離後の `src-egui/main.rs` にて検証）。
+egui版（ルート）および Tauri版（`src-tauri`）のユニットテストがすべて問題なくパスしました。
 
+* **egui版 (ルート)**:
 ```text
 running 6 tests
 test tests::test_highlight_text ... ok
-test tests::test_sorting_snippets ... ok
 test tests::test_logical_deletion ... ok
+test tests::test_sorting_snippets ... ok
 test tests::test_settings_persistence ... ok
 test tests::test_snippet_default_data ... ok
 test tests::test_get_suggested_tags ... ok
 
-test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+```
+
+* **Tauri版 (`src-tauri`)**:
+```text
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 ```
 
 ---
 
 ## 3. 静的解析実行結果 (`cargo clippy`)
-Clippy静的解析において、警告およびエラーは検出されませんでした（警告ゼロ）。
+ルートおよび `src-tauri` での Clippy 静的解析において、警告およびエラーは検出されませんでした（`windows_desktop` フィーチャー指定時・`--no-default-features` 指定時の両方で警告ゼロ）。
 
 ```text
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.82s
-
-    (Tauri版)
-    Checking Snippetflow v1.9.0 (C:\Users\632792\Documents\自作\SnippetFlow\src-tauri)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.69s
+    Checking common_lib v0.2.4 (C:\Users\632792\Documents\自作\common_lib)
+    Checking snippet_manager v1.9.0 (C:\Users\632792\Documents\自作\SnippetFlow)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.00s
 ```
 
 ---

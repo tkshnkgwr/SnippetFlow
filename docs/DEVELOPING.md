@@ -70,7 +70,17 @@ cargo run
 バイナリサイズおよび実行速度の最適化（LTO、パニック巻き戻し除外、strip設定）を適用したリリースバイナリを構築します。
 ```bash
 cargo build --release
-# 出力バイナリ: target/release/Snippetflow.exe
+# 出力バイナリ: target/release/snippet_manager.exe
+```
+
+#### 3. Cargo Features の指定
+本プロジェクトでは `windows_desktop` フィーチャーがデフォルトで有効になっています。必要に応じてフィーチャーフラグを指定してビルド・検証が可能です。
+```bash
+# デフォルト (windows_desktop 有効)
+cargo build
+
+# デフォルト機能なしでのチェック
+cargo check --no-default-features
 ```
 
 ---

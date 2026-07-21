@@ -20,6 +20,10 @@ rfd = "0.12"
 # 2026-07-03: 共有ライブラリの参照追加
 common_lib = { path = "../common_lib" }
 
+[features]
+default = ["windows_desktop"]
+windows_desktop = ["common_lib/windows_desktop"]
+
 [profile.release]
 opt-level = "z"      # サイズ最優先の最適化
 lto = true           # Link-Time Optimization の有効化

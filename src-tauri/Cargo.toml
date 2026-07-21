@@ -29,6 +29,10 @@ chrono = { version = "0.4", features = ["serde"] }
 common_lib = { path = "../../common_lib" }
 tauri-plugin-single-instance = "2.0.1"
 
+[features]
+default = ["windows_desktop"]
+windows_desktop = ["common_lib/windows_desktop"]
+
 [profile.release]
 opt-level = "z"      # サイズ最優先の最適化
 lto = true           # Link-Time Optimization の有効化

@@ -6,6 +6,13 @@
 
 ## [Unreleased]
 
+## [2026-07-21]
+
+### Added
+- **Cargo Features によるプラットフォーム依存機能の分離 (`Cargo.toml`, `src-tauri/Cargo.toml`)**:
+  - ルート `Cargo.toml` および `src-tauri/Cargo.toml` に `[features]` セクションを追加。
+  - `windows_desktop` フィーチャーを定義し、共有ライブラリ `common_lib` の `windows_desktop` フィーチャーと連動させることで、プラットフォーム固有の機能切り替えおよびカスタマイズビルドを可能に向上。
+
 ### Added
 - **Tauriバックエンドへのデータ保存の完全移行 (`src-tauri/Cargo.toml`, `src-tauri/src/lib.rs`, `src-react/hooks/useSnippets.ts`)**:
   - Tauri起動時に Rust バックエンドを介してカレントディレクトリの `snippets.json` からデータをロードし、保存時も Rust 側でファイル書き込みを行う設計へアップグレード。

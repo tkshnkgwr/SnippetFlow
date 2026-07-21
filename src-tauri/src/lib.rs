@@ -83,7 +83,8 @@ const STORAGE_FILE: &str = "snippets.json";
 fn load_snippets() -> Result<Vec<TauriSnippet>, String> {
     if let Ok(file_content) = fs::read_to_string(STORAGE_FILE) {
         if let Ok(db_snippets) = serde_json::from_str::<Vec<DbSnippet>>(&file_content) {
-            let tauri_snippets: Vec<TauriSnippet> = db_snippets.into_iter().map(TauriSnippet::from).collect();
+            let tauri_snippets: Vec<TauriSnippet> =
+                db_snippets.into_iter().map(TauriSnippet::from).collect();
             return Ok(tauri_snippets);
         }
     }
