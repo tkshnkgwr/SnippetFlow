@@ -97,8 +97,8 @@ graph TD
 ```
 
 ### 4.2. Tauri Version (React/TS + Rust) Data Flow
-In the Tauri version, the `load_snippets` command of the Rust backend is invoked via Tauri's IPC (Tauri Command) at startup to load data from `snippets.json` in the current directory.
-Similarly, when saving data, the Rust backend writes to the local `snippets.json` through the `save_snippets` command. This shares and synchronizes the exact same data file with the egui version in real time.
+In the Tauri version, the `load_snippets` command of the Rust backend is invoked via Tauri's IPC (Tauri Command) at startup to load data from `%APPDATA%\com.snippetflow.app\snippets.json` (resolved via `app_data_dir()`).
+Similarly, when saving data, the Rust backend writes to that fixed path through the `save_snippets` command. This path remains stable across version upgrades and reinstalls, preventing data loss.
 Persistence of theme settings is currently completed within the browser's `localStorage` (planned to be centralized in `settings.json` in the future).
 
 ```mermaid
@@ -106,7 +106,7 @@ sequenceDiagram
     autonumber
     participant UI as React UI (src-react)
     participant Backend as Tauri Backend (src-tauri)
-    participant File as Local File (snippets.json)
+    participant File as AppData File (%APPDATA%\com.snippetflow.app\snippets.json)
     participant OS as OS File System (rfd)
 
     Note over UI, File: During normal operation (load / save data)
@@ -131,7 +131,7 @@ sequenceDiagram
     OS-->>Backend: Selected file path
     Backend->>OS: std::fs::read_to_string(path)
     Backend-->>UI: Return read JSON data
-    UI->>Backend: Call save_snippets(snippets) to update snippets.json
+    UI->>Backend: Call save_snippets(snippets) to update AppData snippets.json
 ```
 
 ### 4.3. egui Version (Pure Rust) Data Flow

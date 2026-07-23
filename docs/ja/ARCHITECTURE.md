@@ -97,8 +97,8 @@ graph TD
 ```
 
 ### 4.2. Tauri版（React/TS + Rust）のデータフロー
-Tauri版では、起動時にTauriのIPC（Tauri Command）を介してRustバックエンドの `load_snippets` コマンドを呼び出し、カレントディレクトリの `snippets.json` からデータをロードします。
-データの保存時も同様に `save_snippets` コマンドを通じて、Rust側がローカルの `snippets.json` へ書き込みを行います。これにより、egui版と全く同一のデータファイルをリアルタイムに共有・同期します。
+Tauri版では、起動時にTauriのIPC（Tauri Command）を介してRustバックエンドの `load_snippets` コマンドを呼び出し、`app_data_dir()` で解決した `%APPDATA%\com.snippetflow.app\snippets.json` からデータをロードします。
+データの保存時も同様に `save_snippets` コマンドを通じて、Rust側がその固定パスへ書き込みを行います。このパスはバージョンアップや再インストール後も変わらないため、データ消失が発生しません。
 なお、テーマ設定の永続化については現在もブラウザの `localStorage` で完結しています（将来的に `settings.json` へ一元化予定）。
 
 ```mermaid
@@ -106,7 +106,7 @@ sequenceDiagram
     autonumber
     participant UI as React UI (src-react)
     participant Backend as Tauri Backend (src-tauri)
-    participant File as Local File (snippets.json)
+    participant File as AppData File (%APPDATA%\com.snippetflow.app\snippets.json)
     participant OS as OS File System (rfd)
 
     Note over UI, File: 通常動作時（データのロード・保存）
@@ -131,7 +131,7 @@ sequenceDiagram
     OS-->>Backend: 選択されたファイルパス
     Backend->>OS: std::fs::read_to_string(path)
     Backend-->>UI: 読み込んだ JSON データを返却
-    UI->>Backend: save_snippets(snippets) を呼び出して snippets.json を更新
+    UI->>Backend: save_snippets(snippets) を呼び出して AppData の snippets.json を更新
 ```
 
 ### 4.3. egui版（純Rust）のデータフロー

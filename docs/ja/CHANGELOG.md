@@ -8,6 +8,26 @@
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-07-23
+
+### Added
+- **スニペットの暗号化保存 (`common_lib/src/crypto.rs`, `src-tauri`, `src-egui`)**:
+  - 暗号化・復号モジュール `common_lib::crypto` を新設し、`ENC1:` ヘッダーによるデータの安全な暗号化/復号をサポート。平文 JSON データとの自動判別により完全な上位互換性を維持。
+- **まとめて削除（一括削除・復元・完全削除）機能 (`src-react`)**:
+  - 定型文一覧画面において複数スニペットの選択および「まとめて削除（ゴミ箱移動）」「まとめて復元」「一括完全削除（物理削除）」を実行できるフローティングアクションツールバーを追加。
+- **共通ロジックのユニットテスト大規模拡充 (`common_lib/src/text.rs`)**:
+  - `compute_diff`（LCS差分計算）、`suggest_tags`（インテリジェントタグ提案）、`count_occurrences`、`format_bytes` に対する境界値・異常系（空文字、マルチバイト、超長文等）ユニットテストを追加。
+
+### Optimized
+- **データストレージのエラーハンドリング強化とアトミック書き込み (`src-tauri/src/lib.rs`, `src-egui/storage.rs`)**:
+  - `snippets.json` 破損時に既存データを破壊せず `.bak` ファイルへ安全保護コピーを行った上で初期状態へ安全復旧する安全機構を導入。
+  - 保存時に一時ファイル (`snippets.json.tmp`) を経由するアトミック置換書き込みを導入し、ファイル保存途中のアプリ強制終了やクラッシュによる破損を防止。
+- **バージョンアップ後のスニペットデータ消失問題の修正 (`src-tauri/src/lib.rs`)**:
+  - スニペットの保存先を相対パス（`snippets.json`）から、`app.path().app_data_dir()` で取得するOS標準のアプリデータディレクトリへ変更。
+  - データの保存先が `%APPDATA%\com.snippetflow.app\snippets.json` に固定され、バージョンアップや再インストール後もデータが消えなくなった。
+  - データディレクトリが存在しない場合に自動作成するヘルパー関数 `get_storage_path()` を追加。
+  - `load_snippets`・`save_snippets` コマンドに `tauri::AppHandle` 引数を追加し、実行時に正しいパスを動的解決するよう変更。
+
 ## [2026-07-21]
 
 ### Added

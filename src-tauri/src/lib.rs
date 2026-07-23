@@ -1,4 +1,5 @@
 use std::fs;
+use std::path::PathBuf;
 use tauri::Manager;
 
 use serde::{Deserialize, Serialize};
@@ -77,16 +78,49 @@ impl From<TauriSnippet> for DbSnippet {
     }
 }
 
-const STORAGE_FILE: &str = "snippets.json";
+/// 一時ファイルを経由したアトミック保存処理。書き込み途中の破損を防止します。
+fn atomic_write<P: AsRef<std::path::Path>>(path: P, content: &str) -> Result<(), String> {
+    let path = path.as_ref();
+    let tmp_path = path.with_extension("json.tmp");
+    fs::write(&tmp_path, content).map_err(|e| format!("一時保存に失敗: {e}"))?;
+    fs::rename(&tmp_path, path).map_err(|e| format!("ファイル置換に失敗: {e}"))?;
+    Ok(())
+}
+
+/// アプリデータディレクトリ内の snippets.json へのパスを返す。
+/// ディレクトリが存在しない場合は自動的に作成する。
+fn get_storage_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("app_data_dir の取得に失敗: {e}"))?;
+    fs::create_dir_all(&data_dir).map_err(|e| format!("データディレクトリの作成に失敗: {e}"))?;
+    Ok(data_dir.join("snippets.json"))
+}
 
 #[tauri::command]
-fn load_snippets() -> Result<Vec<TauriSnippet>, String> {
-    if let Ok(file_content) = fs::read_to_string(STORAGE_FILE) {
-        if let Ok(db_snippets) = serde_json::from_str::<Vec<DbSnippet>>(&file_content) {
-            let tauri_snippets: Vec<TauriSnippet> =
-                db_snippets.into_iter().map(TauriSnippet::from).collect();
-            return Ok(tauri_snippets);
+fn load_snippets(app: tauri::AppHandle) -> Result<Vec<TauriSnippet>, String> {
+    let path = get_storage_path(&app)?;
+
+    if let Ok(file_content) = fs::read_to_string(&path) {
+        let json_content = if common_lib::crypto::is_encrypted(&file_content) {
+            common_lib::crypto::decrypt_data(&file_content, common_lib::crypto::DEFAULT_SECRET_KEY)
+                .ok()
+        } else {
+            Some(file_content.clone())
+        };
+
+        if let Some(valid_json) = json_content {
+            if let Ok(db_snippets) = serde_json::from_str::<Vec<DbSnippet>>(&valid_json) {
+                let tauri_snippets: Vec<TauriSnippet> =
+                    db_snippets.into_iter().map(TauriSnippet::from).collect();
+                return Ok(tauri_snippets);
+            }
         }
+
+        // ファイル破損時：安全のため既存ファイルを .bak にバックアップ保存
+        let bak_path = path.with_extension("json.bak");
+        let _ = fs::copy(&path, &bak_path);
     }
 
     // ファイルが存在しない、またはパースエラーの場合、初期のデフォルトデータを生成して保存
@@ -123,7 +157,7 @@ fn load_snippets() -> Result<Vec<TauriSnippet>, String> {
     ];
 
     if let Ok(json) = serde_json::to_string_pretty(&samples) {
-        let _ = fs::write(STORAGE_FILE, json);
+        let _ = atomic_write(&path, &json);
     }
 
     let tauri_snippets = samples.into_iter().map(TauriSnippet::from).collect();
@@ -131,11 +165,32 @@ fn load_snippets() -> Result<Vec<TauriSnippet>, String> {
 }
 
 #[tauri::command]
-fn save_snippets(snippets: Vec<TauriSnippet>) -> Result<(), String> {
+fn save_snippets(
+    app: tauri::AppHandle,
+    snippets: Vec<TauriSnippet>,
+    encrypt: Option<bool>,
+) -> Result<(), String> {
+    let path = get_storage_path(&app)?;
     let db_snippets: Vec<DbSnippet> = snippets.into_iter().map(DbSnippet::from).collect();
     let json = serde_json::to_string_pretty(&db_snippets).map_err(|e| e.to_string())?;
-    fs::write(STORAGE_FILE, json).map_err(|e| e.to_string())?;
-    Ok(())
+
+    let content_to_save = if encrypt.unwrap_or(false) {
+        common_lib::crypto::encrypt_data(&json, common_lib::crypto::DEFAULT_SECRET_KEY)
+    } else {
+        json
+    };
+
+    atomic_write(&path, &content_to_save)
+}
+
+#[tauri::command]
+fn is_storage_encrypted(app: tauri::AppHandle) -> Result<bool, String> {
+    let path = get_storage_path(&app)?;
+    if let Ok(content) = fs::read_to_string(&path) {
+        Ok(common_lib::crypto::is_encrypted(&content))
+    } else {
+        Ok(false)
+    }
 }
 
 #[tauri::command]
@@ -144,7 +199,7 @@ fn export_snippets_json(json_str: String) -> Result<(), String> {
         .add_filter("json", &["json"])
         .save_file()
     {
-        fs::write(path, json_str).map_err(|e| e.to_string())?;
+        atomic_write(path, &json_str)?;
         Ok(())
     } else {
         Err("Cancelled".to_string())
@@ -158,7 +213,11 @@ fn import_snippets_json() -> Result<String, String> {
         .pick_file()
     {
         let content = fs::read_to_string(path).map_err(|e| e.to_string())?;
-        Ok(content)
+        if common_lib::crypto::is_encrypted(&content) {
+            common_lib::crypto::decrypt_data(&content, common_lib::crypto::DEFAULT_SECRET_KEY)
+        } else {
+            Ok(content)
+        }
     } else {
         Err("Cancelled".to_string())
     }
@@ -177,6 +236,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             load_snippets,
             save_snippets,
+            is_storage_encrypted,
             export_snippets_json,
             import_snippets_json
         ])
@@ -192,4 +252,50 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_db_snippet_conversion() {
+        let db = DbSnippet {
+            id: 1,
+            title: "Test Title".to_string(),
+            content: "Test Content".to_string(),
+            description: "Test Desc".to_string(),
+            created_at: "2026-07-23 12:00:00".to_string(),
+            updated_at: "2026-07-23 12:00:00".to_string(),
+            deleted_at: None,
+            is_deleted: false,
+            tags: vec!["tag1".to_string()],
+            is_pinned: true,
+            copy_count: 5,
+            saved_time_sec: 30,
+        };
+
+        let tauri: TauriSnippet = db.clone().into();
+        assert_eq!(tauri.id, 1);
+        assert_eq!(tauri.title, "Test Title");
+        assert!(tauri.is_pinned);
+
+        let db_back: DbSnippet = tauri.into();
+        assert_eq!(db_back.id, db.id);
+        assert_eq!(db_back.title, db.title);
+        assert_eq!(db_back.copy_count, db.copy_count);
+    }
+
+    #[test]
+    fn test_crypto_integration() {
+        let original_json = r#"[{"id":1,"title":"Sample"}]"#;
+        let encrypted =
+            common_lib::crypto::encrypt_data(original_json, common_lib::crypto::DEFAULT_SECRET_KEY);
+        assert!(common_lib::crypto::is_encrypted(&encrypted));
+
+        let decrypted =
+            common_lib::crypto::decrypt_data(&encrypted, common_lib::crypto::DEFAULT_SECRET_KEY)
+                .unwrap();
+        assert_eq!(decrypted, original_json);
+    }
 }

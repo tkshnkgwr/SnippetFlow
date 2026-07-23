@@ -51,7 +51,7 @@ The data structure for template texts is common to both React and Rust, consisti
 * `copy_count` / `copyCount` (usize): Cumulative times copied
 * `saved_time_sec` / `savedTimeSec` (usize): Cumulative saved time (seconds)
 
-*Note: In both the Tauri and egui versions, data is stored in `snippets.json` within the current directory and is shared/synchronized in real-time. In the browser environment (prototype), it is stored only in `localStorage` (`snippets_db`).*
+*Note: In the Tauri version, data is saved to `%APPDATA%\com.snippetflow.app\snippets.json` (resolved via `app_data_dir()`) and persists across version upgrades and reinstalls. In the egui version, data is stored in `snippets.json` within the current working directory. In the browser environment (prototype), it is stored only in `localStorage` (`snippets_db`).*
 
 ### 3.2. Application Settings Data (`settings.json` - Rust Version Only)
 Holds the application behavior and display settings.

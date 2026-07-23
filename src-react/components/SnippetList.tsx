@@ -58,6 +58,9 @@ interface SnippetListProps {
   onGoToPerformance: () => void;
   onImportJSON: (data: Snippet[]) => void;
   onRecordQueryTime: (timeMs: number) => void;
+  onBulkSoftDelete?: (ids: number[]) => void;
+  onBulkRestore?: (ids: number[]) => void;
+  onBulkHardDelete?: (ids: number[]) => void;
 }
 
 export default function SnippetList({
@@ -73,6 +76,9 @@ export default function SnippetList({
   onGoToPerformance,
   onImportJSON,
   onRecordQueryTime,
+  onBulkSoftDelete,
+  onBulkRestore,
+  onBulkHardDelete,
 }: SnippetListProps) {
   // ローカル（コンポーネント内）状態管理
   const [searchText, setSearchText] = useState('');
@@ -630,13 +636,13 @@ export default function SnippetList({
 
       {/* Floating Interactive Toolbar for Multi-select Operations */}
       {selectedIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-5 py-3 rounded-full shadow-2xl flex items-center justify-between gap-6 border border-slate-800 shrink-0 z-50 animate-slide-up">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-5 py-3 rounded-full shadow-2xl flex items-center justify-between gap-4 border border-slate-800 shrink-0 z-50 animate-slide-up">
           <div className="flex items-center space-x-2 text-xs font-sans">
             <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
-            <span><strong>{selectedIds.length}</strong> 件の定型文を選択中</span>
+            <span><strong>{selectedIds.length}</strong> 件選択中</span>
           </div>
 
-          <div className="flex items-center space-x-2.5">
+          <div className="flex items-center space-x-2 shrink-0">
             {/* Compare Button (Available when exactly 2 are selected) */}
             <button
               onClick={() => {
@@ -654,18 +660,69 @@ export default function SnippetList({
               title="2件を選択して差分比較"
             >
               <ArrowLeftRight className="w-3.5 h-3.5" />
-              <span>2件を比較</span>
+              <span>比較</span>
             </button>
 
             {/* Merge/Combine Button */}
             <button
               onClick={() => onGoToMerge(selectedIds)}
-              className="inline-flex items-center space-x-1 px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full text-xs font-bold transition cursor-pointer"
+              className="inline-flex items-center space-x-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full text-xs font-bold transition cursor-pointer"
               title="複数を選択して順序よく結合"
             >
               <Combine className="w-3.5 h-3.5" />
-              <span>選んだ定型文を結合</span>
+              <span>結合</span>
             </button>
+
+            {/* ゴミ箱表示中の場合：一括復元 / 一括完全削除 */}
+            {showDeleted ? (
+              <>
+                {onBulkRestore && (
+                  <button
+                    onClick={() => {
+                      onBulkRestore(selectedIds);
+                      setSelectedIds([]);
+                    }}
+                    className="inline-flex items-center space-x-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full text-xs font-bold transition cursor-pointer"
+                    title="選択した定型文を元通り復元"
+                  >
+                    <History className="w-3.5 h-3.5" />
+                    <span>まとめて復元</span>
+                  </button>
+                )}
+                {onBulkHardDelete && (
+                  <button
+                    onClick={() => {
+                      if (confirm(`選択した ${selectedIds.length} 件の定型文を完全に削除しますか？この操作は取り消せません。`)) {
+                        onBulkHardDelete(selectedIds);
+                        setSelectedIds([]);
+                      }
+                    }}
+                    className="inline-flex items-center space-x-1 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full text-xs font-bold transition cursor-pointer"
+                    title="データベースから永久削除"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>完全削除</span>
+                  </button>
+                )}
+              </>
+            ) : (
+              /* 通常時：まとめてゴミ箱へ移動（論理削除） */
+              onBulkSoftDelete && (
+                <button
+                  onClick={() => {
+                    if (confirm(`選択した ${selectedIds.length} 件の定型文をゴミ箱に移動しますか？`)) {
+                      onBulkSoftDelete(selectedIds);
+                      setSelectedIds([]);
+                    }
+                  }}
+                  className="inline-flex items-center space-x-1 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full text-xs font-bold transition cursor-pointer"
+                  title="選択した定型文をまとめてゴミ箱へ移動"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>まとめて削除</span>
+                </button>
+              )
+            )}
 
             {/* Clear selection */}
             <button

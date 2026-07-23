@@ -51,7 +51,7 @@
 * `copy_count` / `copyCount` (usize): コピーされた累計回数
 * `saved_time_sec` / `savedTimeSec` (usize): 累計短縮時間（秒）
 
-※ Tauri版およびegui版ともに、データはカレントディレクトリの `snippets.json` に保存され、リアルタイムに共有・同期されます。ブラウザ環境（プロトタイプ）でのみ `localStorage` (`snippets_db`) に保存されます。
+※ Tauri版では、データは `app_data_dir()` で解決される `%APPDATA%\com.snippetflow.app\snippets.json` に保存されます。バージョンアップや再インストール後もデータが保持されます。egui版では引き続きカレントディレクトリの `snippets.json` に保存されます。ブラウザ環境（プロトタイプ）でのみ `localStorage` (`snippets_db`) に保存されます。
 
 ### 3.2. アプリ設定データ (`settings.json` - Rust版のみ)
 アプリケーションの動作・表示設定を保持します。

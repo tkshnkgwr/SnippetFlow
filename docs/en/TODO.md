@@ -52,7 +52,13 @@ This document manages the current implementation status (Done), near-term tasks 
 - **Dummy Data Load Testing**: Allows batch-generating and cleaning up 1,000, 2,000, and 5,000 dummy records to verify UI rendering and search loads.
 - **Backup & Restore via OS-Native Dialogs**: Securely exports and imports local JSON data files using the `rfd` crate.
 
-### 1.7. Development Environment and Agent Rules
+### 1.7. Security, Quality Improvements, and Bulk Operations
+- **Encrypted Snippet Storage**: Introduced `common_lib::crypto` module supporting secure encryption and decryption of `snippets.json` using an `ENC1:` magic header format, maintaining seamless backward compatibility with plain JSON.
+- **Enhanced Error Handling & Atomic Storage**: Implemented safety safeguards that automatically back up corrupted `snippets.json` files to `.bak` before recovering, along with atomic file replacement via temporary `.tmp` files.
+- **Expanded Unit Tests for Common Logic**: Added extensive boundary and edge case unit tests for `common_lib` including LCS diff calculation (`compute_diff`), tag suggestion (`suggest_tags`), crypto (`crypto`), and byte formatting (`format_bytes`).
+- **Bulk Delete Operations**: Added multi-selection support in the list view allowing bulk soft deletion (moving to trash), bulk restoration, and bulk permanent deletion via a floating action toolbar.
+
+### 1.8. Development Environment and Agent Rules
 - **Optimization of Verification Process (Skipping checks on Markdown updates)**: Introduced rules in `.agents/AGENTS.md` to skip automated tests and static analysis (`cargo test`, `cargo clippy`, `cargo fmt`) when only Markdown files are updated, reducing redundant verification tasks.
 
 ---
@@ -61,15 +67,9 @@ This document manages the current implementation status (Done), near-term tasks 
 
 ### 2.1. Unifying Data Storage and Settings between Tauri and egui Versions
 - [x] **Full Transition of Tauri Storage to Backend**:
-  Upgraded the application to load data from `snippets.json` in the current directory through the Rust backend at Tauri startup, and write data updates directly from Rust. This enables real-time synchronization and sharing of data between the Tauri and egui versions.
+  Upgraded the application to load data from `%APPDATA%\com.snippetflow.app\snippets.json` (resolved via `app_data_dir()`) through the Rust backend at Tauri startup, and write data updates directly from Rust. The storage path is now fixed and stable across version upgrades and reinstalls, preventing data loss.
 - [ ] **Full Unification of App Settings**:
   Unify settings like theme choices and selected sorting orders in `settings.json` (consistent with egui) instead of storing them in Tauri's `localStorage`.
-
-### 2.2. Improving Quality of Logic and Testing
-- [ ] **Add Unit Tests for Common Logic**:
-  Expand unit tests in `common_lib` for edge cases and boundary values (e.g., empty texts, extremely long content) regarding LCS diff calculation and intelligent tag suggestion scoring.
-- [ ] **Strengthen Error Handling**:
-  Implement a safeguard in Rust's `storage.rs` that detects corruption (invalid JSON formatting) in `snippets.json`, backs up the existing corrupted file as `.bak`, and loads default data instead of immediately overwriting the file.
 
 ---
 
@@ -77,8 +77,6 @@ This document manages the current implementation status (Done), near-term tasks 
 
 - [ ] **Secure Synchronization between Multiple PCs**:
   A feature to securely auto-sync snippet data across multiple PCs using GitHub Gists, custom object storage, or local network shared folders.
-- [ ] **Encrypted Snippet Storage**:
-  An optional feature to encrypt the locally stored `snippets.json` file (e.g., via AES-GCM) to safely store personal information, API keys, and password templates.
 - [ ] **Global Hotkeys (Shortcut Invocation)**:
   Transform the application into a resident utility that pops up the window to the foreground instantly via a specific shortcut key (e.g., `Ctrl + Shift + S`) even when minimized or inactive.
 - [ ] **Categorization (Folder Hierarchies)**:

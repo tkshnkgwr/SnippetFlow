@@ -8,6 +8,26 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-07-23
+
+### Added
+- **Encrypted Snippet Storage (`common_lib/src/crypto.rs`, `src-tauri`, `src-egui`)**:
+  - Introduced new encryption/decryption module `common_lib::crypto` with `ENC1:` magic header, providing secure snippet encryption while maintaining full backward compatibility with plain JSON data.
+- **Bulk Delete Operations (`src-react`)**:
+  - Added multi-selection and floating action toolbar support in the snippet list for bulk soft deletion (moving to trash), bulk restoration, and bulk permanent deletion.
+- **Extensive Unit Tests for Common Logic (`common_lib/src/text.rs`)**:
+  - Added boundary and edge case unit tests for `compute_diff` (LCS diff), `suggest_tags`, `count_occurrences`, and `format_bytes`.
+
+### Optimized
+- **Enhanced Storage Error Handling & Atomic Writes (`src-tauri/src/lib.rs`, `src-egui/storage.rs`)**:
+  - Introduced automatic `.bak` copy creation on corrupted `snippets.json` files before restoring default states safely.
+  - Implemented atomic file writes using temporary `.tmp` files to prevent file corruption during unexpected app shutdowns or crashes.
+- **Snippet Data Persistence After Version Upgrade (`src-tauri/src/lib.rs`)**:
+  - Changed the snippet storage path from a relative path (`snippets.json`) to an OS-standard application data directory resolved via `app.path().app_data_dir()`.
+  - The data is now saved to `%APPDATA%\com.snippetflow.app\snippets.json`, which remains stable across version upgrades and reinstalls.
+  - Added a `get_storage_path()` helper function that also automatically creates the data directory if it does not exist.
+  - Updated `load_snippets` and `save_snippets` Tauri commands to accept `tauri::AppHandle` as a parameter to resolve the correct path at runtime.
+
 ## [2026-07-21]
 
 ### Added

@@ -263,6 +263,49 @@ export function useSnippets() {
     setSelectedSnippetId(undefined);
   };
 
+  const handleBulkSoftDeleteSnippets = (ids: number[]) => {
+    if (ids.length === 0) return;
+    const now = new Date().toISOString();
+    setSnippets(prev =>
+      prev.map(item => {
+        if (ids.includes(item.id)) {
+          return {
+            ...item,
+            isDeleted: true,
+            deletedAt: now,
+          };
+        }
+        return item;
+      })
+    );
+    addToast(`${ids.length}件の定型文をまとめてゴミ箱に移動しました。`, 'info');
+  };
+
+  const handleBulkRestoreSnippets = (ids: number[]) => {
+    if (ids.length === 0) return;
+    const now = new Date().toISOString();
+    setSnippets(prev =>
+      prev.map(item => {
+        if (ids.includes(item.id)) {
+          const { deletedAt, ...rest } = item;
+          return {
+            ...rest,
+            isDeleted: false,
+            updatedAt: now,
+          };
+        }
+        return item;
+      })
+    );
+    addToast(`${ids.length}件の定型文をまとめて復元しました！`, 'success');
+  };
+
+  const handleBulkHardDeleteSnippets = (ids: number[]) => {
+    if (ids.length === 0) return;
+    setSnippets(prev => prev.filter(item => !ids.includes(item.id)));
+    addToast(`${ids.length}件の定型文をデータベースから一括で永久削除しました。`, 'error');
+  };
+
   const handleTogglePin = (id: number) => {
     setSnippets(prev =>
       prev.map(item => {
@@ -323,6 +366,9 @@ export function useSnippets() {
     handleSoftDeleteSnippet,
     handleRestoreSnippet,
     handleHardDeleteSnippet,
+    handleBulkSoftDeleteSnippets,
+    handleBulkRestoreSnippets,
+    handleBulkHardDeleteSnippets,
     handleTogglePin,
     handleGenerateMock,
     handleClearMock,

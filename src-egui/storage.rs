@@ -4,13 +4,37 @@ use chrono::Local;
 
 pub const STORAGE_FILE: &str = "snippets.json";
 
+/// 一時ファイルを経由したアトミック保存処理
+fn atomic_write(path: &str, content: &str) {
+    let tmp_path = format!("{}.tmp", path);
+    if std::fs::write(&tmp_path, content).is_ok() {
+        let _ = std::fs::rename(&tmp_path, path);
+    }
+}
+
 impl SnippetManagerApp {
     // 起動時のJSONロード処理
     pub fn load_data() -> Vec<Snippet> {
         if let Ok(file_content) = std::fs::read_to_string(STORAGE_FILE) {
-            if let Ok(snippets) = serde_json::from_str::<Vec<Snippet>>(&file_content) {
-                return snippets;
+            let json_content = if common_lib::crypto::is_encrypted(&file_content) {
+                common_lib::crypto::decrypt_data(
+                    &file_content,
+                    common_lib::crypto::DEFAULT_SECRET_KEY,
+                )
+                .ok()
+            } else {
+                Some(file_content.clone())
+            };
+
+            if let Some(valid_json) = json_content {
+                if let Ok(snippets) = serde_json::from_str::<Vec<Snippet>>(&valid_json) {
+                    return snippets;
+                }
             }
+
+            // ファイル破損時：安全のため既存ファイルを .bak にバックアップ保存
+            let bak_path = format!("{}.bak", STORAGE_FILE);
+            let _ = std::fs::copy(STORAGE_FILE, bak_path);
         }
 
         // 初期サンプルデータ
@@ -48,7 +72,7 @@ impl SnippetManagerApp {
 
         // 初期ファイル保存
         if let Ok(json) = serde_json::to_string_pretty(&samples) {
-            let _ = std::fs::write(STORAGE_FILE, json);
+            atomic_write(STORAGE_FILE, &json);
         }
 
         samples
@@ -57,7 +81,17 @@ impl SnippetManagerApp {
     // JSON保存処理
     pub fn save_data(&self) {
         if let Ok(json) = serde_json::to_string_pretty(&self.snippets) {
-            let _ = std::fs::write(STORAGE_FILE, json);
+            atomic_write(STORAGE_FILE, &json);
+        }
+    }
+
+    // 暗号化JSON保存処理
+    #[allow(dead_code)]
+    pub fn save_data_encrypted(&self) {
+        if let Ok(json) = serde_json::to_string_pretty(&self.snippets) {
+            let encrypted =
+                common_lib::crypto::encrypt_data(&json, common_lib::crypto::DEFAULT_SECRET_KEY);
+            atomic_write(STORAGE_FILE, &encrypted);
         }
     }
 }
