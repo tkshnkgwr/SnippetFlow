@@ -13,6 +13,16 @@
 
 ---
 
+## 📷 スクリーンショット (Screenshots)
+
+<p align="center">
+  <img src="docs/assets/screenshot_main.png" alt="SnippetFlow メイン画面" width="600" />
+  <br />
+  <sub><strong>SnippetFlow 定型文一覧・タグクラウド・検索画面</strong></sub>
+</p>
+
+---
+
 ## 主な機能
 
 - **テーマ切り替え（ライト/ダーク）の対応**:

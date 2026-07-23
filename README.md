@@ -13,6 +13,16 @@ It also contains the fully-functional React/Vite web prototype version, which sh
 
 ---
 
+## 📷 Screenshots
+
+<p align="center">
+  <img src="docs/assets/screenshot_main.png" alt="SnippetFlow Main UI" width="600" />
+  <br />
+  <sub><strong>SnippetFlow - Snippet List, Tag Cloud & Search View</strong></sub>
+</p>
+
+---
+
 ## Key Features
 
 - **Dark/Light Theme Toggle**:
