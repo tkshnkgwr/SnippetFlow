@@ -8,7 +8,13 @@ pub const STORAGE_FILE: &str = "snippets.json";
 fn atomic_write(path: &str, content: &str) {
     let tmp_path = format!("{}.tmp", path);
     if std::fs::write(&tmp_path, content).is_ok() {
-        let _ = std::fs::rename(&tmp_path, path);
+        if std::path::Path::new(path).exists() {
+            let _ = std::fs::remove_file(path);
+        }
+        if std::fs::rename(&tmp_path, path).is_err() {
+            let _ = std::fs::copy(&tmp_path, path);
+            let _ = std::fs::remove_file(&tmp_path);
+        }
     }
 }
 

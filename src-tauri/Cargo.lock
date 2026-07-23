@@ -4,7 +4,7 @@ version = 3
 
 [[package]]
 name = "SnippetFlow"
-version = "1.13.0"
+version = "1.13.1"
 dependencies = [
  "chrono",
  "common_lib",

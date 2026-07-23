@@ -8,6 +8,14 @@
 
 ## [Unreleased]
 
+## [1.13.1] - 2026-07-23
+
+### Fixed
+- **Windows OS 環境でのファイル書き込み失敗（`fs::rename`）の修正 (`src-tauri/src/lib.rs`, `src-egui/storage.rs`)**:
+  - `atomic_write` 実行時、Windows 環境で既存ファイルが存在する際の上書き置換失敗（パーミッション/ファイルロックエラー）に対するフォールバック機構（事前削除＋`copy`＋`remove_file`）を実装。
+- **フロントエンド・バックエンド間の保存コマンド引数不一致の修正 (`src-react/hooks/useSnippets.ts`, `src-tauri/src/lib.rs`)**:
+  - `save_snippets` コマンド呼び出し時にオプショナル引数 `encrypt` が未指定の場合のデシリアライズ失敗エラーを解消し、未指定時でも既存の暗号化状態を自動維持する安全な判定ロジックを追加。
+
 ## [1.13.0] - 2026-07-23
 
 ### Added

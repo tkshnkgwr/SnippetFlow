@@ -8,6 +8,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.13.1] - 2026-07-23
+
+### Fixed
+- **Fix Windows OS File Replacement Error in `fs::rename` (`src-tauri/src/lib.rs`, `src-egui/storage.rs`)**:
+  - Implemented a robust fallback mechanism (deletion prior to rename + `copy` + `remove_file`) during `atomic_write` to handle file locking and overwrite failures on Windows.
+- **Fix Storage Command Parameter Deserialization Mismatch (`src-react/hooks/useSnippets.ts`, `src-tauri/src/lib.rs`)**:
+  - Resolved `missing field encrypt` deserialization errors during `save_snippets` invocations and added automatic encryption state preservation when the `encrypt` parameter is omitted.
+
 ## [1.13.0] - 2026-07-23
 
 ### Added

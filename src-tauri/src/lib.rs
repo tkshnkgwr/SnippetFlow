@@ -78,12 +78,21 @@ impl From<TauriSnippet> for DbSnippet {
     }
 }
 
-/// 一時ファイルを経由したアトミック保存処理。書き込み途中の破損を防止します。
+/// 一時ファイルを経由したアトミック保存処理。Windowsでの上書き移動失敗に対する保護を含みます。
 fn atomic_write<P: AsRef<std::path::Path>>(path: P, content: &str) -> Result<(), String> {
     let path = path.as_ref();
     let tmp_path = path.with_extension("json.tmp");
     fs::write(&tmp_path, content).map_err(|e| format!("一時保存に失敗: {e}"))?;
-    fs::rename(&tmp_path, path).map_err(|e| format!("ファイル置換に失敗: {e}"))?;
+
+    if path.exists() {
+        let _ = fs::remove_file(path);
+    }
+
+    if let Err(e) = fs::rename(&tmp_path, path) {
+        fs::copy(&tmp_path, path)
+            .map_err(|err| format!("ファイル保存に失敗: {err} (rename error: {e})"))?;
+        let _ = fs::remove_file(&tmp_path);
+    }
     Ok(())
 }
 
@@ -174,7 +183,18 @@ fn save_snippets(
     let db_snippets: Vec<DbSnippet> = snippets.into_iter().map(DbSnippet::from).collect();
     let json = serde_json::to_string_pretty(&db_snippets).map_err(|e| e.to_string())?;
 
-    let content_to_save = if encrypt.unwrap_or(false) {
+    let should_encrypt = match encrypt {
+        Some(val) => val,
+        None => {
+            if let Ok(existing) = fs::read_to_string(&path) {
+                common_lib::crypto::is_encrypted(&existing)
+            } else {
+                false
+            }
+        }
+    };
+
+    let content_to_save = if should_encrypt {
         common_lib::crypto::encrypt_data(&json, common_lib::crypto::DEFAULT_SECRET_KEY)
     } else {
         json
