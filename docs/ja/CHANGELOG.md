@@ -8,7 +8,7 @@
 
 ## [Unreleased]
 
-## [1.12.0] - 2026-07-23
+## [1.13.0] - 2026-07-23
 
 ### Added
 - **スニペットの暗号化保存 (`common_lib/src/crypto.rs`, `src-tauri`, `src-egui`)**:

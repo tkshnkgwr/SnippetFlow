@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [1.12.0] - 2026-07-23
+## [1.13.0] - 2026-07-23
 
 ### Added
 - **Encrypted Snippet Storage (`common_lib/src/crypto.rs`, `src-tauri`, `src-egui`)**:
