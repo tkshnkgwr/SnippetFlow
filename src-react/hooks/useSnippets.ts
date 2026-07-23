@@ -205,11 +205,14 @@ export function useSnippets() {
         id: nextId,
         title: formData.title,
         content: formData.content,
-        description: formData.description,
-        tags: formData.tags,
+        description: formData.description || '',
+        tags: formData.tags || [],
         createdAt: now,
         updatedAt: now,
         isDeleted: false,
+        isPinned: false,
+        copyCount: 0,
+        savedTimeSec: 0,
       };
       setSnippets(prev => [newSnippet, ...prev]);
       addToast('新規定型文を登録しました。', 'success');

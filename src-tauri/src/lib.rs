@@ -29,14 +29,21 @@ pub struct TauriSnippet {
     pub id: usize,
     pub title: String,
     pub content: String,
+    #[serde(default)]
     pub description: String,
     pub created_at: String,
     pub updated_at: String,
+    #[serde(default)]
     pub deleted_at: Option<String>,
+    #[serde(default)]
     pub is_deleted: bool,
+    #[serde(default)]
     pub tags: Vec<String>,
+    #[serde(default)]
     pub is_pinned: bool,
+    #[serde(default)]
     pub copy_count: u32,
+    #[serde(default)]
     pub saved_time_sec: u32,
 }
 
@@ -317,5 +324,25 @@ mod tests {
             common_lib::crypto::decrypt_data(&encrypted, common_lib::crypto::DEFAULT_SECRET_KEY)
                 .unwrap();
         assert_eq!(decrypted, original_json);
+    }
+
+    #[test]
+    fn test_tauri_snippet_deserialization_with_missing_fields() {
+        let json = r#"{
+            "id": 1003,
+            "title": "New Snippet",
+            "content": "Content",
+            "createdAt": "2026-07-23 14:00:00",
+            "updatedAt": "2026-07-23 14:00:00"
+        }"#;
+        let snippet: Result<TauriSnippet, _> = serde_json::from_str(json);
+        assert!(snippet.is_ok());
+        let s = snippet.unwrap();
+        assert_eq!(s.id, 1003);
+        assert_eq!(s.description, "");
+        assert_eq!(s.is_pinned, false);
+        assert_eq!(s.copy_count, 0);
+        assert_eq!(s.saved_time_sec, 0);
+        assert_eq!(s.tags.len(), 0);
     }
 }

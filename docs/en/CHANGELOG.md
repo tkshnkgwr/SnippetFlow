@@ -8,6 +8,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.13.2] - 2026-07-23
+
+### Fixed
+- **Fix Deserialization Failure Error on Saving New Snippets (`src-tauri/src/lib.rs`, `src-react/hooks/useSnippets.ts`)**:
+  - Applied `#[serde(default)]` to optional fields of `TauriSnippet` to resolve deserialization errors when receiving objects with missing property keys.
+  - Set explicit default values during snippet instantiation in the frontend, guaranteeing reliable storage functionality.
+
 ## [1.13.1] - 2026-07-23
 
 ### Fixed
