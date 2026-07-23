@@ -18,7 +18,10 @@
 - **共通ロジックのユニットテスト大規模拡充 (`common_lib/src/text.rs`)**:
   - `compute_diff`（LCS差分計算）、`suggest_tags`（インテリジェントタグ提案）、`count_occurrences`、`format_bytes` に対する境界値・異常系（空文字、マルチバイト、超長文等）ユニットテストを追加。
 
-### Optimized
+### Fixed
+- **GitHub Release タイトルのバージョン名不一致の修正 (`.github/workflows/release.yml`)**:
+  - `releaseName` に指定されていたプレースホルダー `SnippetFlow v__VERSION__` が `tauri.conf.json` の間接参照（`"version": "../package.json"`）を正常解釈できず旧バージョン表記になっていた問題を修正。
+  - Gitタグ名から直接動的展開される `SnippetFlow ${{ github.ref_name }}`（例: `SnippetFlow v1.12.0`）に変更し、タグ名とリリース名が常に100%一致するよう改善。
 - **データストレージのエラーハンドリング強化とアトミック書き込み (`src-tauri/src/lib.rs`, `src-egui/storage.rs`)**:
   - `snippets.json` 破損時に既存データを破壊せず `.bak` ファイルへ安全保護コピーを行った上で初期状態へ安全復旧する安全機構を導入。
   - 保存時に一時ファイル (`snippets.json.tmp`) を経由するアトミック置換書き込みを導入し、ファイル保存途中のアプリ強制終了やクラッシュによる破損を防止。

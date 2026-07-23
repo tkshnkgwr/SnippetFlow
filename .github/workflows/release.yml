@@ -75,8 +75,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }} # 例: v1.4.0
-          releaseName: 'SnippetFlow v__VERSION__'
+          tagName: ${{ github.ref_name }} # 例: v1.12.0
+          releaseName: 'SnippetFlow ${{ github.ref_name }}'
           releaseBody: 'Please refer to the CHANGELOG.md for details about this release.'
           releaseDraft: true
           prerelease: false

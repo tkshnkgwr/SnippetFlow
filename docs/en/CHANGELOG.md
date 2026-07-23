@@ -18,7 +18,10 @@ All notable changes to this project will be documented in this file.
 - **Extensive Unit Tests for Common Logic (`common_lib/src/text.rs`)**:
   - Added boundary and edge case unit tests for `compute_diff` (LCS diff), `suggest_tags`, `count_occurrences`, and `format_bytes`.
 
-### Optimized
+### Fixed
+- **Fix Version Mismatch in GitHub Release Titles (`.github/workflows/release.yml`)**:
+  - Fixed an issue where the `SnippetFlow v__VERSION__` placeholder failed to resolve the indirect version reference (`"version": "../package.json"`) in `tauri.conf.json`, causing release titles to show outdated version numbers.
+  - Changed `releaseName` to dynamically resolve from the Git tag name (`SnippetFlow ${{ github.ref_name }}`, e.g., `SnippetFlow v1.12.0`), guaranteeing a 100% exact match between tag names and release titles.
 - **Enhanced Storage Error Handling & Atomic Writes (`src-tauri/src/lib.rs`, `src-egui/storage.rs`)**:
   - Introduced automatic `.bak` copy creation on corrupted `snippets.json` files before restoring default states safely.
   - Implemented atomic file writes using temporary `.tmp` files to prevent file corruption during unexpected app shutdowns or crashes.
