@@ -340,7 +340,7 @@ mod tests {
         let s = snippet.unwrap();
         assert_eq!(s.id, 1003);
         assert_eq!(s.description, "");
-        assert_eq!(s.is_pinned, false);
+        assert!(!s.is_pinned);
         assert_eq!(s.copy_count, 0);
         assert_eq!(s.saved_time_sec, 0);
         assert_eq!(s.tags.len(), 0);
