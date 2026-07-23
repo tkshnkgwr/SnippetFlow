@@ -8,6 +8,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.13.3] - 2026-07-23
+
+### Added
+- **Default Encryption Enablement for Local Storage (`src-react/hooks/useSnippets.ts`, `src-egui/storage.rs`)**:
+  - Enabled encrypted storage by default across both Tauri and egui versions using the `ENC1:` header format, enhancing data security and unreadability.
+
 ## [1.13.2] - 2026-07-23
 
 ### Fixed

@@ -84,16 +84,8 @@ impl SnippetManagerApp {
         samples
     }
 
-    // JSON保存処理
+    // JSON保存処理（暗号化保存）
     pub fn save_data(&self) {
-        if let Ok(json) = serde_json::to_string_pretty(&self.snippets) {
-            atomic_write(STORAGE_FILE, &json);
-        }
-    }
-
-    // 暗号化JSON保存処理
-    #[allow(dead_code)]
-    pub fn save_data_encrypted(&self) {
         if let Ok(json) = serde_json::to_string_pretty(&self.snippets) {
             let encrypted =
                 common_lib::crypto::encrypt_data(&json, common_lib::crypto::DEFAULT_SECRET_KEY);

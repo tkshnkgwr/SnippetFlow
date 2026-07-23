@@ -75,7 +75,7 @@ export function useSnippets() {
       if (isTauri) {
         try {
           const { invoke } = await import('@tauri-apps/api/core');
-          await invoke('save_snippets', { snippets, encrypt: false });
+          await invoke('save_snippets', { snippets, encrypt: true });
         } catch (e) {
           console.error('Failed to save snippets to Rust backend:', e);
           addToast('バックエンドへのデータ保存に失敗しました。', 'error');
