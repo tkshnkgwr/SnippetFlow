@@ -1,3 +1,5 @@
+[English](../en/DIAGRAM.md) | **日本語版**
+
 # SnippetFlow (SnippetManager) システム構成・設計図面
 
 本ドキュメントでは、**SnippetFlow** のアーキテクチャ、画面遷移、データ構造、および代表的なユースケースのデータフローを Mermaid ダイアグラムで可視化します。

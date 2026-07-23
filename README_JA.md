@@ -38,11 +38,19 @@
 
 ## 設計・仕様詳細
 
-各種詳細設計や技術的詳細は、`docs/` ディレクトリ配下のドキュメントをご参照ください。
-- [機能仕様書 (SPEC.md)](docs/SPEC.md)
-- [システム構成・設計図面 (DIAGRAM.md)](docs/DIAGRAM.md)
-- [リソース測定記録 (FOOTPRINTS.md)](docs/FOOTPRINTS.md)
-- [品質検証・テストレポート (TEST_REPORT.md)](docs/TEST_REPORT.md)
+各種詳細設計や技術的詳細は、`docs/ja/` ディレクトリ配下のドキュメントをご参照ください。
+- [機能仕様書 (SPEC.md)](docs/ja/SPEC.md)
+- [システム構成・設計図面 (DIAGRAM.md)](docs/ja/DIAGRAM.md)
+- [リソース測定記録 (FOOTPRINTS.md)](docs/ja/FOOTPRINTS.md)
+- [品質検証・テストレポート (TEST_REPORT.md)](docs/ja/TEST_REPORT.md)
+- [テスト方針・実行ガイド (TESTING.md)](docs/ja/TESTING.md)
+- [セキュリティポリシー (SECURITY.md)](docs/ja/SECURITY.md)
+- [貢献ガイドライン (CONTRIBUTING.md)](docs/ja/CONTRIBUTING.md)
+- [開発者ガイド (DEVELOPING.md)](docs/ja/DEVELOPING.md)
+- [リリース手順書 (RELEASE.md)](docs/ja/RELEASE.md)
+- [開発およびコーディング指示書 (INSTRUCTIONS.md)](docs/ja/INSTRUCTIONS.md)
+- [タスク管理・TODO (TODO.md)](docs/ja/TODO.md)
+- [ユーザーガイド (USER_GUIDE.md)](docs/ja/USER_GUIDE.md)
 
 ---
 

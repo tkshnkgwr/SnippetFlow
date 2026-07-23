@@ -6,7 +6,7 @@
 [![Platform](https://img.shields.io/badge/platform-windows-lightgrey.svg)](#prerequisites)
 [![Rust Version](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](#prerequisites)
 
-English | [日本語版 (Japanese)](README.ja.md)
+English | [日本語版 (Japanese)](README_JA.md)
 
 **SnippetFlow** is a sleek, transparent, and always-on-top desktop application built with Rust (`egui`/`eframe`) for Windows to quickly manage and copy frequently used text templates (snippets) to the clipboard. 
 It also contains the fully-functional React/Vite web prototype version, which shares exact functionality with the native desktop app.
@@ -38,11 +38,19 @@ It also contains the fully-functional React/Vite web prototype version, which sh
 
 ## Technical Specifications
 
-For detailed functional specifications and Mermaid diagrams, please refer to the documents in the `docs` folder:
-- [Functional Specifications (SPEC.md)](docs/SPEC.md)
-- [Architecture & Sequence Diagrams (DIAGRAM.md)](docs/DIAGRAM.md)
-- [Resource Footprints & Performance (FOOTPRINTS.md)](docs/FOOTPRINTS.md)
-- [Quality Verification & Test Report (TEST_REPORT.md)](docs/TEST_REPORT.md)
+For detailed functional specifications, development guidelines, and diagrams, please refer to the documents in the `docs/en/` folder:
+- [Functional Specifications (SPEC.md)](docs/en/SPEC.md)
+- [Architecture & Sequence Diagrams (DIAGRAM.md)](docs/en/DIAGRAM.md)
+- [Resource Footprints & Performance (FOOTPRINTS.md)](docs/en/FOOTPRINTS.md)
+- [Quality Verification & Test Report (TEST_REPORT.md)](docs/en/TEST_REPORT.md)
+- [Testing Strategy & Guide (TESTING.md)](docs/en/TESTING.md)
+- [Security Policy (SECURITY.md)](docs/en/SECURITY.md)
+- [Contribution Guidelines (CONTRIBUTING.md)](docs/en/CONTRIBUTING.md)
+- [Developer's Guide (DEVELOPING.md)](docs/en/DEVELOPING.md)
+- [Release Flow (RELEASE.md)](docs/en/RELEASE.md)
+- [AI Coding Instructions (INSTRUCTIONS.md)](docs/en/INSTRUCTIONS.md)
+- [Task Log (TODO.md)](docs/en/TODO.md)
+- [User Guide (USER_GUIDE.md)](docs/en/USER_GUIDE.md)
 
 ---
 
