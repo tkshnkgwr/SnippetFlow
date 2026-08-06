@@ -259,7 +259,11 @@ impl SnippetManagerApp {
                                                 }
                                             }
                                         }
-                                        if ui.button("📋 コピー").clicked() {
+                                        if ui
+                                            .button("📋")
+                                            .on_hover_text("クリップボードへコピー")
+                                            .clicked()
+                                        {
                                             if let Some(ref mut cb) = self.clipboard {
                                                 if cb.set_text(snip.content.clone()).is_ok() {
                                                     self.last_action_message =

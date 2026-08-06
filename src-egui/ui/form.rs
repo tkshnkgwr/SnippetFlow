@@ -58,15 +58,17 @@ impl SnippetManagerApp {
                         );
                         ui.end_row();
 
-                        ui.label("タグ追加:");
+                        ui.label("タグ追加 (必須):");
                         ui.horizontal(|ui| {
                             ui.add(
                                 egui::TextEdit::singleline(&mut self.tag_input)
                                     .desired_width(200.0),
                             );
-                            if ui.button("➕ 追加").clicked() && !self.tag_input.is_empty() {
-                                if !self.form_tags.contains(&self.tag_input) {
-                                    self.form_tags.push(self.tag_input.clone());
+                            if ui.button("➕ 追加").clicked() && !self.tag_input.trim().is_empty()
+                            {
+                                let trimmed = self.tag_input.trim().to_string();
+                                if !self.form_tags.contains(&trimmed) {
+                                    self.form_tags.push(trimmed);
                                 }
                                 self.tag_input.clear();
                             }
@@ -114,43 +116,60 @@ impl SnippetManagerApp {
         // ボタン操作部
         ui.horizontal(|ui| {
             // 保存処理
-            if ui.button("💾 保存する").clicked() && !self.form_title.is_empty() {
-                let now_str = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
-
-                if let Some(id) = edit_id {
-                    // 編集更新
-                    if let Some(snip) = self.snippets.iter_mut().find(|s| s.id == id) {
-                        snip.title = self.form_title.clone();
-                        snip.content = self.form_content.clone();
-                        snip.description = self.form_description.clone();
-                        snip.tags = self.form_tags.clone();
-                        snip.updated_at = now_str;
-                    }
-                    self.last_action_message = "✅ 定型文を更新保存しました。".to_string();
-                } else {
-                    // 新規追加
-                    let new_id = self.snippets.iter().map(|s| s.id).max().unwrap_or(0) + 1;
-                    let new_snip = Snippet {
-                        id: new_id,
-                        title: self.form_title.clone(),
-                        content: self.form_content.clone(),
-                        description: self.form_description.clone(),
-                        created_at: now_str.clone(),
-                        updated_at: now_str,
-                        deleted_at: None,
-                        is_deleted: false,
-                        tags: self.form_tags.clone(),
-                        is_pinned: false,
-                        copy_count: 0,
-                        saved_time_sec: 0,
-                    };
-                    self.snippets.push(new_snip);
-                    self.last_action_message = "✅ 新しい定型文を追加しました。".to_string();
+            if ui.button("💾 保存する").clicked() {
+                let trimmed_input = self.tag_input.trim().to_string();
+                if !trimmed_input.is_empty() && !self.form_tags.contains(&trimmed_input) {
+                    self.form_tags.push(trimmed_input);
+                    self.tag_input.clear();
                 }
 
-                self.save_data();
-                self.last_action_time = Some(Instant::now());
-                self.current_screen = AppScreen::List;
+                if self.form_title.trim().is_empty() {
+                    self.last_action_message = "❌ タイトルを入力してください。".to_string();
+                    self.last_action_time = Some(Instant::now());
+                } else if self.form_content.trim().is_empty() {
+                    self.last_action_message = "❌ 定型文の本文を入力してください。".to_string();
+                    self.last_action_time = Some(Instant::now());
+                } else if self.form_tags.is_empty() {
+                    self.last_action_message = "❌ タグを最低1つ登録してください。".to_string();
+                    self.last_action_time = Some(Instant::now());
+                } else {
+                    let now_str = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+
+                    if let Some(id) = edit_id {
+                        // 編集更新
+                        if let Some(snip) = self.snippets.iter_mut().find(|s| s.id == id) {
+                            snip.title = self.form_title.trim().to_string();
+                            snip.content = self.form_content.trim().to_string();
+                            snip.description = self.form_description.trim().to_string();
+                            snip.tags = self.form_tags.clone();
+                            snip.updated_at = now_str;
+                        }
+                        self.last_action_message = "✅ 定型文を更新保存しました。".to_string();
+                    } else {
+                        // 新規追加
+                        let new_id = self.snippets.iter().map(|s| s.id).max().unwrap_or(0) + 1;
+                        let new_snip = Snippet {
+                            id: new_id,
+                            title: self.form_title.trim().to_string(),
+                            content: self.form_content.trim().to_string(),
+                            description: self.form_description.trim().to_string(),
+                            created_at: now_str.clone(),
+                            updated_at: now_str,
+                            deleted_at: None,
+                            is_deleted: false,
+                            tags: self.form_tags.clone(),
+                            is_pinned: false,
+                            copy_count: 0,
+                            saved_time_sec: 0,
+                        };
+                        self.snippets.push(new_snip);
+                        self.last_action_message = "✅ 新しい定型文を追加しました。".to_string();
+                    }
+
+                    self.save_data();
+                    self.last_action_time = Some(Instant::now());
+                    self.current_screen = AppScreen::List;
+                }
             }
 
             // キャンセル戻る

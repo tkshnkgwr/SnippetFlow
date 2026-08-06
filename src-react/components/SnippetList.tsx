@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Search,
   Tag,
@@ -82,10 +82,61 @@ export default function SnippetList({
 }: SnippetListProps) {
   // ローカル（コンポーネント内）状態管理
   const [searchText, setSearchText] = useState('');
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showDeleted, setShowDeleted] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  // マウスカーソル位置に追従する補足説明ツールチップ
+  const [hoveredTooltip, setHoveredTooltip] = useState<{ id: number; text: string; x: number; y: number } | null>(null);
+
+  const handleMouseMoveSnippet = (e: React.MouseEvent, snippet: Snippet) => {
+    if (!snippet.description) {
+      if (hoveredTooltip) setHoveredTooltip(null);
+      return;
+    }
+
+    const mouseX = e.clientX;
+    const mouseY = e.clientY;
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+
+    const tooltipWidth = 320;
+    const tooltipHeight = 90;
+
+    let x = mouseX + 14;
+    let y = mouseY + 14;
+
+    // 画面右端からはみ出る場合は左側に反転
+    if (x + tooltipWidth > windowWidth - 16) {
+      x = mouseX - tooltipWidth - 10;
+    }
+
+    // 画面下部からはみ出る場合は上側に反転
+    if (y + tooltipHeight > windowHeight - 16) {
+      y = mouseY - tooltipHeight - 10;
+    }
+
+    setHoveredTooltip({
+      id: snippet.id,
+      text: snippet.description,
+      x: Math.max(10, x),
+      y: Math.max(10, y),
+    });
+  };
+
+  const handleMouseLeaveSnippet = () => {
+    setHoveredTooltip(null);
+  };
+
+  const handleToggleTag = (tag: string) => {
+    setSelectedTags(prev =>
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const handleResetTags = () => {
+    setSelectedTags([]);
+  };
 
   const [isTauri, setIsTauri] = useState(false);
   React.useEffect(() => {
@@ -107,11 +158,8 @@ export default function SnippetList({
     return Array.from(tagsSet);
   }, [snippets, showDeleted]);
 
-  // UPDATE 2026-07-01: 子コンポーネントのレンダーフェーズ中に親コンポーネントの setState (onRecordQueryTime) を
-  // 直接呼び出すと React の「Cannot update a component while rendering a different component」警告が発生するため、
-  // 計算処理 (useMemo) から計測時間を返し、useEffect を介して安全に親コンポーネントのステートを更新するように修正。
   // 検索条件に基づきフィルタリングを行い、かつ検索にかかった処理時間を計測する
-  const { filteredSnippets, queryTime } = useMemo(() => {
+  const fallbackSearch = useMemo(() => {
     const start = performance.now();
     
     const lowerSearch = searchText.toLowerCase().trim();
@@ -119,8 +167,11 @@ export default function SnippetList({
       // 1. 論理削除フラグの検証（非表示設定の場合はスキップ）
       if (s.isDeleted && !showDeleted) return false;
 
-      // 2. 選択されたタグに一致するか検証
-      if (selectedTag && !s.tags.includes(selectedTag)) return false;
+      // 2. 選択されたタグに一致するか検証（複数選択時：選択されたタグのいずれかを含む）
+      if (selectedTags.length > 0) {
+        const hasMatchingTag = selectedTags.some(t => s.tags.includes(t));
+        if (!hasMatchingTag) return false;
+      }
 
       // 3. 検索キーワード（部分一致・ID一致など）を検証
       if (lowerSearch) {
@@ -166,11 +217,42 @@ export default function SnippetList({
       filteredSnippets: sortedResult,
       queryTime: end - start
     };
-  }, [snippets, searchText, selectedTag, showDeleted, sortCriterion]);
+  }, [snippets, searchText, selectedTags, showDeleted, sortCriterion]);
 
-  React.useEffect(() => {
-    onRecordQueryTime(queryTime);
-  }, [queryTime, onRecordQueryTime]);
+  const [filteredSnippets, setFilteredSnippets] = useState<Snippet[]>(fallbackSearch.filteredSnippets);
+
+  useEffect(() => {
+    let isMounted = true;
+    const performSearch = async () => {
+      if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          const res = await invoke<{ filteredSnippets: Snippet[]; queryTimeMs: number }>('search_snippets', {
+            snippets,
+            searchText,
+            selectedTags,
+            showDeleted,
+            sortCriterion,
+          });
+          if (isMounted) {
+            setFilteredSnippets(res.filteredSnippets);
+            onRecordQueryTime(res.queryTimeMs);
+            return;
+          }
+        } catch (e) {
+          console.error('Failed to search snippets via Rust backend:', e);
+        }
+      }
+      if (isMounted) {
+        setFilteredSnippets(fallbackSearch.filteredSnippets);
+        onRecordQueryTime(fallbackSearch.queryTime);
+      }
+    };
+    performSearch();
+    return () => {
+      isMounted = false;
+    };
+  }, [snippets, searchText, selectedTags, showDeleted, sortCriterion, fallbackSearch, onRecordQueryTime]);
   // END UPDATE 2026-07-01
 
   // 単一スニペットのコピー処理を行う関数
@@ -368,41 +450,45 @@ export default function SnippetList({
         </div>
 
         {/* Dynamic Tag Clouds Row */}
-        {/* UPDATE 2026-06-30: タグクラウド行の枠線をダークモード（dark:border-slate-800）に対応 */}
         <div className="flex flex-wrap items-center gap-1.5 border-t border-slate-100 dark:border-slate-800 pt-3 text-xs" id="list-tag-cloud">
           <span className="text-slate-400 font-medium flex items-center mr-1 font-sans">
             <Tag className="w-3.5 h-3.5 mr-1" />
             タグ：
           </span>
-          {/* UPDATE 2026-06-30: 「すべて表示」ボタンの背景色と文字色をダークモード（dark:bg-slate-200 dark:text-slate-900 / dark:bg-slate-800 dark:text-slate-350）に対応 */}
           <button
-            onClick={() => setSelectedTag(null)}
-            className={`px-2.5 py-1 rounded-md transition font-sans cursor-pointer ${
-              selectedTag === null
+            onClick={handleResetTags}
+            className={`px-2.5 py-1 rounded-md transition font-sans cursor-pointer flex items-center space-x-1 ${
+              selectedTags.length === 0
                 ? 'bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 font-medium'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-350 hover:bg-slate-200 dark:hover:bg-slate-700'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
             }`}
           >
-            すべて表示
+            <span>すべて表示</span>
+            {selectedTags.length > 0 && (
+              <span className="ml-1 text-[10px] px-1.5 py-0.2 bg-rose-500 text-white rounded-full font-bold">
+                リセット
+              </span>
+            )}
           </button>
-          {allTags.map(tag => (
-            <button
-              key={tag}
-              onClick={() => setSelectedTag(tag)}
-              className={`px-2.5 py-1 rounded-md transition font-sans cursor-pointer ${
-                selectedTag === tag
-                  ? 'bg-indigo-600 text-white font-medium'
-                  : 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-350 hover:bg-indigo-100/80 dark:hover:bg-indigo-900 border border-indigo-100/50 dark:border-indigo-900/50'
-              }`}
-            >
-              {/* UPDATE 2026-06-30: 個別タグボタンのアクティブ・非アクティブ配色をダークモード（dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-900/50）に対応 */}
-              #{tag}
-            </button>
-          ))}
+          {allTags.map(tag => {
+            const isSelected = selectedTags.includes(tag);
+            return (
+              <button
+                key={tag}
+                onClick={() => handleToggleTag(tag)}
+                className={`px-2.5 py-1 rounded-md transition font-sans cursor-pointer border ${
+                  isSelected
+                    ? 'bg-indigo-600 dark:bg-indigo-600 text-white font-medium border-indigo-600 dark:border-indigo-500 shadow-sm'
+                    : 'bg-indigo-50/80 dark:bg-slate-800/90 text-indigo-800 dark:text-indigo-200 hover:bg-indigo-100 dark:hover:bg-slate-700 border-indigo-200/80 dark:border-slate-700'
+                }`}
+              >
+                #{tag}
+              </button>
+            );
+          })}
         </div>
  
         {/* Filters/Toggles & Benchmark display footer */}
-        {/* UPDATE 2026-06-30: フィルター表示トグル・フッター行の枠線と文字色をダークモード（dark:border-slate-800 dark:text-slate-400）に対応 */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 text-xs text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800 pt-3 font-sans">
           <label className="flex items-center space-x-2 cursor-pointer">
             <input
@@ -412,10 +498,9 @@ export default function SnippetList({
               className="w-3.5 h-3.5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
               id="checkbox-show-deleted"
             />
-            {/* UPDATE 2026-06-30: 削除済みトグルラベル文字色をダークモード（dark:text-slate-300）に対応 */}
             <span className="flex items-center text-slate-600 dark:text-slate-300 font-medium">
               <History className="w-3.5 h-3.5 mr-1 text-slate-400" />
-              削除した定型文（過去ログ）を表示する
+              削除した定型文を表示する
             </span>
           </label>
  
@@ -465,7 +550,8 @@ export default function SnippetList({
               <div
                 key={snippet.id}
                 onClick={() => onEditSnippet(snippet.id)}
-                // UPDATE 2026-06-30: 定型文アイテムカードの境界線と背景色をダークモード（dark:bg-slate-900 / dark:border-slate-800）に対応。選択状態やホバー効果、削除フラグ状態も調整
+                onMouseMove={(e) => handleMouseMoveSnippet(e, snippet)}
+                onMouseLeave={handleMouseLeaveSnippet}
                 className={`group relative rounded-xl border transition-all duration-150 p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 cursor-pointer hover:shadow-md ${
                   snippet.isDeleted
                     ? 'border-amber-200/60 bg-amber-50/20 dark:bg-amber-950/10 dark:border-amber-900/40'
@@ -476,6 +562,7 @@ export default function SnippetList({
                     : 'border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
                 }`}
               >
+
                 {/* Checkbox and Left Column */}
                 <div className="flex items-start space-x-3.5 flex-1 min-w-0">
                   <div
@@ -524,7 +611,7 @@ export default function SnippetList({
                             key={t}
                             onClick={(e) => {
                               e.stopPropagation();
-                              setSelectedTag(t);
+                              handleToggleTag(t);
                             }}
                             className="text-[10px] px-2 py-0.2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-350 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium font-sans"
                           >
@@ -543,26 +630,21 @@ export default function SnippetList({
                   </span>
                   
                   <div className="flex items-center space-x-1.5">
-                    {/* Copy Button (List page action) */}
+                    {/* Copy Button (List page action - Icon only) */}
                     <button
                       onClick={(e) => handleCopySingle(e, snippet)}
-                      title="クリップボードへコピー"
-                      className={`inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+                      title={copiedId === snippet.id ? "コピー完了！" : "クリップボードへコピー"}
+                      aria-label={copiedId === snippet.id ? "コピー完了" : "クリップボードへコピー"}
+                      className={`inline-flex items-center justify-center p-2 rounded-lg transition ${
                         copiedId === snippet.id
                           ? 'bg-emerald-600 text-white shadow-sm'
                           : 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-600 dark:hover:bg-indigo-600 hover:text-white cursor-pointer'
                       }`}
                     >
                       {copiedId === snippet.id ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 animate-bounce" />
-                          <span>コピー済!</span>
-                        </>
+                        <Check className="w-4 h-4 animate-bounce" />
                       ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5" />
-                          <span>コピー</span>
-                        </>
+                        <Copy className="w-4 h-4" />
                       )}
                     </button>
 
@@ -611,11 +693,11 @@ export default function SnippetList({
             入力された検索キーワードまたはタグが登録された定型文に存在しないか、削除した定型文非表示の状態で検索している可能性があります。
           </p>
           <div className="flex gap-2.5 pt-2">
-            {(searchText || selectedTag || showDeleted) && (
+            {(searchText || selectedTags.length > 0 || showDeleted) && (
               <button
                 onClick={() => {
                   setSearchText('');
-                  setSelectedTag(null);
+                  setSelectedTags([]);
                   setShowDeleted(true);
                 }}
                 className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs rounded-lg transition cursor-pointer"
@@ -731,6 +813,22 @@ export default function SnippetList({
             >
               解除
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* マウスカーソル近傍表示・見切れ防止のスマート補足説明ツールチップ */}
+      {hoveredTooltip && (
+        <div
+          style={{ left: `${hoveredTooltip.x}px`, top: `${hoveredTooltip.y}px` }}
+          className="fixed z-50 pointer-events-none transition-all duration-75 animate-fade-in"
+        >
+          <div className="bg-slate-900/95 dark:bg-slate-100/95 text-white dark:text-slate-900 text-xs px-3.5 py-2.5 rounded-xl shadow-2xl border border-slate-700/80 dark:border-slate-300/80 max-w-xs font-sans backdrop-blur-md">
+            <div className="flex items-center space-x-1.5 font-bold text-[11px] mb-1 text-amber-400 dark:text-amber-600 border-b border-slate-700/60 dark:border-slate-300/60 pb-1">
+              <Info className="w-3.5 h-3.5 shrink-0" />
+              <span>補足・説明</span>
+            </div>
+            <p className="text-[11px] leading-relaxed text-slate-200 dark:text-slate-800 break-words">{hoveredTooltip.text}</p>
           </div>
         </div>
       )}

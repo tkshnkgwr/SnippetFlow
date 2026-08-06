@@ -96,33 +96,117 @@ export default function SnippetForm({
     return count;
   };
 
+  // 全スニペットにおける各タグの累積使用頻度（保有スニペット数）を計算
+  const tagFrequencyMap = React.useMemo(() => {
+    const map = new Map<string, number>();
+    (snippets || []).forEach(s => {
+      (s.tags || []).forEach(t => {
+        if (t) map.set(t, (map.get(t) || 0) + 1);
+      });
+    });
+    return map;
+  }, [snippets]);
+
   // 全ての定型文から既存の一意なタグを抽出
-  const allUniqueTags = Array.from(
-    new Set((snippets || []).flatMap(s => s.tags || []))
-  ).filter(Boolean);
+  const allUniqueTags = Array.from(tagFrequencyMap.keys());
 
   // すでに登録されているタグを除外
-  const filteredUniqueTags = allUniqueTags.filter(tag => !tags.includes(tag));
+  const filteredUniqueTags: string[] = (allUniqueTags as string[]).filter(tag => !tags.includes(tag));
 
-  // 各タグの出現回数を計測（タイトル、本文、説明を合算。タイトルは重要度が高いので重み付け2倍に）
+  // 各タグの出現回数を計測（タイトル重み2倍＋本文＋説明）および全体使用頻度
   const scoredTags = filteredUniqueTags.map(tag => {
     const titleScore = countOccurrences(title, tag) * 2;
     const contentScore = countOccurrences(content, tag);
     const descScore = countOccurrences(description, tag);
-    const score = titleScore + contentScore + descScore;
-    return { tag, score };
+    const textScore = titleScore + contentScore + descScore;
+    const frequency = tagFrequencyMap.get(tag) || 0;
+    return { tag, textScore, frequency, score: textScore > 0 ? textScore : frequency };
   });
 
-  // 出現回数が1回以上のものを降順でソートし、上位5件を提案
-  const suggestedTags = scoredTags
-    .filter(item => item.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 5)
-    .map(item => item.tag);
+  // テキスト一致（出現度）を最優先し、一致が無い場合は全体使用頻度が高い順（同点時は名前順）に最大5件動的提案
+  const fallbackSuggestedTags = React.useMemo(() => {
+    return [...scoredTags]
+      .sort((a, b) => {
+        if (b.textScore !== a.textScore) return b.textScore - a.textScore;
+        if (b.frequency !== a.frequency) return b.frequency - a.frequency;
+        return a.tag.localeCompare(b.tag);
+      })
+      .slice(0, 5)
+      .map(item => item.tag);
+  }, [scoredTags]);
+
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchSuggestions = async () => {
+      if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          const res = await invoke<string[]>('suggest_tags_cmd', {
+            snippets,
+            title,
+            content,
+            description,
+            currentTags: tags,
+          });
+          if (isMounted) {
+            setSuggestedTags(res);
+            return;
+          }
+        } catch (e) {
+          console.error('Failed to suggest tags via Rust backend:', e);
+        }
+      }
+      if (isMounted) {
+        setSuggestedTags(fallbackSuggestedTags);
+      }
+    };
+    fetchSuggestions();
+    return () => {
+      isMounted = false;
+    };
+  }, [snippets, title, content, description, tags]);
+
+  // フォーム内容に変更があるか（未保存状態 isDirty）を判定
+  const isDirty = React.useMemo(() => {
+    if (!snippet) {
+      return title.trim() !== '' || content.trim() !== '' || description.trim() !== '' || tags.length > 0;
+    }
+    const initialTitle = snippet.title || '';
+    const initialContent = snippet.content || '';
+    const initialDesc = snippet.description || '';
+    const initialTags = snippet.tags || [];
+
+    const titleChanged = title.trim() !== initialTitle.trim();
+    const contentChanged = content.trim() !== initialContent.trim();
+    const descChanged = description.trim() !== initialDesc.trim();
+    const tagsChanged = JSON.stringify([...tags].sort()) !== JSON.stringify([...initialTags].sort());
+
+    return titleChanged || contentChanged || descChanged || tagsChanged;
+  }, [snippet, title, content, description, tags]);
+
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+
+  const handleBackClick = () => {
+    if (isDirty) {
+      setShowUnsavedModal(true);
+    } else {
+      onCancel();
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    let currentTags = [...tags];
+    const trimmedTag = tagInput.trim();
+    if (trimmedTag && !currentTags.includes(trimmedTag)) {
+      currentTags.push(trimmedTag);
+      setTags(currentTags);
+      setTagInput('');
+    }
 
     if (!title.trim()) {
       setError('タイトルを入力してください。');
@@ -132,25 +216,62 @@ export default function SnippetForm({
       setError('定型文の本文を入力してください。');
       return;
     }
+    if (currentTags.length === 0) {
+      setError('タグを最低1つ登録してください。');
+      return;
+    }
 
     onSave({
       id: snippet?.id, // 新規作成時は undefined になります
       title: title.trim(),
       content: content.trim(),
       description: description.trim(),
-      tags: tags,
+      tags: currentTags,
     });
   };
 
   return (
-    <div className="max-w-3xl mx-auto bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden" id="snippet-form-root">
-      {/* UPDATE 2026-06-30: フォーム外枠コンテナーの背景とボーダーをダークモードに対応 */}
+    <div className="max-w-3xl mx-auto bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden relative" id="snippet-form-root">
+      {/* 未保存変更がある場合の離脱確認ダイアログモーダル */}
+      {showUnsavedModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 font-sans">
+            <div className="flex items-center space-x-3 text-amber-500">
+              <AlertTriangle className="w-6 h-6 shrink-0 animate-bounce" />
+              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">未保存の変更があります</h3>
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              入力・編集中の内容が保存されていません。一覧画面に戻ると変更内容は破棄されますが、よろしいですか？
+            </p>
+            <div className="flex items-center justify-end space-x-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowUnsavedModal(false)}
+                className="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium transition cursor-pointer"
+              >
+                編集を続ける
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowUnsavedModal(false);
+                  onCancel();
+                }}
+                className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-medium shadow-sm transition cursor-pointer"
+              >
+                保存せずに戻る
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ヘッダーバー */}
-      {/* UPDATE 2026-06-30: フォームヘッダーの背景とボーダーをダークモード（dark:bg-slate-950 dark:border-slate-850）に対応 */}
       <div className="bg-slate-50 dark:bg-slate-950 px-6 py-4 border-b border-slate-100 dark:border-slate-850 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <button
-            onClick={onCancel}
+            type="button"
+            onClick={handleBackClick}
             className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg transition cursor-pointer"
             id="btn-form-back"
             title="戻る"
@@ -258,9 +379,9 @@ export default function SnippetForm({
 
         {/* Tags Field */}
         <div>
-          {/* UPDATE 2026-06-30: ラベル色をダークモードに対応 */}
+          {/* UPDATE 2026-07-29: タグを必須項目として明示 */}
           <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wider font-sans">
-            タグ（スペースまたはカンマで区切って複数入力可能）
+            タグ <span className="text-red-500 font-bold">*必須</span>（スペースまたはカンマで区切って複数入力可能）
           </label>
           <div className="flex flex-col space-y-2.5">
             <div className="flex space-x-2">
@@ -271,6 +392,10 @@ export default function SnippetForm({
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="タグを入力（例：メール）"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
                 className="flex-1 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition"
                 id="form-input-tag"
               />

@@ -6,7 +6,23 @@
 
 ---
 
-## [Unreleased]
+## [1.14.0] - 2026-08-06
+
+### Added
+- **Rustバックエンドへの重処理全面移行 (`src-tauri/src/lib.rs`, Reactコンポーネント群)**:
+  - 差分計算 (LCS)、検索・ソート、タグAI提案、複数定型文マージ処理を Rust バックエンドへネイティブオフロード化。
+- **スマート・マウストラッキングツールチップ (`src-react/components/SnippetList.tsx`)**:
+  - マウスカーソル近傍へのスムーズ追従・枠外見切れ防止のスマートツールチップを実装。
+
+### Changed
+- **表示カラーモードラベルの最適化 (`src-react/App.tsx`)**:
+  - リストラベルを「ライト」「ダーク」「OS設定」へシンプル化。
+
+### Fixed
+- **タグ提案の安定ソート化とブラウザ自動入力の無効化 (`src-react/components/SnippetForm.tsx`, `src-tauri/src/lib.rs`)**:
+  - 同点スコアタグのアルファベット順固定（フリッカー防止）および `autoComplete="off"` による入力履歴ポップアップ非表示化。
+- **Serde デシリアライズ上位互換対応 (`src-tauri/src/lib.rs`)**:
+  - `snake_case` と `camelCase` の双方をパース可能なエイリアス構造を導入。
 
 ## [1.13.3] - 2026-07-23
 

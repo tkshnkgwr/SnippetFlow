@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ClipboardList,
   Layers,
@@ -35,7 +35,8 @@ export default function App() {
   const {
     isTauri,
     isDarkMode,
-    setIsDarkMode,
+    themeMode,
+    setThemeMode,
     snippets,
     activeTab,
     setActiveTab,
@@ -52,6 +53,7 @@ export default function App() {
     toasts,
     nextId,
     handleCloseApp,
+    handleMinimizeApp,
     handleCopyText,
     handleSaveSnippet,
     handleSoftDeleteSnippet,
@@ -66,9 +68,11 @@ export default function App() {
     handleImportJSON,
   } = useSnippets();
 
+  const [showHelpModal, setShowHelpModal] = useState(false);
+
   return (
     // UPDATE 2026-06-30: isDarkMode変数に応じて .dark クラスをルートに追加。Tailwind v4のダークモード制御を有効化します。
-    <div className={`h-screen overflow-hidden ${isDarkMode ? 'bg-slate-950 text-slate-100 dark' : 'bg-slate-50/20 text-slate-800'} flex flex-col font-sans transition-colors duration-200`} id="app-container">
+    <div className={`h-screen overflow-hidden ${isDarkMode ? 'bg-slate-950 text-slate-100 dark' : 'bg-slate-50 text-slate-800'} flex flex-col font-sans transition-colors duration-200`} id="app-container">
       
       {/* トースト通知のポップアップ表示コンテナ */}
       <div className="fixed top-5 right-5 space-y-2 z-50 max-w-sm w-full" id="toast-container">
@@ -91,15 +95,88 @@ export default function App() {
           </div>
         ))}
       </div>
+
+      {/* ヘルプダイアログモーダル */}
+      {showHelpModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in" id="help-modal">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/50">
+              <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400">
+                <HelpCircle className="w-5 h-5" />
+                <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">SnippetFlow ヘルプ</h3>
+              </div>
+              <button
+                onClick={() => setShowHelpModal(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-5 text-xs text-slate-600 dark:text-slate-300 font-sans leading-relaxed">
+              <div className="p-3.5 bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 rounded-xl space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-slate-900 dark:text-white text-sm">SnippetFlow</span>
+                  <span className="px-2 py-0.5 bg-indigo-600 text-white font-mono rounded text-[10px]">v{packageJson.version}</span>
+                </div>
+                <p className="text-slate-500 dark:text-slate-400 text-[11px]">
+                  定型文クリップボード・マネージャー ({isTauri ? 'Tauri Desktop Native' : 'Web Runtime'})
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center space-x-1.5">
+                  <span>⌨️ キーボードショートカット</span>
+                </h4>
+                <div className="grid grid-cols-1 gap-1.5 font-mono text-[11px]">
+                  <div className="flex items-center justify-between p-2 rounded bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+                    <span className="font-sans">新しい定型文を登録</span>
+                    <span className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded">Ctrl + N</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 rounded bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+                    <span className="font-sans">検索キーワードにフォーカス</span>
+                    <span className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded">Ctrl + F</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 rounded bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+                    <span className="font-sans">ダイアログ・モーダルを閉じる</span>
+                    <span className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded">Esc</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center space-x-1.5">
+                  <span>📜 システム・ログ情報</span>
+                </h4>
+                <div className="p-3 bg-slate-900 text-slate-200 font-mono text-[10px] rounded-xl space-y-1 overflow-x-auto border border-slate-800">
+                  <div>[SYS] Application Initialized (v{packageJson.version})</div>
+                  <div>[SYS] Environment: {isTauri ? 'Tauri Desktop Windows Client' : 'Browser Web App'}</div>
+                  <div>[DB]  Active Snippets: {snippets.length} records</div>
+                  <div>[CFG] Theme Mode: {themeMode} (Current: {isDarkMode ? 'Dark' : 'Light'})</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 flex justify-end">
+              <button
+                onClick={() => setShowHelpModal(false)}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium transition cursor-pointer"
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
  
-      <header data-tauri-drag-region className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 border-b border-slate-100 dark:border-slate-950 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 shadow-sm dark:shadow-md cursor-default select-none">
+      <header data-tauri-drag-region className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 border-b border-slate-100 dark:border-slate-950 px-6 py-3 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 shadow-sm dark:shadow-md cursor-default select-none">
         <div data-tauri-drag-region className="flex items-center space-x-3">
           <div className="p-2 bg-indigo-600 rounded-lg text-white shadow-inner">
             <ClipboardList className="w-6 h-6" id="app-logo-icon" />
           </div>
           <div data-tauri-drag-region>
             <h1 data-tauri-drag-region className="text-base font-bold font-sans tracking-wide text-slate-900 dark:text-white leading-none" id="app-title-header">
-              定型文クリップボード・マネージャー
+              SnippetFlow
             </h1>
             <p data-tauri-drag-region className="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-1">
               JSON Database Engine ver {packageJson.version} • Local Client Edition
@@ -107,8 +184,8 @@ export default function App() {
           </div>
         </div>
  
-        {/* アプリ上部の共通ナビゲーションタブ */}
-        <div className="flex items-center gap-3">
+        {/* アプリ上部の共通ナビゲーションタブおよび各種操作ボタン */}
+        <div className="flex items-center gap-2.5">
           <nav className="flex flex-wrap items-center bg-slate-100 dark:bg-slate-950 p-1 rounded-lg border border-slate-200 dark:border-slate-800 text-xs">
             <button
               onClick={() => {
@@ -182,20 +259,47 @@ export default function App() {
             </button>
           </nav>
  
-          {/* UPDATE 2026-07-01: トグルスイッチをライトモード時の白・グレー基調、ダークモード時の暗色基調へ対応させ、全体のコントラストを一元化 */}
+          {/* 表示カラー（テーマ）設定 - QuMaEditor風リスト選択 */}
+          <div className="relative inline-block text-xs">
+            <select
+              value={themeMode}
+              onChange={(e) => setThemeMode(e.target.value as 'light' | 'dark' | 'system')}
+              className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-950 hover:bg-slate-200 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-lg transition cursor-pointer font-sans focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              id="select-theme-mode"
+              title="表示カラー設定"
+            >
+              <option value="light">☀️ ライト</option>
+              <option value="dark">🌙 ダーク</option>
+              <option value="system">💻 OS設定</option>
+            </select>
+          </div>
+
+          {/* QuMaEditorスタイルのヘルプボタン */}
           <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            className="p-2 bg-slate-100 dark:bg-slate-950 hover:bg-slate-200 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-lg transition-all shrink-0 cursor-pointer flex items-center justify-center"
-            title={isDarkMode ? "ライトモードに切り替え" : "ダークモードに切り替え"}
-            id="btn-theme-toggle"
+            onClick={() => setShowHelpModal(true)}
+            className="p-1.5 bg-slate-100 dark:bg-slate-950 hover:bg-slate-200 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 rounded-lg transition shrink-0 cursor-pointer flex items-center justify-center"
+            title="ヘルプ（ショートカット・ログ・バージョン）"
+            id="btn-help-modal"
           >
-            {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-500" />}
+            <HelpCircle className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
           </button>
+
+          {/* ウィンドウ最小化ボタン */}
+          {isTauri && (
+            <button
+              onClick={handleMinimizeApp}
+              className="p-1.5 bg-slate-100 dark:bg-slate-950 hover:bg-slate-200 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 rounded-lg transition shrink-0 cursor-pointer flex items-center justify-center"
+              title="ウィンドウを最小化"
+              id="btn-minimize-app"
+            >
+              <span className="font-bold text-xs leading-none select-none px-0.5">ー</span>
+            </button>
+          )}
 
           {isTauri && (
             <button
               onClick={handleCloseApp}
-              className="p-2 bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 dark:hover:bg-rose-900 border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 rounded-lg transition-all shrink-0 cursor-pointer flex items-center justify-center"
+              className="p-1.5 bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 dark:hover:bg-rose-900 border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 rounded-lg transition shrink-0 cursor-pointer flex items-center justify-center"
               title="アプリを閉じる"
               id="btn-close-app"
             >

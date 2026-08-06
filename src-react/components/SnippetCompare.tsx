@@ -42,12 +42,40 @@ export default function SnippetCompare({
   const [diffParts, setDiffParts] = useState<DiffPart[]>([]);
 
   useEffect(() => {
-    if (snippetA && snippetB) {
-      const parts = computeDiff(snippetA.content, snippetB.content);
-      setDiffParts(parts);
-    } else {
-      setDiffParts([]);
-    }
+    let isMounted = true;
+    const calculate = async () => {
+      if (snippetA && snippetB) {
+        if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+          try {
+            const { invoke } = await import('@tauri-apps/api/core');
+            const res = await invoke<Array<{ diff_type: 'Added' | 'Removed' | 'Unchanged'; value: string }>>(
+              'compute_snippet_diff',
+              { oldText: snippetA.content, newText: snippetB.content }
+            );
+            if (isMounted) {
+              const mapped: DiffPart[] = res.map(r => ({
+                type: r.diff_type === 'Added' ? 'added' : r.diff_type === 'Removed' ? 'removed' : 'unchanged',
+                value: r.value,
+              }));
+              setDiffParts(mapped);
+              return;
+            }
+          } catch (e) {
+            console.error('Failed to compute diff via Rust backend:', e);
+          }
+        }
+        if (isMounted) {
+          const parts = computeDiff(snippetA.content, snippetB.content);
+          setDiffParts(parts);
+        }
+      } else {
+        if (isMounted) setDiffParts([]);
+      }
+    };
+    calculate();
+    return () => {
+      isMounted = false;
+    };
   }, [snippetAId, snippetBId, snippets, snippetA, snippetB]);
 
   const handleSwap = () => {

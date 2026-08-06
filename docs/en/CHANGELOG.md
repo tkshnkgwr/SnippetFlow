@@ -6,7 +6,23 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [Unreleased]
+## [1.14.0] - 2026-08-06
+
+### Added
+- **Full Text Processing Offloading to Rust Backend (`src-tauri/src/lib.rs`, React Components)**:
+  - Offloaded diff computation (LCS), search & sort, tag AI suggestions, and snippet merging natively to Rust IPC commands.
+- **Smart Mouse Tracking Tooltip (`src-react/components/SnippetList.tsx`)**:
+  - Implemented cursor-following tooltip with viewport boundary checking to prevent clipping on top items.
+
+### Changed
+- **Optimized Theme Mode Labels (`src-react/App.tsx`)**:
+  - Simplified theme option labels to "ライト", "ダーク", and "OS設定".
+
+### Fixed
+- **Tag Suggestion Stability & Disabled Autocomplete (`src-react/components/SnippetForm.tsx`, `src-tauri/src/lib.rs`)**:
+  - Fixed tag suggestion flicker via alphabetical tie-breaking and disabled browser input history popups with `autoComplete="off"`.
+- **Serde Deserialization Backward Compatibility (`src-tauri/src/lib.rs`)**:
+  - Added field aliases supporting both `snake_case` and `camelCase` JSON payloads.
 
 ## [1.13.3] - 2026-07-23
 

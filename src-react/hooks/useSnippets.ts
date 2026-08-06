@@ -8,26 +8,60 @@ interface Toast {
   type: 'success' | 'info' | 'error';
 }
 
+export type ThemeMode = 'light' | 'dark' | 'system';
+
 export function useSnippets() {
   const [isTauri] = useState(() => typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
     try {
-      const saved = localStorage.getItem('theme_dark_mode');
-      return saved === 'true';
-    } catch {
-      return false;
-    }
+      const saved = localStorage.getItem('theme_mode');
+      if (saved === 'light' || saved === 'dark' || saved === 'system') return saved;
+      const savedOld = localStorage.getItem('theme_dark_mode');
+      if (savedOld === 'true') return 'dark';
+    } catch {}
+    return 'system';
   });
 
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+
   useEffect(() => {
-    localStorage.setItem('theme_dark_mode', String(isDarkMode));
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    localStorage.setItem('theme_mode', themeMode);
+    
+    const applyTheme = () => {
+      let isDark = false;
+      if (themeMode === 'dark') {
+        isDark = true;
+      } else if (themeMode === 'light') {
+        isDark = false;
+      } else {
+        isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      }
+      setIsDarkMode(isDark);
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    };
+
+    applyTheme();
+
+    if (themeMode === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const listener = (e: MediaQueryListEvent) => {
+        setIsDarkMode(e.matches);
+        if (e.matches) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      };
+      mediaQuery.addEventListener('change', listener);
+      return () => mediaQuery.removeEventListener('change', listener);
     }
-  }, [isDarkMode]);
+  }, [themeMode]);
 
   const [snippets, setSnippets] = useState<Snippet[]>(DEFAULT_SNIPPETS);
 
@@ -123,6 +157,15 @@ export function useSnippets() {
       getCurrentWebviewWindow().close();
     } catch (e) {
       console.error('Failed to close window via Tauri API:', e);
+    }
+  };
+
+  const handleMinimizeApp = async () => {
+    try {
+      const { getCurrentWebviewWindow } = await import('@tauri-apps/api/webviewWindow');
+      getCurrentWebviewWindow().minimize();
+    } catch (e) {
+      console.error('Failed to minimize window via Tauri API:', e);
     }
   };
 
@@ -348,6 +391,8 @@ export function useSnippets() {
     isTauri,
     isDarkMode,
     setIsDarkMode,
+    themeMode,
+    setThemeMode,
     snippets,
     activeTab,
     setActiveTab,
@@ -364,6 +409,7 @@ export function useSnippets() {
     toasts,
     nextId,
     handleCloseApp,
+    handleMinimizeApp,
     handleCopyText,
     handleSaveSnippet,
     handleSoftDeleteSnippet,

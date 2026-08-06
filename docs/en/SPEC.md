@@ -78,7 +78,7 @@ Holds the application behavior and display settings.
 * **Tag Cloud UI Filtering**:
   * Unique tags are automatically extracted from snippets and listed as buttons.
   * Clicking a tag allows immediate toggle-based filtering of the snippet list.
-* **Quick Copy**: Clicking the "📋 Copy" button in each row instantly copies the text to the clipboard and displays a completion notification at the top for 3 seconds.
+* **Quick Copy**: Clicking the "📋" (or copy icon) button in each row instantly copies the text to the clipboard and displays a completion notification at the top.
 * **Multiple Selection**:
   * **Merge and Copy**: Clicking "🔗 Merge and Copy" when multiple snippets are selected merges their contents with a newline separator and copies them at once.
   * **Diff Comparison**: Enabled only when exactly two snippets are selected. Transitions to the Diff Comparison screen.
@@ -86,6 +86,7 @@ Holds the application behavior and display settings.
 ### 4.2. Change Screen (Create / Edit Form)
 * **Create**: Enter title, content, description, and tags to save. The current time is automatically set as the creation and update timestamps.
 * **Edit**: Load existing content and edit. The current time is automatically set as the update timestamp. When in edit mode, metadata such as ID, creation date, and update date are explicitly shown.
+* **Input Validation**: In addition to title and content, registering at least one tag is mandatory. If no tag is provided, saving is blocked with an error message. Any pending tag text in the input field will be automatically added upon save.
 * **Delete / Restore / Permanently Delete Actions**:
   * When the snippet is not deleted (`is_deleted == false`): Displays the "🗑️ Delete Snippet" button (logical deletion).
   * When the snippet is already logically deleted: Displays the "🔄 Restore from Archive" button and the "🗑️ Delete Permanently" (physical deletion) button.

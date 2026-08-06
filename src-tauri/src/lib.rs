@@ -5,21 +5,28 @@ use tauri::Manager;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct DbSnippet {
     pub id: usize,
     pub title: String,
     pub content: String,
+    #[serde(default)]
     pub description: String,
+    #[serde(alias = "created_at")]
     pub created_at: String,
+    #[serde(alias = "updated_at")]
     pub updated_at: String,
+    #[serde(default, alias = "deleted_at")]
     pub deleted_at: Option<String>,
+    #[serde(default, alias = "is_deleted")]
     pub is_deleted: bool,
+    #[serde(default)]
     pub tags: Vec<String>,
-    #[serde(default)]
+    #[serde(default, alias = "is_pinned")]
     pub is_pinned: bool,
-    #[serde(default)]
+    #[serde(default, alias = "copy_count")]
     pub copy_count: u32,
-    #[serde(default)]
+    #[serde(default, alias = "saved_time_sec")]
     pub saved_time_sec: u32,
 }
 
@@ -31,19 +38,21 @@ pub struct TauriSnippet {
     pub content: String,
     #[serde(default)]
     pub description: String,
+    #[serde(alias = "created_at")]
     pub created_at: String,
+    #[serde(alias = "updated_at")]
     pub updated_at: String,
-    #[serde(default)]
+    #[serde(default, alias = "deleted_at")]
     pub deleted_at: Option<String>,
-    #[serde(default)]
+    #[serde(default, alias = "is_deleted")]
     pub is_deleted: bool,
     #[serde(default)]
     pub tags: Vec<String>,
-    #[serde(default)]
+    #[serde(default, alias = "is_pinned")]
     pub is_pinned: bool,
-    #[serde(default)]
+    #[serde(default, alias = "copy_count")]
     pub copy_count: u32,
-    #[serde(default)]
+    #[serde(default, alias = "saved_time_sec")]
     pub saved_time_sec: u32,
 }
 
@@ -250,6 +259,181 @@ fn import_snippets_json() -> Result<String, String> {
     }
 }
 
+/// Rustバックエンドでの検索・フィルタリング・ソート結果を表す構造体。
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchResult {
+    /// 絞り込みおよびソート済みのスニペットリスト。
+    pub filtered_snippets: Vec<TauriSnippet>,
+    /// バックエンドでのクエリ検索処理時間（ミリ秒単位）。
+    pub query_time_ms: f64,
+}
+
+/// 2つのテキスト間で行単位の差分（LCS: 最長共通部分列）をRust側で高速計算して返します。
+///
+/// # Arguments
+/// * `old_text` - 比較元のテキスト（A）
+/// * `new_text` - 比較先のテキスト（B）
+#[tauri::command]
+fn compute_snippet_diff(old_text: String, new_text: String) -> Vec<common_lib::text::DiffPart> {
+    common_lib::text::compute_diff(&old_text, &new_text)
+}
+
+/// スニペット全件に対し、キーワード検索・複数タグ絞り込み・論理削除フィルタ・ソートをRust側で超高速実行します。
+///
+/// # Arguments
+/// * `snippets` - 検索対象のスニペット一覧
+/// * `search_text` - 検索キーワード
+/// * `selected_tags` - 絞り込み対象のタグリスト（いずれかを含む場合一致）
+/// * `show_deleted` - 削除済みデータを含めるかどうかのフラグ
+/// * `sort_criterion` - 並び替えの基準 ("updated_at_desc", "updated_at_asc", "created_at_desc", "title_asc", "copy_count_desc")
+#[tauri::command]
+fn search_snippets(
+    snippets: Vec<TauriSnippet>,
+    search_text: String,
+    selected_tags: Vec<String>,
+    show_deleted: bool,
+    sort_criterion: String,
+) -> SearchResult {
+    let start = std::time::Instant::now();
+    let lower_search = search_text.trim().to_lowercase();
+
+    let mut filtered: Vec<TauriSnippet> = snippets
+        .into_iter()
+        .filter(|s| {
+            if s.is_deleted && !show_deleted {
+                return false;
+            }
+
+            if !selected_tags.is_empty() {
+                let has_matching_tag = selected_tags.iter().any(|st| s.tags.contains(st));
+                if !has_matching_tag {
+                    return false;
+                }
+            }
+
+            if !lower_search.is_empty() {
+                let matches_title = s.title.to_lowercase().contains(&lower_search);
+                let matches_content = s.content.to_lowercase().contains(&lower_search);
+                let matches_desc = s.description.to_lowercase().contains(&lower_search);
+                let matches_id = s.id.to_string() == lower_search;
+                let matches_tags = s
+                    .tags
+                    .iter()
+                    .any(|t| t.to_lowercase().contains(&lower_search));
+                return matches_title
+                    || matches_content
+                    || matches_desc
+                    || matches_id
+                    || matches_tags;
+            }
+
+            true
+        })
+        .collect();
+
+    filtered.sort_by(|a, b| {
+        let pin_a = if a.is_pinned { 1 } else { 0 };
+        let pin_b = if b.is_pinned { 1 } else { 0 };
+        if pin_b != pin_a {
+            return pin_b.cmp(&pin_a);
+        }
+
+        match sort_criterion.as_str() {
+            "updated_at_asc" => a.updated_at.cmp(&b.updated_at),
+            "created_at_desc" => b.created_at.cmp(&a.created_at),
+            "title_asc" => a.title.cmp(&b.title),
+            "copy_count_desc" => b.copy_count.cmp(&a.copy_count),
+            _ => b.updated_at.cmp(&a.updated_at),
+        }
+    });
+
+    let elapsed = start.elapsed().as_secs_f64() * 1000.0;
+    SearchResult {
+        filtered_snippets: filtered,
+        query_time_ms: elapsed,
+    }
+}
+
+/// 既存スニペットの全体使用頻度と入力テキストとの出現スコア（タイトル重み2倍）を合算し、
+/// 最適なおすすめタグ Top 5 をRust側で高速生成して返します。
+///
+/// # Arguments
+/// * `snippets` - スニペットデータ全件
+/// * `title` - 入力・編集中のタイトル
+/// * `content` - 入力・編集中の本文
+/// * `description` - 入力・編集中の説明文
+/// * `current_tags` - 現在すでに登録されているタグ（候補から除外）
+#[tauri::command]
+fn suggest_tags_cmd(
+    snippets: Vec<TauriSnippet>,
+    title: String,
+    content: String,
+    description: String,
+    current_tags: Vec<String>,
+) -> Vec<String> {
+    use std::collections::HashMap;
+
+    let mut frequency_map: HashMap<String, usize> = HashMap::new();
+    for s in &snippets {
+        for t in &s.tags {
+            if !t.is_empty() {
+                *frequency_map.entry(t.clone()).or_insert(0) += 1;
+            }
+        }
+    }
+
+    let all_candidates: Vec<String> = frequency_map.keys().cloned().collect();
+
+    let mut scored: Vec<(String, usize, usize)> = all_candidates
+        .into_iter()
+        .filter(|t| !current_tags.contains(t))
+        .map(|tag| {
+            let lower_tag = tag.to_lowercase();
+            let mut text_score = 0;
+            text_score += common_lib::text::count_occurrences(&title, &lower_tag) * 2;
+            text_score += common_lib::text::count_occurrences(&content, &lower_tag);
+            text_score += common_lib::text::count_occurrences(&description, &lower_tag);
+            let freq = *frequency_map.get(&tag).unwrap_or(&0);
+            (tag, text_score, freq)
+        })
+        .collect();
+
+    scored.sort_by(|a, b| {
+        if b.1 != a.1 {
+            b.1.cmp(&a.1)
+        } else if b.2 != a.2 {
+            b.2.cmp(&a.2)
+        } else {
+            a.0.cmp(&b.0)
+        }
+    });
+
+    scored.truncate(5);
+    scored.into_iter().map(|(tag, _, _)| tag).collect()
+}
+
+/// 選択されたスニペットを順序通りに抽出して指定区切り文字でRust側で超高速結合します。
+///
+/// # Arguments
+/// * `snippets` - 定型文全件データ
+/// * `ordered_ids` - 結合するスニペットIDの順序配列
+/// * `separator` - 結合時の区切り文字列
+#[tauri::command]
+fn merge_snippets(
+    snippets: Vec<TauriSnippet>,
+    ordered_ids: Vec<usize>,
+    separator: String,
+) -> String {
+    let mut selected_contents = Vec::with_capacity(ordered_ids.len());
+    for id in ordered_ids {
+        if let Some(s) = snippets.iter().find(|item| item.id == id) {
+            selected_contents.push(s.content.as_str());
+        }
+    }
+    selected_contents.join(&separator)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -265,7 +449,11 @@ pub fn run() {
             save_snippets,
             is_storage_encrypted,
             export_snippets_json,
-            import_snippets_json
+            import_snippets_json,
+            compute_snippet_diff,
+            search_snippets,
+            suggest_tags_cmd,
+            merge_snippets
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {
@@ -283,7 +471,10 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{
+        compute_snippet_diff, merge_snippets, search_snippets, suggest_tags_cmd, DbSnippet,
+        TauriSnippet,
+    };
 
     #[test]
     fn test_db_snippet_conversion() {
@@ -344,5 +535,138 @@ mod tests {
         assert_eq!(s.copy_count, 0);
         assert_eq!(s.saved_time_sec, 0);
         assert_eq!(s.tags.len(), 0);
+    }
+
+    #[test]
+    fn test_compute_snippet_diff_cmd() {
+        let old_text = "line1\nline2".to_string();
+        let new_text = "line1\nline3".to_string();
+        let diff = compute_snippet_diff(old_text, new_text);
+        assert_eq!(diff.len(), 3);
+        assert_eq!(diff[0].diff_type, common_lib::text::DiffType::Unchanged);
+        assert_eq!(diff[0].value, "line1");
+    }
+
+    #[test]
+    fn test_search_snippets_cmd() {
+        let sample_a = TauriSnippet {
+            id: 1,
+            title: "Rust Email".to_string(),
+            content: "Hello Rust".to_string(),
+            description: "Desc".to_string(),
+            created_at: "2026-08-01 10:00:00".to_string(),
+            updated_at: "2026-08-01 10:00:00".to_string(),
+            deleted_at: None,
+            is_deleted: false,
+            tags: vec!["mail".to_string(), "rust".to_string()],
+            is_pinned: false,
+            copy_count: 10,
+            saved_time_sec: 100,
+        };
+        let sample_b = TauriSnippet {
+            id: 2,
+            title: "JS Note".to_string(),
+            content: "Hello JS".to_string(),
+            description: "Desc JS".to_string(),
+            created_at: "2026-08-02 10:00:00".to_string(),
+            updated_at: "2026-08-02 10:00:00".to_string(),
+            deleted_at: None,
+            is_deleted: false,
+            tags: vec!["js".to_string()],
+            is_pinned: true,
+            copy_count: 2,
+            saved_time_sec: 20,
+        };
+
+        let snippets = vec![sample_a, sample_b];
+        let res = search_snippets(
+            snippets.clone(),
+            "rust".to_string(),
+            vec![],
+            false,
+            "updated_at_desc".to_string(),
+        );
+
+        assert_eq!(res.filtered_snippets.len(), 1);
+        assert_eq!(res.filtered_snippets[0].id, 1);
+
+        let res_pin = search_snippets(
+            snippets,
+            "".to_string(),
+            vec![],
+            false,
+            "updated_at_asc".to_string(),
+        );
+
+        // ピン留めされた ID: 2 がソート順（updated_at_asc）に関わらず最上位に優先される
+        assert_eq!(res_pin.filtered_snippets[0].id, 2);
+    }
+
+    #[test]
+    fn test_suggest_tags_cmd() {
+        let snippet = TauriSnippet {
+            id: 1,
+            title: "Business Email".to_string(),
+            content: "Content".to_string(),
+            description: "".to_string(),
+            created_at: "".to_string(),
+            updated_at: "".to_string(),
+            deleted_at: None,
+            is_deleted: false,
+            tags: vec!["business".to_string(), "email".to_string()],
+            is_pinned: false,
+            copy_count: 0,
+            saved_time_sec: 0,
+        };
+
+        let suggestions = suggest_tags_cmd(
+            vec![snippet],
+            "Business Meeting".to_string(),
+            "".to_string(),
+            "".to_string(),
+            vec!["email".to_string()],
+        );
+
+        assert!(suggestions.contains(&"business".to_string()));
+        assert!(!suggestions.contains(&"email".to_string()));
+    }
+
+    #[test]
+    fn test_merge_snippets_cmd() {
+        let snippet_a = TauriSnippet {
+            id: 1,
+            title: "Part1".to_string(),
+            content: "Hello".to_string(),
+            description: "".to_string(),
+            created_at: "".to_string(),
+            updated_at: "".to_string(),
+            deleted_at: None,
+            is_deleted: false,
+            tags: vec![],
+            is_pinned: false,
+            copy_count: 0,
+            saved_time_sec: 0,
+        };
+        let snippet_b = TauriSnippet {
+            id: 2,
+            title: "Part2".to_string(),
+            content: "World".to_string(),
+            description: "".to_string(),
+            created_at: "".to_string(),
+            updated_at: "".to_string(),
+            deleted_at: None,
+            is_deleted: false,
+            tags: vec![],
+            is_pinned: false,
+            copy_count: 0,
+            saved_time_sec: 0,
+        };
+
+        let merged = merge_snippets(
+            vec![snippet_a, snippet_b],
+            vec![2, 1],
+            "\n---\n".to_string(),
+        );
+        assert_eq!(merged, "World\n---\nHello");
     }
 }

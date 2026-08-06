@@ -81,8 +81,20 @@ export default function SnippetMerge({
     return selectedSnippets.map(s => s.content).join(separator);
   };
 
-  const handleCopy = () => {
-    const text = getMergedText();
+  const handleCopy = async () => {
+    let text = '';
+    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        text = await invoke<string>('merge_snippets', { snippets, orderedIds, separator });
+      } catch (e) {
+        console.error('Failed to merge snippets via Rust backend:', e);
+        text = getMergedText();
+      }
+    } else {
+      text = getMergedText();
+    }
+
     if (text) {
       onCopyText(text, '結合された定型文', orderedIds);
       setCopied(true);

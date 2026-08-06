@@ -71,6 +71,28 @@ This document manages the current implementation status (Done), near-term tasks 
 - [ ] **Full Unification of App Settings**:
   Unify settings like theme choices and selected sorting orders in `settings.json` (consistent with egui) instead of storing them in Tauri's `localStorage`.
 
+### 2.2. Near-Term Planned Features and Improvements (Short-Term Improvements)
+- [x] **Multiple Tag Selection and Reset Button**:
+  Enhance tag cloud filtering in the list view to support selecting multiple tags simultaneously, and add a "Reset Selection" button to clear all active tag filters in one click.
+- [x] **Fix/Improve Fixed Tag Suggestions in Create/Edit Form**:
+  Investigate and fix the issue where tag candidates appearing during snippet creation and editing remain fixed, ensuring dynamic suggestions based on current input and existing tags.
+- [x] **Titlebar Help Button**:
+  Add a Help button to the titlebar styled after the "QuMaEditor" project design, displaying keyboard shortcuts, log viewer access, and application version info upon clicking.
+- [x] **Theme Selection List (Light / Dark / System OS)**:
+  Align the theme settings with "QuMaEditor" by allowing users to select "Light Mode", "Dark Mode", or "System OS Default" from a list selection interface.
+- [x] **Add Window Minimize Button**:
+  Place a minimize window button in the titlebar layout.
+- [x] **Update Titlebar Text to App Name**:
+  Change the titlebar display text from "Template Clipboard Manager" to the official app name "SnippetFlow".
+- [x] **Improve Tag Cloud Visibility in Dark Mode**:
+  Adjust existing tag colors in the list view tag cloud to be slightly brighter, improving legibility and visibility in dark mode.
+- [x] **Text Label Revision for Deleted Snippets Toggle**:
+  Change the toggle checkbox text from "Show deleted snippets (past logs)" to "Show deleted snippets".
+- [x] **Unsaved Changes Warning Dialog**:
+  Display a confirmation warning (e.g., "Changes will not be saved. Are you sure?") when navigating back to the list view after modifying content in the create/edit form without saving (excluding explicit clicks on the "Cancel" button).
+- [x] **Hover Popup (Tooltip) for Snippet Description in List View**:
+  Display a popup preview (tooltip/hover window) showing the snippet's description and auxiliary notes when hovering the mouse cursor over a card item in the list view.
+
 ---
 
 ## 3. Future Feature Expansion Proposals (Backlog)
