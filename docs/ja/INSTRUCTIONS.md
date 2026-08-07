@@ -7,84 +7,59 @@
 ---
 
 ## 1. 命名規則 (Naming Conventions)
-
-本プロジェクトは、使用する言語や環境に応じて標準的な命名規則を採用しています。
-
-### 1.1. Rust (src-egui / src-tauri / common_lib)
-- **パスカルケース (PascalCase)**:
-  - 構造体、トレイト、Enum、Enumバリアント (`SnippetManagerApp`, `Snippet`, `SortCriterion`, `AppScreen`)
-- **スネークケース (snake_case)**:
-  - 関数、メソッド、変数、構造体フィールド、モジュール名 (`load_data()`, `save_data()`, `is_dark_mode`, `copy_count`, `app.rs`, `storage.rs`)
-- **アッパースネークケース (UPPER_SNAKE_CASE)**:
-  - 定数、グローバル定数 (`STORAGE_FILE`, `SETTINGS_FILE`)
-
-### 1.2. TypeScript / React (src-react)
-- **パスカルケース (PascalCase)**:
-  - コンポーネント名、インターフェース、型定義、コンポーネントファイル名 (`SnippetList`, `Snippet`, `ActiveTab`, `SnippetForm.tsx`)
-- **キャメルケース (camelCase)**:
-  - 変数、関数、オブジェクトプロパティ、フック名 (`computeDiff`, `useSnippets`, `createdAt`, `isDeleted`, `mockData`)
-- **アッパースネークケース (UPPER_SNAKE_CASE)**:
-  - モジュール内の定数定義 (`DEFAULT_SNIPPETS`)
-
-### 1.3. データ構造シリアライズのマッピング規則
-Tauri/Web側（キャメルケース）とRust側（スネークケース）でJSONデータの相互やり取りが発生するため、以下のマッピングに留意してください。
-- Rustモデル (`src-egui/model.rs`) では、`is_pinned`, `copy_count`, `saved_time_sec` などのフィールドに対して `#[serde(default)]` アトリビュートを付与しています。
-- フィールドの命名差異があるため、Rust側でシリアライズ/デシリアライズする際は、Web側のキャメルケース（例: `isPinned`, `copyCount`）とRust側のスネークケース（例: `is_pinned`, `copy_count`）の差異を壊さないよう、互換性を考慮してフィールドを扱ってください。
+使用する言語や環境に応じて標準的な命名規則を採用しています。
+- **Rust (src-egui / src-tauri / common_lib)**:
+  - 構造体、トレイト、Enum、Enumバリアント: `PascalCase`
+  - 関数、メソッド、変数、構造体フィールド、モジュール名: `snake_case`
+  - 定数、グローバル定数: `SCREAMING_SNAKE_CASE`
+- **TypeScript / React (src-react)**:
+  - コンポーネント名、インターフェース、型定義、コンポーネントファイル名: `PascalCase`
+  - 変数、関数、オブジェクトプロパティ、フック名: `camelCase`
+  - モジュール内の定数定義: `UPPER_SNAKE_CASE`
+- **シリアライズの例外**: Tauri/Web側（キャメルケース）とRust側（スネークケース）の相互変換時の互換性を維持する。
 
 ---
 
 ## 2. エラーハンドリング方針 (Error Handling Policy)
-
-開発環境やユーザーの利用環境において、アプリが突然クラッシュしたりサイレントにハングアップしたりするのを防ぐため、以下のエラーハンドリング方針を徹底してください。
-
-### 2.1. Rust (egui / storage / common_lib)
-- **フォールバックとサイレントハンドリング (デフォルト指向)**:
-  - `storage.rs` や `AppSettings::load()` のように、ファイルが存在しない場合やパースエラーが発生した場合は、クラッシュさせずに `Default::default()` や事前に用意した初期サンプルデータへ安全にフォールバックします。
-  - `if let Ok(val) = ...` や `unwrap_or_else` を活用し、不可避なI/Oエラーを安全に無視・処理します。
-- **伝播が必要なエラー (Tauri コマンド等)**:
-  - Webviewへ結果を返却するTauriコマンド (`export_snippets_json` 等) では、明示的にエラーをフロントエンドへ伝えるため、`Result<T, String>` を戻り値とします。
-  - Rustの標準的なエラーは、呼び出し時に `.map_err(|e| e.to_string())?` を用いて文字列のエラーメッセージに変換し、フロントエンド側へ伝播させます。
-
-### 2.2. TypeScript / React (src-react)
-- **I/Oと状態操作の例外保護**:
+- **Rust (egui / storage / common_lib)**:
+  - ファイルが存在しない場合やパースエラーが発生した場合は、`Default::default()` や初期サンプルデータへ安全にフォールバックします。
+- **TypeScript / React (src-react)**:
   - `localStorage` の読み書きや、JSONパースの実行時には、必ず `try-catch` ブロックで囲んで例外を捕捉し、アプリ全体のレンダリングが停止するのを防止します。
-- **ユーザーへのフィードバック**:
-  - コピー失敗、インポート失敗などのエラーが発生した場合は、単に `console.error` に出力するだけでなく、トースト通知機能（`addToast(message, 'error')`）を呼び出し、ユーザーが視覚的に失敗を検知できるようにします。
+  - エラー発生時はトースト通知機能（`addToast(message, 'error')`）を呼び出します。
 
 ---
 
 ## 3. コンポーネント・モジュール分割基準
-
-コードの保守性と視認性を高く保つため、機能や役割に応じてコードを分割します。単一のプログラムソースファイル（`.rs`, `.ts`, `.tsx` 等）が 1000 行を超過した場合は、必ず機能ごとのモジュール分割・リファクタリングを実施または提案してください。
-
-### 3.1. Rust (src-egui)
-- **`main.rs`**: エントリポイント。多重起動チェック、NativeOptionsの設定、カスタムフォントの設定のみを行います。
-- **`model.rs`**: データ構造（`Snippet`, `AppSettings` 等）およびEnum定義のみを格納します。
-- **`storage.rs`**: JSONファイルへの入出力（ロード・セーブ）処理のみをカプセル化します。
-- **`theme.rs`**: カラーパレットの定義、ダークモード/ライトモード用のスタイル設定、カスタム日本語フォントのロード、ハイライト処理などを格納します。
-- **`app.rs`**: アプリケーションの状態管理、イベントループ (`update`)、ヘッダー/フッター等の大枠のレイアウトを処理します。
-- **`ui.rs`**: 各画面（一覧、フォーム、比較、結合、性能診断）の具体的な描画ロジックを担当する関数群を配置します。
-
-### 3.2. TypeScript / React (src-react)
-- **`App.tsx`**: 最上位レイアウト、トーストコンテナ、および上部ナビゲーション・フッターのみを管理するスケルトンとして機能させます。
-- **`hooks/useSnippets.ts`**: アプリケーションのすべての状態管理（コピー、保存、論理削除、物理削除、復元、ダミーデータ生成など）を一元化して管理するカスタムフックです。
-- **`components/`**: 画面単位で完全にファイルを分離します。
-  - `SnippetList.tsx`: 一覧画面（検索、ソート、ピン留め、複数選択アクション）。
-  - `SnippetForm.tsx`: 追加・編集フォーム（タグ自動提案を含む）。
-  - `SnippetCompare.tsx`: 動的差し替え対応の2カラムLCS差分表示。
-  - `SnippetMerge.tsx`: 結合順序調整、区切り文字選択、ライブプレビュー。
-  - `StatsPanel.tsx`: データベース診断、使用統計、負荷テスト、アーキテクチャガイド。
+単一のプログラムソースファイル（`.rs`, `.ts`, `.tsx` 等）が 1000 行を超過した場合は、必ず機能ごとのモジュール分割・リファクタリングを実施または提案します。
+- **Rust (src-egui)**: `main.rs`, `model.rs`, `storage.rs`, `theme.rs`, `app.rs`, `ui.rs` に分割。
+- **TypeScript / React (src-react)**: `App.tsx`, `hooks/useSnippets.ts`, `components/` 配下に分割。
 
 ---
 
-## 4. AIが出力する際のフォーマット指定 (AI Output Format)
+## 4. 自動ドキュメンテーションと更新ルール (モジュール化退避)
+コード変更・機能追加・バグ修正時は `docs/ja/` および `docs/en/` の両ドキュメントを完全同期更新します (`CHANGELOG.md`, `SPEC.md`, `TODO.md` 等)。
+※**`.md` ファイルのみの変更時は、本自動更新および事前検証プロセスはスキップします。**
 
-AIがソースコードの修正や追加案を提案する際は、以下のルールを厳守してください。
+| 対象ドキュメント | 役割 | 更新タイミング |
+| :--- | :--- | :--- |
+| `CHANGELOG.md` | 変更履歴の記録 | 実装完了ごとに追記。日付単位 (`## [YYYY-MM-DD]`)・カテゴリ別 (`Added`, `Fixed`, `Optimized`, `Removed`) に最新が上に来るよう記述。 |
+| `SPEC.md` | 機能仕様・定義 | CLI引数、計算ロジック、計算精度、UIコンポーネント、対応OSなどの仕様変更時。 |
+| `DIAGRAM.md` | システム構成・可視化 | 処理フロー変更時にMermaid（英語版は英語表記）を更新。 |
+| `README.md` / `README_JA.md` | 概要・ビルド/実行手順 | 起動オプション、ビルド手順、動作要件等の変更時。 |
+| `FOOTPRINTS.md` | パフォーマンス計測 | リリースビルドサイズ変更、最適化設定変更、新規計測結果取得時に追記。 |
+| `ARCHITECTURE.md` | 設計・モジュール構造 | 内部構造刷新、モジュールの新規作成・分割、アルゴリズム変更時に更新。 |
+| `INSTRUCTIONS.md` | AI向けコーディング規約 | AI向けのコーディング規約や方針の管理。 |
+| `TODO.md` | タスク管理 | Done (実装済)、In Progress/Todo (直近タスク)、Backlog (拡張提案) の追加・更新時。 |
 
-- **解説は最小限にする**:
-  - コードの背景にある実装意図や重要なロジックの変更点以外の、些長な文法解説は行わないでください。
-  - 修正コードそのものが語る状態を目指します。
-- **行番号と差分コンテキストの明記**:
-  - コード編集ツールを使用する際、および差分をテキストで示す際は、前後のコード（コンテキスト）を十分に含め、変更箇所の行番号や対象ファイルを誤認しないように明確に指定してください。
-- **文字化け（豆腐文字）防止の厳守**:
-  - `egui` 周りのUIコンポーネントを修正する場合、日本語の描画が発生する箇所では、`theme::setup_custom_fonts` を通してロードされたフォントが適切に適用され、文字化け（豆腐文字）が絶対に発生しないように配慮してください。
+---
+
+## 5. 品質管理・事前検証ルール (モジュール化退避)
+- **モジュール分割 (1,000行ルール)**: 単一ソースファイルが **1,000行** を超えた場合は分割・リファクタリングを提案。
+- **ローカル事前検証 5 コマンド** (※ `.md` のみ変更時はスキップ):
+  1. `cargo test` （テスト合格）
+  2. `cargo clippy --all-targets -- -D warnings` （Clippy警告ゼロ）
+  3. `cargo fmt --check` （フォーマット適合）
+  4. `cargo doc --no-deps --document-private-items` （Rustdocビルド警告ゼロ）
+  5. `npm run lint && npm run build` （TypeScript型チェック＆Viteビルド合格）
+- **バージョン管理 (SSOT)**:
+  - ルート `package.json` を SSOT とし、`Cargo.toml`（ルート & `src-tauri`）と同期する。

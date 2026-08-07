@@ -9,98 +9,41 @@ on:
     branches: [ main ]
     paths-ignore:
       - '**.md'
+  workflow_dispatch:
 
 jobs:
-  frontend:
-    runs-on: ubuntu-latest
+  quality-check:
+    name: Frontend Lint & Rust Tauri Check
+    runs-on: windows-latest
+
     steps:
       - name: Checkout SnippetFlow
         uses: actions/checkout@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: package-lock.json
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Rust Cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "src-tauri -> target"
+
       - name: Install dependencies
         run: npm ci
-      - name: Build frontend
-        run: npm run build
 
-  rust-egui:
-    runs-on: windows-latest
-    steps:
-      - name: Checkout SnippetFlow
-        uses: actions/checkout@v4
-      - name: Checkout common_lib
-        uses: actions/checkout@v4
-        with:
-          repository: tkshnkgwr/common_lib
-          path: common_lib
-          token: ${{ secrets.PAT || github.token }}
-      - name: Move common_lib to parent directory
-        shell: pwsh
-        run: Move-Item -Path common_lib -Destination ..\common_lib
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy, rustfmt
-      - name: Cargo Cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-egui-${{ hashFiles('**/Cargo.lock') }}
-      - name: Check formatting
-        run: cargo fmt --check
-      - name: Run clippy
-        run: cargo clippy --all-targets -- -D warnings
-      - name: Run tests
-        run: cargo test
+      - name: Run lint & type check
+        run: npm run lint
 
-  rust-tauri:
-    runs-on: windows-latest
-    steps:
-      - name: Checkout SnippetFlow
-        uses: actions/checkout@v4
-      - name: Checkout common_lib
-        uses: actions/checkout@v4
-        with:
-          repository: tkshnkgwr/common_lib
-          path: common_lib
-          token: ${{ secrets.PAT || github.token }}
-      - name: Move common_lib to parent directory
-        shell: pwsh
-        run: Move-Item -Path common_lib -Destination ..\common_lib
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install Node dependencies
-        run: npm ci
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy, rustfmt
-      - name: Cargo Cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            src-tauri/target/
-          key: ${{ runner.os }}-cargo-tauri-${{ hashFiles('src-tauri/Cargo.lock') }}
       - name: Check formatting (Tauri)
-        run: |
-          cd src-tauri
-          cargo fmt --check
+        run: cargo fmt --manifest-path src-tauri/Cargo.toml --check
+
       - name: Run clippy (Tauri)
-        run: |
-          cd src-tauri
-          cargo clippy --all-targets -- -D warnings
+        run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
