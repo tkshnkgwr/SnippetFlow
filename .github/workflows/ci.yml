@@ -20,6 +20,18 @@ jobs:
       - name: Checkout SnippetFlow
         uses: actions/checkout@v4
 
+      - name: Checkout common_lib
+        uses: actions/checkout@v4
+        with:
+          repository: tkshnkgwr/common_lib
+          token: ${{ secrets.PAT || github.token }}
+          path: common_lib_tmp
+
+      - name: Move common_lib to parent directory
+        shell: pwsh
+        run: |
+          Move-Item -Path common_lib_tmp -Destination ../common_lib
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -47,3 +59,6 @@ jobs:
 
       - name: Run clippy (Tauri)
         run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+
+      - name: Run unit tests (Tauri)
+        run: cargo test --manifest-path src-tauri/Cargo.toml
