@@ -7,13 +7,23 @@ import React, { useState } from 'react';
 import { Database, Zap, HardDrive, BarChart3, ShieldAlert, Sparkles } from 'lucide-react';
 import { Snippet } from '../types';
 
+/**
+ * 性能メーター・アナリティクス画面コンポーネントのProps定義。
+ */
 interface StatsPanelProps {
+  /** スニペット全件データ */
   snippets: Snippet[];
+  /** ダミーデータ生成ハンドラー */
   onGenerateMock: (count: number) => void;
+  /** ダミーデータクリーンアップハンドラー */
   onClearMock: () => void;
+  /** 直近のクエリ実行時間（ミリ秒） */
   queryTimeMs: number;
 }
 
+/**
+ * データベース診断、使用統計アナリティクス、ベンチマークテスト、およびダミーデータ負荷検証を提供する画面。
+ */
 export default function StatsPanel({
   snippets,
   onGenerateMock,

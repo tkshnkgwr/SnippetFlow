@@ -25,6 +25,8 @@ Thumbs.db
 *.un~
 *~
 *.swp
+*.bak
+/*.bak
 
 # Tauri (src-tauri) 関連の除外
 /src-tauri/target/

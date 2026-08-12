@@ -8,14 +8,25 @@ import { ArrowLeftRight, Copy, Check, FileText, Split, ArrowLeft } from 'lucide-
 import { Snippet } from '../types';
 import { computeDiff, DiffPart } from '../utils';
 
+/**
+ * スニペット差分比較画面コンポーネントのProps定義。
+ */
 interface SnippetCompareProps {
+  /** スニペット全件データ */
   snippets: Snippet[];
+  /** 比較対象Aの初期選択ID */
   initialSnippetAId?: number;
+  /** 比較対象Bの初期選択ID */
   initialSnippetBId?: number;
+  /** 戻るボタンクリックハンドラー */
   onBack: () => void;
+  /** コピー処理ハンドラー */
   onCopyText: (text: string, label: string, id?: number | number[]) => void;
 }
 
+/**
+ * 2つの選択された定型文を行単位のLCS差分（最長共通部分列）ハイライトで比較する2カラム画面。
+ */
 export default function SnippetCompare({
   snippets,
   initialSnippetAId,

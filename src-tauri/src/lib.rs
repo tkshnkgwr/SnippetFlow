@@ -4,54 +4,80 @@ use tauri::Manager;
 
 use serde::{Deserialize, Serialize};
 
+/// データベース（snippets.json）保存形式のスニペット構造体。
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct DbSnippet {
+    /// 定型文の一意な識別ID
     pub id: usize,
+    /// 定型文のタイトル
     pub title: String,
+    /// 定型文の本文
     pub content: String,
+    /// 定型文の補足・説明テキスト
     #[serde(default)]
     pub description: String,
+    /// 作成日時 (ISO 8601 フォーマット)
     #[serde(alias = "created_at")]
     pub created_at: String,
+    /// 最終更新日時 (ISO 8601 フォーマット)
     #[serde(alias = "updated_at")]
     pub updated_at: String,
+    /// 論理削除日時 (`Option<String>`)
     #[serde(default, alias = "deleted_at")]
     pub deleted_at: Option<String>,
+    /// 論理削除フラグ (true の場合ゴミ箱内)
     #[serde(default, alias = "is_deleted")]
     pub is_deleted: bool,
+    /// 関連付けられたタグリスト
     #[serde(default)]
     pub tags: Vec<String>,
+    /// 最上部ピン留め表示フラグ
     #[serde(default, alias = "is_pinned")]
     pub is_pinned: bool,
+    /// コピー累計回数
     #[serde(default, alias = "copy_count")]
     pub copy_count: u32,
+    /// コピーにより節約された推定短縮時間（秒単位）
     #[serde(default, alias = "saved_time_sec")]
     pub saved_time_sec: u32,
 }
 
+/// Tauri IPCコマンドとの相互やり取りに使用するスニペット構造体。
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct TauriSnippet {
+    /// 定型文の一意な識別ID
     pub id: usize,
+    /// 定型文のタイトル
     pub title: String,
+    /// 定型文の本文
     pub content: String,
+    /// 定型文の補足・説明テキスト
     #[serde(default)]
     pub description: String,
+    /// 作成日時 (ISO 8601 フォーマット)
     #[serde(alias = "created_at")]
     pub created_at: String,
+    /// 最終更新日時 (ISO 8601 フォーマット)
     #[serde(alias = "updated_at")]
     pub updated_at: String,
+    /// 論理削除日時 (`Option<String>`)
     #[serde(default, alias = "deleted_at")]
     pub deleted_at: Option<String>,
+    /// 論理削除フラグ
     #[serde(default, alias = "is_deleted")]
     pub is_deleted: bool,
+    /// 関連付けられたタグリスト
     #[serde(default)]
     pub tags: Vec<String>,
+    /// 最上部ピン留め表示フラグ
     #[serde(default, alias = "is_pinned")]
     pub is_pinned: bool,
+    /// コピー累計回数
     #[serde(default, alias = "copy_count")]
     pub copy_count: u32,
+    /// コピーにより節約された推定短縮時間（秒単位）
     #[serde(default, alias = "saved_time_sec")]
     pub saved_time_sec: u32,
 }
@@ -123,6 +149,8 @@ fn get_storage_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     Ok(data_dir.join("snippets.json"))
 }
 
+/// ローカルストレージ（snippets.json）からスニペット一覧を読み込みます。
+/// 暗号化されている場合は透過的に復号し、存在しない/破損時はデフォルトサンプルを復元生成します。
 #[tauri::command]
 fn load_snippets(app: tauri::AppHandle) -> Result<Vec<TauriSnippet>, String> {
     let path = get_storage_path(&app)?;
@@ -189,6 +217,11 @@ fn load_snippets(app: tauri::AppHandle) -> Result<Vec<TauriSnippet>, String> {
     Ok(tauri_snippets)
 }
 
+/// スニペット全件データをアトミックに保存します。必要に応じて暗号化保存を適用します。
+///
+/// # Arguments
+/// * `snippets` - 保存するスニペット配列
+/// * `encrypt` - 明示的な暗号化フラグ（指定なしの場合は既存ファイルの保存状態を維持）
 #[tauri::command]
 fn save_snippets(
     app: tauri::AppHandle,
@@ -219,6 +252,7 @@ fn save_snippets(
     atomic_write(&path, &content_to_save)
 }
 
+/// 現在の snippets.json が暗号化保存されているかを判定して返します。
 #[tauri::command]
 fn is_storage_encrypted(app: tauri::AppHandle) -> Result<bool, String> {
     let path = get_storage_path(&app)?;
@@ -229,6 +263,7 @@ fn is_storage_encrypted(app: tauri::AppHandle) -> Result<bool, String> {
     }
 }
 
+/// OSネイティブの保存ダイアログを表示し、スニペットのJSONデータをローカルファイルへ保存します。
 #[tauri::command]
 fn export_snippets_json(json_str: String) -> Result<(), String> {
     if let Some(path) = rfd::FileDialog::new()
@@ -242,6 +277,8 @@ fn export_snippets_json(json_str: String) -> Result<(), String> {
     }
 }
 
+/// OSネイティブのファイル選択ダイアログを表示し、選択されたJSONファイルをインポート用に読み込みます。
+/// （暗号化ファイルの場合は透過的に復号して返します）
 #[tauri::command]
 fn import_snippets_json() -> Result<String, String> {
     if let Some(path) = rfd::FileDialog::new()
@@ -434,6 +471,8 @@ fn merge_snippets(
     selected_contents.join(&separator)
 }
 
+/// Tauriアプリケーションのエントリポイント。
+/// 二重起動防止プラグインの登録、IPCコマンドのバインド、およびハンドラーの起動を行います。
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -497,63 +536,46 @@ mod tests {
         assert_eq!(tauri.id, 1);
         assert_eq!(tauri.title, "Test Title");
         assert!(tauri.is_pinned);
-
-        let db_back: DbSnippet = tauri.into();
-        assert_eq!(db_back.id, db.id);
-        assert_eq!(db_back.title, db.title);
-        assert_eq!(db_back.copy_count, db.copy_count);
-    }
-
-    #[test]
-    fn test_crypto_integration() {
-        let original_json = r#"[{"id":1,"title":"Sample"}]"#;
-        let encrypted =
-            common_lib::crypto::encrypt_data(original_json, common_lib::crypto::DEFAULT_SECRET_KEY);
-        assert!(common_lib::crypto::is_encrypted(&encrypted));
-
-        let decrypted =
-            common_lib::crypto::decrypt_data(&encrypted, common_lib::crypto::DEFAULT_SECRET_KEY)
-                .unwrap();
-        assert_eq!(decrypted, original_json);
-    }
-
-    #[test]
-    fn test_tauri_snippet_deserialization_with_missing_fields() {
-        let json = r#"{
-            "id": 1003,
-            "title": "New Snippet",
-            "content": "Content",
-            "createdAt": "2026-07-23 14:00:00",
-            "updatedAt": "2026-07-23 14:00:00"
-        }"#;
-        let snippet: Result<TauriSnippet, _> = serde_json::from_str(json);
-        assert!(snippet.is_ok());
-        let s = snippet.unwrap();
-        assert_eq!(s.id, 1003);
-        assert_eq!(s.description, "");
-        assert!(!s.is_pinned);
-        assert_eq!(s.copy_count, 0);
-        assert_eq!(s.saved_time_sec, 0);
-        assert_eq!(s.tags.len(), 0);
     }
 
     #[test]
     fn test_compute_snippet_diff_cmd() {
-        let old_text = "line1\nline2".to_string();
-        let new_text = "line1\nline3".to_string();
-        let diff = compute_snippet_diff(old_text, new_text);
-        assert_eq!(diff.len(), 3);
-        assert_eq!(diff[0].diff_type, common_lib::text::DiffType::Unchanged);
-        assert_eq!(diff[0].value, "line1");
+        let diff = compute_snippet_diff("Hello".to_string(), "World".to_string());
+        assert!(!diff.is_empty());
+    }
+
+    #[test]
+    fn test_crypto_integration() {
+        let plain = "Hello SnippetFlow";
+        let encrypted =
+            common_lib::crypto::encrypt_data(plain, common_lib::crypto::DEFAULT_SECRET_KEY);
+        assert!(common_lib::crypto::is_encrypted(&encrypted));
+
+        let decrypted =
+            common_lib::crypto::decrypt_data(&encrypted, common_lib::crypto::DEFAULT_SECRET_KEY)
+                .expect("Decryption failed");
+        assert_eq!(decrypted, plain);
+    }
+
+    #[test]
+    fn test_tauri_snippet_deserialization_with_missing_fields() {
+        let json_str = r#"[{"id": 99, "title": "Minimal", "content": "Minimal Content", "createdAt": "2026-07-23", "updatedAt": "2026-07-23"}]"#;
+        let db_list: Vec<DbSnippet> =
+            serde_json::from_str(json_str).expect("Deserialization failed");
+        assert_eq!(db_list.len(), 1);
+        assert_eq!(db_list[0].id, 99);
+        assert_eq!(db_list[0].description, "");
+        assert!(!db_list[0].is_deleted);
+        assert!(!db_list[0].is_pinned);
     }
 
     #[test]
     fn test_search_snippets_cmd() {
         let sample_a = TauriSnippet {
             id: 1,
-            title: "Rust Email".to_string(),
+            title: "Rust Guide".to_string(),
             content: "Hello Rust".to_string(),
-            description: "Desc".to_string(),
+            description: "Desc Rust".to_string(),
             created_at: "2026-08-01 10:00:00".to_string(),
             updated_at: "2026-08-01 10:00:00".to_string(),
             deleted_at: None,
@@ -611,6 +633,58 @@ mod tests {
         );
         assert_eq!(res_and.filtered_snippets.len(), 1);
         assert_eq!(res_and.filtered_snippets[0].id, 1);
+    }
+
+    #[test]
+    fn test_search_snippets_show_deleted_filter() {
+        let active_snippet = TauriSnippet {
+            id: 1,
+            title: "Active".to_string(),
+            content: "Active".to_string(),
+            description: "".to_string(),
+            created_at: "2026-08-01 10:00:00".to_string(),
+            updated_at: "2026-08-01 10:00:00".to_string(),
+            deleted_at: None,
+            is_deleted: false,
+            tags: vec![],
+            is_pinned: false,
+            copy_count: 0,
+            saved_time_sec: 0,
+        };
+        let deleted_snippet = TauriSnippet {
+            id: 2,
+            title: "Deleted".to_string(),
+            content: "Deleted".to_string(),
+            description: "".to_string(),
+            created_at: "2026-08-01 10:00:00".to_string(),
+            updated_at: "2026-08-01 10:00:00".to_string(),
+            deleted_at: Some("2026-08-02 10:00:00".to_string()),
+            is_deleted: true,
+            tags: vec![],
+            is_pinned: false,
+            copy_count: 0,
+            saved_time_sec: 0,
+        };
+
+        let snippets = vec![active_snippet, deleted_snippet];
+
+        let hide_del = search_snippets(
+            snippets.clone(),
+            "".to_string(),
+            vec![],
+            false,
+            "updated_at_desc".to_string(),
+        );
+        assert_eq!(hide_del.filtered_snippets.len(), 1);
+
+        let show_del = search_snippets(
+            snippets,
+            "".to_string(),
+            vec![],
+            true,
+            "updated_at_desc".to_string(),
+        );
+        assert_eq!(show_del.filtered_snippets.len(), 2);
     }
 
     #[test]

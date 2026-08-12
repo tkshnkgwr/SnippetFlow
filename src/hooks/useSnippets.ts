@@ -2,14 +2,25 @@ import { useState, useEffect } from 'react';
 import { Snippet, ActiveTab, SortCriterion } from '../types';
 import { DEFAULT_SNIPPETS, generateMockSnippets } from '../utils';
 
+/**
+ * アプリ内通知トーストの通知要素構造。
+ */
 interface Toast {
   id: string;
   message: string;
   type: 'success' | 'info' | 'error';
 }
 
+/**
+ * カラーテーマ設定（'light' | 'dark' | 'system'）。
+ */
 export type ThemeMode = 'light' | 'dark' | 'system';
 
+/**
+ * スニペットデータの一元管理・Tauri IPC連携・永続化・カラーテーマ設定を行うメインカスタムフック。
+ *
+ * @returns スニペット操作用ステートおよびアクション関数オブジェクト
+ */
 export function useSnippets() {
   const [isTauri] = useState(() => typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window);
   const [isLoaded, setIsLoaded] = useState(false);

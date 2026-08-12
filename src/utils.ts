@@ -5,12 +5,23 @@
 
 import { Snippet } from './types';
 
-// 簡易的な行単位・文字単位の差分計算アルゴリズム（LCS: 最長共通部分列アルゴリズムに基づく）
+/**
+ * テキスト差分（LCSアルゴリズム）の各比較ブロックの型定義。
+ */
 export interface DiffPart {
+  /** 差分の変更タイプ（追加 / 削除 / 変更なし） */
   type: 'added' | 'removed' | 'unchanged';
+  /** 比較要素の行文字列 */
   value: string;
 }
 
+/**
+ * 2つのテキスト間で行単位の差分（最長共通部分列: LCS）を計算します。
+ *
+ * @param oldText - 比較元（旧）テキスト
+ * @param newText - 比較先（新）テキスト
+ * @returns 行単位の差分オブジェクト配列
+ */
 export function computeDiff(oldText: string, newText: string): DiffPart[] {
   // 行ごとに分割して綺麗な行単位の比較を行う
   const oldLines = oldText.split('\n');
@@ -51,7 +62,9 @@ export function computeDiff(oldText: string, newText: string): DiffPart[] {
   return result;
 }
 
-// 初期データの日本語テンプレート
+/**
+ * アプリ初回起動時に読み込まれるデフォルトスニペットテンプレート一覧。
+ */
 export const DEFAULT_SNIPPETS: Snippet[] = [
   {
     id: 1001,
@@ -106,7 +119,12 @@ export const DEFAULT_SNIPPETS: Snippet[] = [
   }
 ];
 
-// JSONの描画や検索処理のパフォーマンス速度をテストするための大量のダミーデータを生成するヘルパー関数
+/**
+ * パフォーマンスベンチマークおよび負荷テスト用に指定件数のモックスニペットデータを自動生成します。
+ *
+ * @param count - 生成するスニペットの件数（例: 1000, 5000）
+ * @returns 生成されたスニペットオブジェクト配列
+ */
 export function generateMockSnippets(count: number): Snippet[] {
   const baseTags = ["ビジネス", "開発", "サポート", "マーケティング", "プライベート", "テンプレ", "SNS", "重要"];
   const templates = [

@@ -45,24 +45,45 @@ const highlightText = (text: string, highlight: string) => {
   );
 };
 
+/**
+ * スニペット一覧画面コンポーネントのProps定義。
+ */
 interface SnippetListProps {
+  /** スニペットデータ全件 */
   snippets: Snippet[];
+  /** 現在選択中のソート基準 */
   sortCriterion: SortCriterion;
+  /** ソート基準変更イベントハンドラー */
   onSortCriterionChange: (criterion: SortCriterion) => void;
+  /** 新規作成画面遷移ハンドラー */
   onAddSnippet: () => void;
+  /** 編集画面遷移ハンドラー */
   onEditSnippet: (id: number) => void;
+  /** テキストコピーハンドラー */
   onCopyText: (text: string, label: string, id?: number | number[]) => void;
+  /** ピン留めトグルハンドラー */
   onTogglePin: (id: number) => void;
+  /** 差分比較画面遷移ハンドラー */
   onGoToCompare: (idA?: number, idB?: number) => void;
+  /** 複数マージ画面遷移ハンドラー */
   onGoToMerge: (ids: number[]) => void;
+  /** パフォーマンス画面遷移ハンドラー */
   onGoToPerformance: () => void;
+  /** JSONインポートハンドラー */
   onImportJSON: (data: Snippet[]) => void;
+  /** クエリ処理時間記録ハンドラー */
   onRecordQueryTime: (timeMs: number) => void;
+  /** 一括論理削除ハンドラー */
   onBulkSoftDelete?: (ids: number[]) => void;
+  /** 一括復元ハンドラー */
   onBulkRestore?: (ids: number[]) => void;
+  /** 一括完全削除ハンドラー */
   onBulkHardDelete?: (ids: number[]) => void;
 }
 
+/**
+ * 定型文一覧、検索・タグクラウド・ソート・一括操作を提供するメインコンポーネント。
+ */
 export default function SnippetList({
   snippets,
   sortCriterion,

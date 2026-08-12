@@ -7,13 +7,23 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Copy, Check, ChevronUp, ChevronDown, ListPlus, FileText } from 'lucide-react';
 import { Snippet } from '../types';
 
+/**
+ * 複数定型文の結合画面コンポーネントのProps定義。
+ */
 interface SnippetMergeProps {
+  /** スニペット全件データ */
   snippets: Snippet[];
+  /** 初期選択されたスニペットID配列 */
   selectedSnippetIds: number[];
+  /** 戻るボタンクリックハンドラー */
   onBack: () => void;
+  /** 一括コピー処理ハンドラー */
   onCopyText: (text: string, label: string, id?: number | number[]) => void;
 }
 
+/**
+ * 複数のスニペットを選択・順序調整・区切り文字指定して1つの文章に一括マージ・コピーする画面。
+ */
 export default function SnippetMerge({
   snippets,
   selectedSnippetIds,

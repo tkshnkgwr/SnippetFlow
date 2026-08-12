@@ -8,17 +8,31 @@ import { ArrowLeft, Save, Trash2, RotateCcw, AlertTriangle, Plus, X, Calendar, K
 import { Snippet } from '../types';
 
 // UPDATE 2026-06-30: タグ提案機能に必要な snippets リストを props に追加
+/**
+ * スニペット新規作成・編集フォーム画面コンポーネントのProps定義。
+ */
 interface SnippetFormProps {
-  snippet?: Snippet; // 未定義の場合は「新規作成」モードになります
+  /** 編集対象のスニペット（未指定の場合は新規作成モード） */
+  snippet?: Snippet;
+  /** 保存実行イベントハンドラー */
   onSave: (snippet: Omit<Snippet, 'createdAt' | 'updatedAt' | 'isDeleted'> & { id?: number }) => void;
+  /** 論理削除（ゴミ箱移動）ハンドラー */
   onSoftDelete: (id: number) => void;
+  /** アーカイブ復元ハンドラー */
   onRestore: (id: number) => void;
+  /** 完全物理削除ハンドラー */
   onHardDelete: (id: number) => void;
+  /** キャンセル（一覧へ戻る）ハンドラー */
   onCancel: () => void;
+  /** 新規作成時に発行される自動ID番号 */
   nextId: number;
+  /** AIタグ提案用の全スニペット一覧 */
   snippets?: Snippet[];
 }
 
+/**
+ * スニペットの新規登録、編集、論理/物理削除、およびリアルタイムAIタグ提案を提供するフォーム画面。
+ */
 export default function SnippetForm({
   snippet,
   onSave,
