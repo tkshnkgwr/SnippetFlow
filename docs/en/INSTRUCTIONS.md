@@ -10,15 +10,15 @@ This document defines the development conventions, coding styles, and error hand
 
 This project adopts standard naming conventions based on the language and environment used.
 
-### 1.1. Rust (src-egui / src-tauri / common_lib)
+### 1.1. Rust (src-tauri / common_lib)
 - **PascalCase**:
-  - Structs, traits, enums, and enum variants (`SnippetManagerApp`, `Snippet`, `SortCriterion`, `AppScreen`)
+  - Structs, traits, enums, and enum variants (`SnippetManagerApp`, `TauriSnippet`, `SortCriterion`)
 - **snake_case**:
-  - Functions, methods, variables, struct fields, and module names (`load_data()`, `save_data()`, `is_dark_mode`, `copy_count`, `app.rs`, `storage.rs`)
+  - Functions, methods, variables, struct fields, and module names (`load_snippets()`, `save_snippets()`, `is_dark_mode`, `copy_count`, `lib.rs`)
 - **UPPER_SNAKE_CASE**:
   - Constants and global constants (`STORAGE_FILE`, `SETTINGS_FILE`)
 
-### 1.2. TypeScript / React (src-react)
+### 1.2. TypeScript / React (src)
 - **PascalCase**:
   - Component names, interfaces, type definitions, and component filenames (`SnippetList`, `Snippet`, `ActiveTab`, `SnippetForm.tsx`)
 - **camelCase**:
@@ -27,9 +27,8 @@ This project adopts standard naming conventions based on the language and enviro
   - Constants defined within modules (`DEFAULT_SNIPPETS`)
 
 ### 1.3. Data Structure Serialization Mapping Rules
-Since JSON data is exchanged between the Tauri/Web side (camelCase) and the Rust side (snake_case), keep the following mapping rules in mind:
-- In the Rust model (`src-egui/model.rs`), fields such as `is_pinned`, `copy_count`, and `saved_time_sec` are annotated with `#[serde(default)]`.
-- Due to differences in field naming, when serializing/deserializing on the Rust side, handle fields with compatibility in mind so as not to break the mapping between the Web side's camelCase (e.g., `isPinned`, `copyCount`) and the Rust side's snake_case (e.g., `is_pinned`, `copy_count`).
+Since JSON data is exchanged between the Web side (camelCase) and the Rust side (snake_case), keep the following mapping rules in mind:
+- Handle fields with compatibility in mind using serde aliases so as not to break the mapping between the Web side's camelCase (e.g., `isPinned`, `copyCount`) and the Rust side's snake_case (e.g., `is_pinned`, `copy_count`).
 
 ---
 
@@ -37,15 +36,12 @@ Since JSON data is exchanged between the Tauri/Web side (camelCase) and the Rust
 
 To prevent the application from crashing suddenly or silently hanging in development or user environments, strictly adhere to the following error handling policies.
 
-### 2.1. Rust (egui / storage / common_lib)
-- **Fallback and Silent Handling (Default-Oriented)**:
-  - As seen in `storage.rs` and `AppSettings::load()`, if a file does not exist or a parsing error occurs, safely fall back to `Default::default()` or pre-configured initial sample data without crashing.
-  - Utilize `if let Ok(val) = ...` or `unwrap_or_else` to safely ignore or handle unavoidable I/O errors.
-- **Errors that Need to be Propagated (Tauri Commands, etc.)**:
-  - For Tauri commands that return results to the Webview (such as `export_snippets_json`), return a `Result<T, String>` to explicitly communicate errors to the frontend.
-  - Standard Rust errors should be converted to string error messages during invocation using `.map_err(|e| e.to_string())?` and propagated to the frontend.
+### 2.1. Rust (src-tauri / common_lib)
+- If a file is missing or a parse error occurs, safely fallback to `Default::default()` or initial sample data.
+- For Tauri commands that return results to the Webview (such as `export_snippets_json`), return a `Result<T, String>` to explicitly communicate errors to the frontend.
+- Standard Rust errors should be converted to string error messages during invocation using `.map_err(|e| e.to_string())?` and propagated to the frontend.
 
-### 2.2. TypeScript / React (src-react)
+### 2.2. TypeScript / React (src)
 - **Exception Protection for I/O and State Operations**:
   - Always wrap `localStorage` read/write operations and JSON parsing in `try-catch` blocks to catch exceptions and prevent the rendering of the entire application from stopping.
 - **User Feedback**:

@@ -4,6 +4,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.14.1] - 2026-08-12
+
+### Added
+- **AND Condition Filtering for Multiple Tag Selection (`src/components/SnippetList.tsx`, `src-tauri/src/lib.rs`)**:
+  - Implemented AND condition tag filtering so selecting multiple tags displays only snippets possessing all selected tags.
+
+### Changed
+- **Project Structure Optimization for Tauri-Dedicated Architecture (`src/`, `Cargo.toml`, `vite.config.ts`, `index.html`, `tsconfig.json`)**:
+  - Removed unused pure Rust/egui source code (`src-egui/`) and related build configurations.
+  - Renamed frontend source directory from `src-react/` to standard `src/` and optimized project layout exclusively for Tauri. Updated all documentation accordingly.
+
 ---
 
 ## [1.14.0] - 2026-08-06

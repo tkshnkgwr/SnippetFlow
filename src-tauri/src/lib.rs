@@ -284,7 +284,7 @@ fn compute_snippet_diff(old_text: String, new_text: String) -> Vec<common_lib::t
 /// # Arguments
 /// * `snippets` - 検索対象のスニペット一覧
 /// * `search_text` - 検索キーワード
-/// * `selected_tags` - 絞り込み対象のタグリスト（いずれかを含む場合一致）
+/// * `selected_tags` - 絞り込み対象のタグリスト（選択されたタグすべてを含むAND条件で一致）
 /// * `show_deleted` - 削除済みデータを含めるかどうかのフラグ
 /// * `sort_criterion` - 並び替えの基準 ("updated_at_desc", "updated_at_asc", "created_at_desc", "title_asc", "copy_count_desc")
 #[tauri::command]
@@ -306,7 +306,7 @@ fn search_snippets(
             }
 
             if !selected_tags.is_empty() {
-                let has_matching_tag = selected_tags.iter().any(|st| s.tags.contains(st));
+                let has_matching_tag = selected_tags.iter().all(|st| s.tags.contains(st));
                 if !has_matching_tag {
                     return false;
                 }
@@ -591,7 +591,7 @@ mod tests {
         assert_eq!(res.filtered_snippets[0].id, 1);
 
         let res_pin = search_snippets(
-            snippets,
+            snippets.clone(),
             "".to_string(),
             vec![],
             false,
@@ -600,6 +600,17 @@ mod tests {
 
         // ピン留めされた ID: 2 がソート順（updated_at_asc）に関わらず最上位に優先される
         assert_eq!(res_pin.filtered_snippets[0].id, 2);
+
+        // 複数タグ選択時のAND条件検証
+        let res_and = search_snippets(
+            snippets,
+            "".to_string(),
+            vec!["mail".to_string(), "rust".to_string()],
+            false,
+            "updated_at_desc".to_string(),
+        );
+        assert_eq!(res_and.filtered_snippets.len(), 1);
+        assert_eq!(res_and.filtered_snippets[0].id, 1);
     }
 
     #[test]

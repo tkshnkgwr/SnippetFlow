@@ -33,10 +33,5 @@ tauri-plugin-single-instance = "2.0.1"
 default = ["windows_desktop"]
 windows_desktop = ["common_lib/windows_desktop"]
 
-[profile.release]
-opt-level = "z"      # サイズ最優先の最適化
-lto = true           # Link-Time Optimization の有効化
-codegen-units = 1    # コードジェネレータのユニット数を1にして最適化を保護
-panic = "abort"      # パニック時の巻き戻しコードを除外してサイズ削減
-strip = true         # デバッグシンボルとシンボルテーブルの自動削除
+
 

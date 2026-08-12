@@ -47,25 +47,20 @@ SnippetFlowは、日常のビジネスメールや定型業務で多用される
 ```text
 SnippetFlow/
 ├── .agents/             # エージェント用指示書（AGENTS.md等）の配置
-├── common_lib/          # 両実行環境で共通して使用するRust共有ライブラリ
+├── common_lib/          # 共有Rustライブラリ
 ├── docs/                # 仕様書、アーキテクチャ、リリース手順等のドキュメント類
-├── src-egui/            # egui版（純Rust）のソースコード
-├── src-react/           # Tauri版のフロントエンド（React/TypeScript）ソースコード
+├── src/                 # Tauri版のフロントエンド（React/TypeScript）ソースコード
 └── src-tauri/           # Tauri版のデスクトップアプリバックエンド（Rust）ソースコード
 ```
 
 ### 3.1. 各ディレクトリの役割と詳細
-- **`src-react/` (Vite / React UI)**:
+- **`src/` (Vite / React UI)**:
   - リッチなUI表現、スムーズなアニメーション、および快適なUXを提供する役割を持ちます。
   - `components/` にて各画面（一覧、フォーム、マージ、比較、性能診断）をコンポーネント化し、状態管理はカスタムフック `hooks/useSnippets.ts` に集約しています。
 - **`src-tauri/` (Tauri Rust Backend)**:
-  - Webview（React側）から要求されたOS固有の機能（ネイティブファイルダイアログによるインポート/エクスポート等）を安全に実行するブリッジとしての役割を持ちます。
-- **`src-egui/` (純Rust GUI App)**:
-  - Webviewエンジンすら起動させない「極限の低リソース」で動作する実行環境です。
-  - Windows環境での常時最前面・低リソースユーティリティとしての品質を保証するため、即時モード描画（Immediate Mode）のレンダリング頻度を制限し、アイドルCPU使用率 0.0%〜0.1% を達成しています。
+  - Webview（React側）から要求されたOS固有の機能（ネイティブファイルダイアログによるインポート/エクスポート等）や重い処理（差分計算、タグ提案、暗号化保存等）を高速・安全に実行するネイティブバックエンドです。
 - **`common_lib/` (共通ロジッククレート)**:
-  - フロントエンドと言語を越えて、完全に同一の動作を保証すべき「アルゴリズム」や「スコアリング」を共通Rustコードとして一元管理します。
-  - これにより、二重実装によるバグの混入を防ぎ、テスト容易性を高めています。
+  - LCS差分比較アルゴリズムや暗号化/復号処理などを一元管理するライブラリです。
 
 ---
 
@@ -76,12 +71,11 @@ SnippetFlow/
 
 ```mermaid
 graph TD
-    subgraph Client Environments
-        A[src-react: React/TS UI]
-        B[src-egui: egui GUI App]
+    subgraph Client Environment
+        A[src: React/TS UI]
     end
 
-    subgraph Desktop Platforms
+    subgraph Desktop Platform
         C[src-tauri: Tauri Rust Backend]
     end
 
@@ -91,7 +85,6 @@ graph TD
 
     A -- "IPC (Tauri Command)" --> C
     C -- "Dependency" --> D
-    B -- "Dependency" --> D
 
     style D fill:#f9f,stroke:#333,stroke-width:2px
 ```

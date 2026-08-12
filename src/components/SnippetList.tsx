@@ -167,9 +167,9 @@ export default function SnippetList({
       // 1. 論理削除フラグの検証（非表示設定の場合はスキップ）
       if (s.isDeleted && !showDeleted) return false;
 
-      // 2. 選択されたタグに一致するか検証（複数選択時：選択されたタグのいずれかを含む）
+      // 2. 選択されたタグに一致するか検証（複数選択時：選択されたタグすべてを含むAND条件）
       if (selectedTags.length > 0) {
-        const hasMatchingTag = selectedTags.some(t => s.tags.includes(t));
+        const hasMatchingTag = selectedTags.every(t => s.tags.includes(t));
         if (!hasMatchingTag) return false;
       }
 

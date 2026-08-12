@@ -1,28 +1,9 @@
-[package]
-name = "snippet_manager"
-version = "1.14.0"
-edition = "2021"
-publish = false
-
-[[bin]]
-name = "snippet_manager"
-path = "src-egui/main.rs"
-
-[dependencies]
-# UPDATE 2026-07-01: Windows低リソース・透過ウィンドウに対応した egui と eframe の定義
-eframe = { version = "0.22.0", features = ["persistence"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-arboard = "3.2" # クリップボードへのセーフコピー用
-winapi = { version = "0.3.9", features = ["winuser"] }
-chrono = { version = "0.4.39", features = ["serde"] }
-rfd = "0.12"
-# 2026-07-03: 共有ライブラリの参照追加
-common_lib = { path = "../common_lib" }
-
-[features]
-default = ["windows_desktop"]
-windows_desktop = ["common_lib/windows_desktop"]
+[workspace]
+members = [
+    "src-tauri",
+]
+default-members = ["src-tauri"]
+resolver = "2"
 
 [profile.release]
 opt-level = "z"      # サイズ最優先の最適化
@@ -30,5 +11,3 @@ lto = true           # Link-Time Optimization の有効化
 codegen-units = 1    # コードジェネレータのユニット数を1にして最適化を保護
 panic = "abort"      # パニック時の巻き戻しコードを除外してサイズ削減
 strip = true         # デバッグシンボルとシンボルテーブルの自動削除
-
-

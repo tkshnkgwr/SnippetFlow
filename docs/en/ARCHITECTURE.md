@@ -47,25 +47,20 @@ The project is organized as follows, designed to leverage the productivity of We
 ```text
 SnippetFlow/
 ├── .agents/             # Agent instructions (AGENTS.md, etc.)
-├── common_lib/          # Rust shared library used across both execution environments
+├── common_lib/          # Shared Rust library
 ├── docs/                # Specifications, architecture, release procedures, and other documents
-├── src-egui/            # Source code for the egui version (pure Rust)
-├── src-react/           # Frontend (React/TypeScript) source code for the Tauri version
+├── src/                 # Frontend (React/TypeScript) source code for the Tauri version
 └── src-tauri/           # Desktop app backend (Rust) source code for the Tauri version
 ```
 
 ### 3.1. Roles and Details of Each Directory
-- **`src-react/` (Vite / React UI)**:
+- **`src/` (Vite / React UI)**:
   - Responsible for providing rich UI expressions, smooth animations, and a comfortable UX.
   - Components representing each screen (list, form, merge, comparison, performance diagnostics) are modularized in `components/`, and state management is centralized in the custom hook `hooks/useSnippets.ts`.
 - **`src-tauri/` (Tauri Rust Backend)**:
-  - Serves as a bridge to safely execute OS-specific functions (such as import/export using native file dialogs) requested by the Webview (React side).
-- **`src-egui/` (Pure Rust GUI App)**:
-  - An execution environment that runs with "extreme low resources" without even launching the Webview engine.
-  - To guarantee the quality of a low-resource utility that is always on top in the Windows environment, it limits the rendering frequency of the immediate-mode GUI, achieving an idle CPU usage of 0.0% to 0.1%.
+  - Serves as a native backend to safely and quickly execute OS-specific functions (such as import/export using native file dialogs) and heavy logic (diff computation, tag suggestions, encrypted storage).
 - **`common_lib/` (Shared Logic Crate)**:
-  - Centralizes "algorithms" and "scoring" in shared Rust code to guarantee completely identical behavior across frontends and languages.
-  - This prevents bugs caused by duplicate implementations and improves testability.
+  - Centralizes LCS difference calculation algorithms and encryption/decryption routines.
 
 ---
 
@@ -76,12 +71,11 @@ The application dependencies are configured as follows, with `common_lib` contai
 
 ```mermaid
 graph TD
-    subgraph Client Environments
-        A[src-react: React/TS UI]
-        B[src-egui: egui GUI App]
+    subgraph Client Environment
+        A[src: React/TS UI]
     end
 
-    subgraph Desktop Platforms
+    subgraph Desktop Platform
         C[src-tauri: Tauri Rust Backend]
     end
 
@@ -91,7 +85,6 @@ graph TD
 
     A -- "IPC (Tauri Command)" --> C
     C -- "Dependency" --> D
-    B -- "Dependency" --> D
 
     style D fill:#f9f,stroke:#333,stroke-width:2px
 ```

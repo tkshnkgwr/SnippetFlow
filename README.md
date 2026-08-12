@@ -8,8 +8,8 @@
 
 English | [日本語版 (Japanese)](README_JA.md)
 
-**SnippetFlow** is a sleek, transparent, and always-on-top desktop application built with Rust (`egui`/`eframe`) for Windows to quickly manage and copy frequently used text templates (snippets) to the clipboard. 
-It also contains the fully-functional React/Vite web prototype version, which shares exact functionality with the native desktop app.
+**SnippetFlow** is a sleek, fast, and lightweight desktop application built with React/TypeScript and Rust (Tauri 2) for Windows to quickly manage and copy frequently used text templates (snippets) to the clipboard.
+It features instant search with multiple tag AND filtering, auto tag recommendations, diff comparisons, and secure snippet storage.
 
 ---
 

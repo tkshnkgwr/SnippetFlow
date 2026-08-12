@@ -9,12 +9,10 @@ This document manages the current implementation status (Done), near-term tasks 
 ## 1. Implemented Features (Done)
 
 ### 1.1. Common Foundation and UI Design
-- **Hybrid Execution Environment**: Both the Tauri version (React/TS + Rust) and egui version (pure Rust) run with a hybrid design sharing the same core features.
-- **Responsive Dark Mode**: Dynamic switching between dark and light themes utilizing Tailwind v4 (Tauri) and egui's native visual styles.
+- **Tauri-Dedicated Architecture Optimization**: Removed the unused pure Rust/egui version and optimized the project structure exclusively for Tauri (React/TS + Rust).
+- **Responsive Dark Mode**: Dynamic switching between dark and light themes utilizing Tailwind v4.
 - **Fixed Header/Footer Layout**: User-friendly screen layout where navigation, search controls, and the action bar remain fixed while the list scrolls.
-- **Single Instance Prevention (Duplicate Prevention)**:
-  - Tauri: Adopts `tauri-plugin-single-instance` to focus the existing window when duplicate execution is attempted.
-  - egui: Silently restricts duplicate execution using a `single-instance` mutex.
+- **Single Instance Prevention (Duplicate Prevention)**: Adopts `tauri-plugin-single-instance` to focus the existing window when duplicate execution is attempted.
 - **Japanese Character Corruption Prevention**: Dynamically loads and registers standard Windows system fonts (such as Meiryo) at startup to prevent "tofu" characters.
 
 ### 1.2. List Screen (List / Home)
@@ -92,6 +90,12 @@ This document manages the current implementation status (Done), near-term tasks 
   Display a confirmation warning (e.g., "Changes will not be saved. Are you sure?") when navigating back to the list view after modifying content in the create/edit form without saving (excluding explicit clicks on the "Cancel" button).
 - [x] **Hover Popup (Tooltip) for Snippet Description in List View**:
   Display a popup preview (tooltip/hover window) showing the snippet's description and auxiliary notes when hovering the mouse cursor over a card item in the list view.
+- [x] **Switch Multiple Tag Selection Filter to AND Logic**:
+  When multiple tags are selected in the list view, change the filtering logic from the current OR condition to an AND condition (e.g., if tags "AI" and "Routine Work" are both selected, display only snippets that possess both tags).
+- [x] **Remove egui Build and Source Code / Transition to Tauri-Only**:
+  Remove unused pure Rust/egui (`src-egui`) source code and related build configurations, streamlining the codebase exclusively for Tauri.
+- [x] **Review and Optimize Project Directory Structure**:
+  Refactor the hybrid directory structure (e.g., `src-tauri` / `src-react`), build scripts, and documentation to an optimized structure (`src` + `src-tauri`) dedicated to a single Tauri application.
 
 ---
 

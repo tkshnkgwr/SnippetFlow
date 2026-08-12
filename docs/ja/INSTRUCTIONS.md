@@ -8,11 +8,11 @@
 
 ## 1. 命名規則 (Naming Conventions)
 使用する言語や環境に応じて標準的な命名規則を採用しています。
-- **Rust (src-egui / src-tauri / common_lib)**:
+- **Rust (src-tauri / common_lib)**:
   - 構造体、トレイト、Enum、Enumバリアント: `PascalCase`
   - 関数、メソッド、変数、構造体フィールド、モジュール名: `snake_case`
   - 定数、グローバル定数: `SCREAMING_SNAKE_CASE`
-- **TypeScript / React (src-react)**:
+- **TypeScript / React (src)**:
   - コンポーネント名、インターフェース、型定義、コンポーネントファイル名: `PascalCase`
   - 変数、関数、オブジェクトプロパティ、フック名: `camelCase`
   - モジュール内の定数定義: `UPPER_SNAKE_CASE`
@@ -21,9 +21,9 @@
 ---
 
 ## 2. エラーハンドリング方針 (Error Handling Policy)
-- **Rust (egui / storage / common_lib)**:
+- **Rust (src-tauri / common_lib)**:
   - ファイルが存在しない場合やパースエラーが発生した場合は、`Default::default()` や初期サンプルデータへ安全にフォールバックします。
-- **TypeScript / React (src-react)**:
+- **TypeScript / React (src)**:
   - `localStorage` の読み書きや、JSONパースの実行時には、必ず `try-catch` ブロックで囲んで例外を捕捉し、アプリ全体のレンダリングが停止するのを防止します。
   - エラー発生時はトースト通知機能（`addToast(message, 'error')`）を呼び出します。
 
@@ -31,8 +31,8 @@
 
 ## 3. コンポーネント・モジュール分割基準
 単一のプログラムソースファイル（`.rs`, `.ts`, `.tsx` 等）が 1000 行を超過した場合は、必ず機能ごとのモジュール分割・リファクタリングを実施または提案します。
-- **Rust (src-egui)**: `main.rs`, `model.rs`, `storage.rs`, `theme.rs`, `app.rs`, `ui.rs` に分割。
-- **TypeScript / React (src-react)**: `App.tsx`, `hooks/useSnippets.ts`, `components/` 配下に分割。
+- **Rust (src-tauri)**: `lib.rs`, `main.rs` 等に関心事に応じて最適化。
+- **TypeScript / React (src)**: `App.tsx`, `hooks/useSnippets.ts`, `components/` 配下に分割。
 
 ---
 
