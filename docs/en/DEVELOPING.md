@@ -94,19 +94,25 @@ cargo check --no-default-features
 Before committing changes or creating a pull request, verify that all the following static analysis and tests pass locally (zero errors and warnings).
 
 ### 1. Compliance with Code Formatting Rules
+
 ```bash
 cargo fmt --check
 ```
-* *If formatting errors occur, run `cargo fmt` to automatically format the code.
+
+- *If formatting errors occur, run `cargo fmt` to automatically format the code.*
 
 ### 2. Static Analysis (Clippy)
+
 ```bash
 cargo clippy --all-targets -- -D warnings
 ```
-* *Warnings are treated as errors. Resolve all warnings before compiling.
+
+- *Warnings are treated as errors. Resolve all warnings before compiling.*
 
 ### 3. Running Unit Tests
+
 ```bash
 cargo test
 ```
-* *When adding new features or changing logic, make sure to add/extend tests in `mod tests` in `src/main.rs`.
+
+- *When adding new features or changing logic, make sure to add/extend tests in `mod tests` in `src/main.rs`.*

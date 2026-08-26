@@ -39,14 +39,17 @@
 本アプリは、**Tauriデスクトップ環境 (React + Rust)** と **egui単体版デスクトップ環境 (純Rust)** の2系統が共存しています。
 
 ### 3.1. Tauri環境 (React + Rust Webview)
+
 Webテクノロジー（React/TypeScript/Vite）を用いた画面描画と、Rustバックエンド（ファイルダイアログ等）のハイブリッド構成です。
 
 #### 1. 依存関係のインストール (フロントエンド)
+
 ```bash
 npm install
 ```
 
 #### 2. 開発用ホットリロードサーバーの起動
+
 ```bash
 npm run dev
 # もしくは Tauri 開発コマンドを実行
@@ -54,6 +57,7 @@ npx tauri dev
 ```
 
 #### 3. プロダクションビルド (パッケージング)
+
 ```bash
 npx tauri build
 ```
@@ -61,22 +65,28 @@ npx tauri build
 ---
 
 ### 3.2. egui環境 (純Rust)
+
 HTML/CSSエンジンを排除し、システムリソース（メモリ/CPU）の消費を極限まで抑えた超軽量・単一バイナリ動作版です。
 
 #### 1. デバッグ実行
+
 ```bash
 cargo run
 ```
 
 #### 2. リリースビルド
+
 バイナリサイズおよび実行速度の最適化（LTO、パニック巻き戻し除外、strip設定）を適用したリリースバイナリを構築します。
+
 ```bash
 cargo build --release
 # 出力バイナリ: target/release/snippet_manager.exe
 ```
 
 #### 3. Cargo Features の指定
+
 本プロジェクトでは `windows_desktop` フィーチャーがデフォルトで有効になっています。必要に応じてフィーチャーフラグを指定してビルド・検証が可能です。
+
 ```bash
 # デフォルト (windows_desktop 有効)
 cargo build
@@ -92,19 +102,25 @@ cargo check --no-default-features
 変更をコミットまたはプルリクエストを作成する前に、ローカルで以下の静的解析・テストがすべて合格（エラー・警告ゼロ）することを確認してください。
 
 ### 1. コードフォーマット規約の準拠
+
 ```bash
 cargo fmt --check
 ```
-* ※フォーマットエラーが出た場合は、`cargo fmt` を実行して自動整形を行ってください。
+
+- ※フォーマットエラーが出た場合は、`cargo fmt` を実行して自動整形を行ってください。
 
 ### 2. 静的解析 (Clippy)
+
 ```bash
 cargo clippy --all-targets -- -D warnings
 ```
-* ※警告はエラーとして扱われます。すべて解決した上でコンパイルを通してください。
+
+- ※警告はエラーとして扱われます。すべて解決した上でコンパイルを通してください。
 
 ### 3. ユニットテストの実行
+
 ```bash
 cargo test
 ```
-* ※新規機能やロジック変更時は、必ず `src/main.rs` の `mod tests` にテストコードを追加・拡張してください。
+
+- ※新規機能やロジック変更時は、必ず `src/main.rs` の `mod tests` にテストコードを追加・拡張してください。

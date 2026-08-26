@@ -19,7 +19,7 @@ Versions are not automatically synchronized between Node.js (`package.json`) and
 1. **`package.json`** (`"version"` field)
 2. **`Cargo.toml` (root)** (`version` field)
 3. **`src-tauri/Cargo.toml`** (`version` field)
-4. **`README.md` / `README.ja.md`** version status badges at the top
+4. **`README.md` / `README_JA.md`** version status badges at the top
 
 > [!WARNING]
 > Any version mismatch may cause build errors or failure in creating draft releases on GitHub Actions.

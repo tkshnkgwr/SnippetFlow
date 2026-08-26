@@ -42,12 +42,12 @@ This document manages the current implementation status (Done), near-term tasks 
 - **Live Preview and Bulk Copy**: Previews the merged output in real-time and copies it to the clipboard at once.
 
 ### 1.6. Performance Meter Screen (Performance)
-- **Database Diagnostics**: Displays record counts, estimated JSON file size, and the latest search query execution time in milliseconds.
+- **Database Diagnostics**: Displays record counts, estimated JSON file size, and the latest search query execution time computed natively in Rust.
 - **Usage Statistics (Analytics)**:
-  - Visualizes the total copy count and cumulative typing time saved (calculated as: 1 character copied = 0.3 seconds saved).
-  - Displays the top 3 snippets by copy count.
-- **Benchmark Testing**: Measures the average search execution time after running 100 trials (in milliseconds).
-- **Dummy Data Load Testing**: Allows batch-generating and cleaning up 1,000, 2,000, and 5,000 dummy records to verify UI rendering and search loads.
+  - Visualizes total copy counts and cumulative typing time saved (1 character = 0.3s).
+  - Displays top 3 most copied snippets aggregated natively in Rust.
+- **Rust Backend Benchmark Testing**: Accurately measures average search query execution time across 100 iterations directly in the Rust backend.
+- **Native Dummy Data Load Testing**: Generates and cleans up 1,000, 2,000, and 5,000 dummy records natively in Rust at ultra-high speed, avoiding UI main-thread blocking.
 - **Backup & Restore via OS-Native Dialogs**: Securely exports and imports local JSON data files using the `rfd` crate.
 
 ### 1.7. Security, Quality Improvements, and Bulk Operations

@@ -26,10 +26,10 @@ This document summarizes the security design principles, supported versions, and
 
 Security updates are provided for the following versions:
 
-| Version                 | Support Status |
-| :---------------------- | :------------: |
-| Latest Release (`v1.9.x`)| ✅ Supported   |
-| Older Releases          | ❌ Unsupported |
+| Version                  | Support Status |
+| :----------------------- | :------------: |
+| Latest Release (`v1.9.x`)|  ✅ Supported  |
+| Older Releases           | ❌ Unsupported |
 
 ---
 

@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Database, Zap, HardDrive, BarChart3, ShieldAlert, Sparkles } from 'lucide-react';
-import { Snippet } from '../types';
+import { Snippet, SnippetStats } from '../types';
 
 /**
  * 性能メーター・アナリティクス画面コンポーネントのProps定義。
@@ -33,17 +33,64 @@ export default function StatsPanel({
   const [benchmarking, setBenchmarking] = useState(false);
   const [benchTime, setBenchTime] = useState<number | null>(null);
 
-  const totalCount = snippets.length;
-  const activeCount = snippets.filter(s => !s.isDeleted).length;
-  const deletedCount = snippets.filter(s => s.isDeleted).length;
+  // ブラウザ環境向けフォールバック計算
+  const fallbackStats = useMemo<SnippetStats>(() => {
+    const totalCount = snippets.length;
+    const activeCount = snippets.filter(s => !s.isDeleted).length;
+    const deletedCount = snippets.filter(s => s.isDeleted).length;
+    const serializedSize = JSON.stringify(snippets).length;
+    const kbSize = (serializedSize / 1024).toFixed(2);
+    const totalCopies = snippets.reduce((sum, s) => sum + (s.copyCount || 0), 0);
+    const totalSavedSec = snippets.reduce((sum, s) => sum + (s.savedTimeSec || 0), 0);
 
-  // 概算のデータベースファイルサイズ（バイト数）を算出
-  const serializedSize = JSON.stringify(snippets).length;
-  const kbSize = (serializedSize / 1024).toFixed(2);
+    const topSnippets = [...snippets]
+      .filter(s => (s.copyCount || 0) > 0)
+      .sort((a, b) => (b.copyCount || 0) - (a.copyCount || 0))
+      .slice(0, 3)
+      .map(s => ({
+        id: s.id,
+        title: s.title,
+        copyCount: s.copyCount || 0,
+        savedTimeSec: s.savedTimeSec || 0,
+      }));
 
-  // 使用統計（アナリティクス）の集計計算
-  const totalCopies = snippets.reduce((sum, s) => sum + (s.copyCount || 0), 0);
-  const totalSavedSec = snippets.reduce((sum, s) => sum + (s.savedTimeSec || 0), 0);
+    return {
+      totalCount,
+      activeCount,
+      deletedCount,
+      totalCopies,
+      totalSavedSec,
+      kbSize,
+      topSnippets,
+    };
+  }, [snippets]);
+
+  const [stats, setStats] = useState<SnippetStats>(fallbackStats);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchStats = async () => {
+      if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          const res = await invoke<SnippetStats>('get_snippet_stats', { snippets });
+          if (isMounted) {
+            setStats(res);
+            return;
+          }
+        } catch (e) {
+          console.error('Failed to get snippet stats via Rust backend:', e);
+        }
+      }
+      if (isMounted) {
+        setStats(fallbackStats);
+      }
+    };
+    fetchStats();
+    return () => {
+      isMounted = false;
+    };
+  }, [snippets, fallbackStats]);
 
   const formatSavedTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);
@@ -58,18 +105,24 @@ export default function StatsPanel({
     }
   };
 
-  const topSnippets = [...snippets]
-    .filter(s => (s.copyCount || 0) > 0)
-    .sort((a, b) => (b.copyCount || 0) - (a.copyCount || 0))
-    .slice(0, 3);
-
-  // 簡易ベンチマーク機能: 検索処理を100回繰り返し平均実行速度を算出する
-  const runBenchmark = () => {
+  // ベンチマーク機能: Rustバックエンドで100回試行平均を計測
+  const runBenchmark = async () => {
     setBenchmarking(true);
+    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        const res = await invoke<number>('benchmark_search', { snippets });
+        setBenchTime(res);
+        setBenchmarking(false);
+        return;
+      } catch (e) {
+        console.error('Failed to run benchmark via Rust backend:', e);
+      }
+    }
+
     setTimeout(() => {
       const start = performance.now();
       for (let i = 0; i < 100; i++) {
-        // 複雑な検索クエリのシミュレーション: タグ「ビジネス」かつタイトルに「テスト」が含まれるデータをフィルタリングする負荷再現
         snippets.filter(s => 
           (s.title.toLowerCase().includes('自動生成') || s.content.includes('〇〇')) &&
           s.tags.some(t => t.includes('ビジネス') || t.includes('開発'))
@@ -78,7 +131,7 @@ export default function StatsPanel({
       const end = performance.now();
       setBenchTime(Number(((end - start) / 100).toFixed(4)));
       setBenchmarking(false);
-    }, 100);
+    }, 50);
   };
 
   return (
@@ -114,20 +167,20 @@ export default function StatsPanel({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-150 dark:border-slate-850">
             <div className="text-xs text-slate-400 font-sans">総コピー回数</div>
-            <div className="text-xl font-bold text-slate-700 dark:text-slate-200 mt-1 font-mono">{totalCopies} 回</div>
+            <div className="text-xl font-bold text-slate-700 dark:text-slate-200 mt-1 font-mono">{stats.totalCopies} 回</div>
           </div>
           <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-150 dark:border-slate-850">
             <div className="text-xs text-slate-400 font-sans">累計短縮（節約）時間</div>
-            <div className="text-xl font-bold text-slate-700 dark:text-slate-200 mt-1 font-mono">{formatSavedTime(totalSavedSec)}</div>
+            <div className="text-xl font-bold text-slate-700 dark:text-slate-200 mt-1 font-mono">{formatSavedTime(stats.totalSavedSec)}</div>
             <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">※1文字あたり0.3秒のタイピング時間を想定</div>
           </div>
         </div>
         
         <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-150 dark:border-slate-850">
           <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 font-sans">よく使う定型文トップ3</h4>
-          {topSnippets.length > 0 ? (
+          {stats.topSnippets.length > 0 ? (
             <div className="space-y-2">
-              {topSnippets.map((s, index) => (
+              {stats.topSnippets.map((s, index) => (
                 <div key={s.id} className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-350 border-b border-slate-100 dark:border-slate-850 pb-1.5 last:border-0 last:pb-0">
                   <div className="flex items-center space-x-2 truncate">
                     <span className="font-bold text-indigo-500 font-mono w-4">{index + 1}.</span>
@@ -150,15 +203,15 @@ export default function StatsPanel({
         {/* UPDATE 2026-06-30: 各メトリクスカードをダークモード（dark:bg-slate-950 dark:border-slate-800）に対応 */}
         <div className="bg-slate-50 dark:bg-slate-950 rounded-xl p-4 border border-slate-100 dark:border-slate-800">
           <div className="text-xs font-medium text-slate-400 font-sans">総定型文数 (レコード数)</div>
-          <div className="text-2xl font-bold text-slate-700 dark:text-slate-100 mt-1 font-mono">{totalCount} <span className="text-sm font-normal text-slate-400">件</span></div>
+          <div className="text-2xl font-bold text-slate-700 dark:text-slate-100 mt-1 font-mono">{stats.totalCount} <span className="text-sm font-normal text-slate-400">件</span></div>
           <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
-            有効: {activeCount} / 削除済: {deletedCount}
+            有効: {stats.activeCount} / 削除済: {stats.deletedCount}
           </div>
         </div>
 
         <div className="bg-slate-50 dark:bg-slate-950 rounded-xl p-4 border border-slate-100 dark:border-slate-800">
           <div className="text-xs font-medium text-slate-400 font-sans">推測ファイルサイズ (JSON)</div>
-          <div className="text-2xl font-bold text-slate-700 dark:text-slate-100 mt-1 font-mono">{kbSize} <span className="text-sm font-normal text-slate-400">KB</span></div>
+          <div className="text-2xl font-bold text-slate-700 dark:text-slate-100 mt-1 font-mono">{stats.kbSize} <span className="text-sm font-normal text-slate-400">KB</span></div>
           <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
             ブラウザ容量上限: 約 5,000 KB (5MB)
           </div>

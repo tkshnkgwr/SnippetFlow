@@ -4,6 +4,21 @@
 
 プロジェクトのすべての重要な変更が本ファイルに記録されます。
 
+## [1.14.2] - 2026-08-26
+
+### Added
+- **Rust バックエンドへの高負荷処理追加移行 (`src-tauri/src/lib.rs`, `src/hooks/useSnippets.ts`, `src/components/StatsPanel.tsx`)**:
+  - `generate_mock_snippets`: 大量検証用ダミーデータ（1,000〜5,000件）の高速生成をRustネイティブへ移行し、UIメインスレッドの負荷を完全解消。
+  - `get_snippet_stats`: 定型文の件数・有効件数・論理削除件数・総コピー数・累計短縮時間・概算ファイル容量・Top3定型文の集計をRust側で高速処理。
+  - `benchmark_search`: 検索エンジンの100回試行平均速度計測をRustバックエンドで正確に実行。
+
+### Removed
+- **不要ファイルの削除クリーンアップ**:
+  - 未参照のアイコンファイル `src-tauri/icons/iusttziusttziust.png` を削除。
+  - アプリから参照されていない古い残骸ファイル `src-tauri/snippets.json` を削除。
+
+---
+
 ## [1.14.1] - 2026-08-12
 
 ### Added

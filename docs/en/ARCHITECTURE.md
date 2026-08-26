@@ -27,16 +27,16 @@ This project adopts a hybrid configuration to use the right technology for the r
 - **TypeScript / JavaScript**: Ensuring frontend UI logic and type safety.
 
 ### 2.2. Frameworks & Libraries by Application
-| Category | Tauri / Web Version (Rich UI) | egui Version (Ultra-lightweight Native) |
-| :--- | :--- | :--- |
-| **GUI Framework** | **Tauri v2** + **Vite 6** + **React 19** | **egui / eframe** (v0.22.0) |
-| **Language / Runtime** | TS (React) / Rust (Tauri Backend) | Pure Rust (Windows native rendering) |
-| **Styling** | TailwindCSS v4 / Vanilla CSS | egui custom theme (custom frame) |
-| **Clipboard I/O** | `navigator.clipboard` / simple fallback | `arboard` (v3.2) |
-| **Serialization** | `JSON.stringify` / `parse` | `serde` (v1.0) / `serde_json` (v1.0) |
-| **Date & Time** | `new Date().toISOString()` | `chrono` (v0.4) |
-| **Dialog I/O** | `rfd` (v0.12) *mediated on Tauri Rust side | `rfd` (v0.12) |
-| **Icons** | `lucide-react` | Plain text / Unicode emojis |
+| Category               | Tauri / Web Version (Rich UI)              | egui Version (Ultra-lightweight Native) |
+| :--------------------- | :----------------------------------------- | :-------------------------------------- |
+| **GUI Framework**      | **Tauri v2** + **Vite 6** + **React 19**   | **egui / eframe** (v0.22.0)             |
+| **Language / Runtime** | TS (React) / Rust (Tauri Backend)          | Pure Rust (Windows native rendering)    |
+| **Styling**            | TailwindCSS v4 / Vanilla CSS               | egui custom theme (custom frame)        |
+| **Clipboard I/O**      | `navigator.clipboard` / simple fallback    | `arboard` (v3.2)                        |
+| **Serialization**      | `JSON.stringify` / `parse`                 | `serde` (v1.0) / `serde_json` (v1.0)    |
+| **Date & Time**        | `new Date().toISOString()`                 | `chrono` (v0.4)                         |
+| **Dialog I/O**         | `rfd` (v0.12) *mediated on Tauri Rust side | `rfd` (v0.12)                           |
+| **Icons**              | `lucide-react`                             | Plain text / Unicode emojis             |
 
 ---
 
@@ -58,7 +58,12 @@ SnippetFlow/
   - Responsible for providing rich UI expressions, smooth animations, and a comfortable UX.
   - Components representing each screen (list, form, merge, comparison, performance diagnostics) are modularized in `components/`, and state management is centralized in the custom hook `hooks/useSnippets.ts`.
 - **`src-tauri/` (Tauri Rust Backend)**:
-  - Serves as a native backend to safely and quickly execute OS-specific functions (such as import/export using native file dialogs) and heavy logic (diff computation, tag suggestions, encrypted storage).
+  - Serves as a native backend to safely and quickly execute OS-specific functions (such as import/export using native file dialogs) and heavy logic (diff computation, search & sorting, tag suggestions, encrypted storage, and high-speed mock data generation).
+  - **Modular Architecture**:
+    - `lib.rs`: Tauri entry point, single-instance plugin initialization, command routing registry.
+    - `models.rs`: Data schema definitions for snippets and statistics, Serde serialization/deserialization, and conversion traits.
+    - `storage.rs`: Atomic file I/O to AppData, encryption/decryption, OS-native dialog operations.
+    - `operations.rs`: High-speed search & tag filtering, LCS text diffing, AI tag suggestions, snippet merging, mock data generation, statistics aggregation, and benchmark testing.
 - **`common_lib/` (Shared Logic Crate)**:
   - Centralizes LCS difference calculation algorithms and encryption/decryption routines.
 

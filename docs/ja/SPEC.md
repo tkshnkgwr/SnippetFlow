@@ -24,13 +24,28 @@
 * **Styling**: Vanilla CSS, TailwindCSS v4 (ダークモード対応)
 * **Icons**: lucide-react
 
-### Rust (デスクトップ製品版)
-* **GUI Engine**: `egui` / `eframe` (v0.22.0)
-* **Clipboard I/O**: `arboard` (v3.2)
+### Rust (Tauri デスクトップ版)
+* **Core**: Tauri v2 (`tauri`, `tauri-plugin-single-instance`, `tauri-plugin-log`)
 * **Serialization**: `serde` (v1.0), `serde_json` (v1.0)
 * **DateTime**: `chrono` (v0.4)
 * **Native Dialogs**: `rfd` (v0.12) - OS標準のファイルダイアログ呼び出し用
 * **Cargo Features**: `windows_desktop` (Win32 API/Single Instance 等の Windows 固有機能連携用。`common_lib` の機能フラグと連動)
+
+#### Tauri IPC コマンド一覧
+| コマンド名               | 役割                                            | 引数                                                             | 返り値                |
+| :----------------------- | :---------------------------------------------- | :--------------------------------------------------------------- | :-------------------- |
+| `load_snippets`          | AppData からスニペット一覧を透過的ロード        | なし                                                             | `Vec<TauriSnippet>`   |
+| `save_snippets`          | AppData へスニペット全件をアトミック暗号化保存  | `snippets`, `encrypt` (任意)                                     | `Result<(), String>`  |
+| `is_storage_encrypted`   | 保存ファイルの暗号化状態を判定                  | なし                                                             | `bool`                |
+| `export_snippets_json`   | RFD セーブダイアログ経由で JSON エクスポート    | `json_str`                                                       | `Result<(), String>`  |
+| `import_snippets_json`   | RFD オープンダイアログ経由で JSON インポート    | なし                                                             | `Result<String, ...>` |
+| `compute_snippet_diff`   | 2つのテキスト間で行単位の LCS 差分を高速計算   | `old_text`, `new_text`                                           | `Vec<DiffPart>`       |
+| `search_snippets`        | キーワード検索・タグ絞り込み・ソートを高速実行  | `snippets`, `search_text`, `selected_tags`, `show_deleted`, etc. | `SearchResult`        |
+| `suggest_tags_cmd`       | 入力内容からスコアに基づく推奨タグ Top5 を提案  | `snippets`, `title`, `content`, `description`, `current_tags`    | `Vec<String>`         |
+| `merge_snippets`         | 複数スニペットを指定区切り文字で順序通り結合    | `snippets`, `ordered_ids`, `separator`                          | `String`              |
+| `generate_mock_snippets` | 大量負荷検証用モックスニペットを超高速生成      | `count`, `start_id`                                             | `Vec<TauriSnippet>`   |
+| `get_snippet_stats`      | スニペット全件の統計・アナリティクス・容量集計  | `snippets`                                                       | `SnippetStats`        |
+| `benchmark_search`       | 検索処理の100回試行平均速度（ms）を正確に計測   | `snippets`                                                       | `f64`                 |
 
 ---
 
@@ -150,4 +165,3 @@
   - Windows 環境（`windows-latest`）上でビルドを実行。
   - **Tauri アプリ**: `tauri-apps/tauri-action` を介して、自動で GitHub ドラフトリリースを作成し、インストーラー（MSI / NSIS等）および実行ファイルをアップロード。
   - **egui 単体版アプリ**: `cargo build --release` で生成される `snippet_manager.exe` を Windows-x64 向けに zip アーカイブ化し、同ドラフトリリースへ自動追加アップロード。
-

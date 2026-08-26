@@ -27,16 +27,16 @@ SnippetFlowは、日常のビジネスメールや定型業務で多用される
 - **TypeScript / JavaScript**: フロントエンドUIロジックおよび型安全性の確保。
 
 ### 2.2. アプリケーション別フレームワーク＆ライブラリ
-| 分類 | Tauri / Web版 (リッチUI) | egui版 (超軽量ネイティブ) |
-| :--- | :--- | :--- |
-| **GUIフレームワーク** | **Tauri v2** + **Vite 6** + **React 19** | **egui / eframe** (v0.22.0) |
-| **言語・実行環境** | TS (React) / Rust (Tauri Backend) | 純Rust (Windows ネイティブ描画) |
-| **スタイリング** | TailwindCSS v4 / Vanilla CSS | eguiカスタムテーマ (カスタムフレーム) |
-| **クリップボードI/O** | `navigator.clipboard` / 簡易フォールバック | `arboard` (v3.2) |
-| **シリアライズ** | `JSON.stringify` / `parse` | `serde` (v1.0) / `serde_json` (v1.0) |
-| **日付・時刻** | `new Date().toISOString()` | `chrono` (v0.4) |
-| **ダイアログI/O** | `rfd` (v0.12) ※Tauri Rust側で仲介 | `rfd` (v0.12) |
-| **アイコン** | `lucide-react` | プレーンテキスト/Unicode絵文字 |
+| 分類                  | Tauri / Web版 (リッチUI)                   | egui版 (超軽量ネイティブ)             |
+| :-------------------- | :----------------------------------------- | :------------------------------------ |
+| **GUIフレームワーク** | **Tauri v2** + **Vite 6** + **React 19**   | **egui / eframe** (v0.22.0)           |
+| **言語・実行環境**    | TS (React) / Rust (Tauri Backend)          | 純Rust (Windows ネイティブ描画)       |
+| **スタイリング**      | TailwindCSS v4 / Vanilla CSS               | eguiカスタムテーマ (カスタムフレーム) |
+| **クリップボードI/O** | `navigator.clipboard` / 簡易フォールバック | `arboard` (v3.2)                      |
+| **シリアライズ**      | `JSON.stringify` / `parse`                 | `serde` (v1.0) / `serde_json` (v1.0)  |
+| **日付・時刻**        | `new Date().toISOString()`                 | `chrono` (v0.4)                       |
+| **ダイアログI/O**     | `rfd` (v0.12) ※Tauri Rust側で仲介          | `rfd` (v0.12)                         |
+| **アイコン**          | `lucide-react`                             | プレーンテキスト/Unicode絵文字        |
 
 ---
 
@@ -58,7 +58,12 @@ SnippetFlow/
   - リッチなUI表現、スムーズなアニメーション、および快適なUXを提供する役割を持ちます。
   - `components/` にて各画面（一覧、フォーム、マージ、比較、性能診断）をコンポーネント化し、状態管理はカスタムフック `hooks/useSnippets.ts` に集約しています。
 - **`src-tauri/` (Tauri Rust Backend)**:
-  - Webview（React側）から要求されたOS固有の機能（ネイティブファイルダイアログによるインポート/エクスポート等）や重い処理（差分計算、タグ提案、暗号化保存等）を高速・安全に実行するネイティブバックエンドです。
+  - Webview（React側）から要求されたOS固有の機能（ネイティブファイルダイアログによるインポート/エクスポート等）や重い処理（差分計算、検索・ソート、タグ提案、暗号化保存、ダミーデータ高速生成等）を高速・安全に実行するネイティブバックエンドです。
+  - **モジュール分割構成**:
+    - `lib.rs`: Tauriエントリポイント、二重起動防止プラグイン、コマンドルーティング登録。
+    - `models.rs`: スニペットや統計情報のデータ構造定義、Serdeシリアライズ・デシリアライズおよび相互変換トレイト。
+    - `storage.rs`: AppDataへのアトミックファイル読み書き、暗号化/復号、OSネイティブファイルダイアログ制御。
+    - `operations.rs`: 高速検索・タグ絞り込み、LCS差分比較、AIタグ提案、複数定型文マージ、モックデータ高速生成、統計集計、ベンチマーク測定。
 - **`common_lib/` (共通ロジッククレート)**:
   - LCS差分比較アルゴリズムや暗号化/復号処理などを一元管理するライブラリです。
 

@@ -56,3 +56,38 @@ export interface PerformanceStats {
   /** キャッシュヒットの有無 */
   cacheHit: boolean;
 }
+
+/**
+ * コピー回数上位スニペットの簡易情報。
+ */
+export interface TopSnippet {
+  /** スニペットID */
+  id: number;
+  /** タイトル */
+  title: string;
+  /** コピー累計回数 */
+  copyCount: number;
+  /** 節約時間（秒） */
+  savedTimeSec: number;
+}
+
+/**
+ * バックエンド（Rust）から取得するスニペット集計統計情報。
+ */
+export interface SnippetStats {
+  /** 総スニペット件数 */
+  totalCount: number;
+  /** 有効なスニペット件数 */
+  activeCount: number;
+  /** 論理削除済みスニペット件数 */
+  deletedCount: number;
+  /** 総コピー回数 */
+  totalCopies: number;
+  /** 累計節約時間（秒） */
+  totalSavedSec: number;
+  /** 概算ファイルサイズ（KB） */
+  kbSize: string;
+  /** よく使うスニペットトップ3 */
+  topSnippets: TopSnippet[];
+}
+

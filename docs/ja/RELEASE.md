@@ -19,7 +19,7 @@ Node.js (package.json) と Rust (Cargo.toml) は自動でバージョンが同�
 1. **`package.json`** (`"version"` フィールド)
 2. **`Cargo.toml` (ルート)** (`version` フィールド)
 3. **`src-tauri/Cargo.toml`** (`version` フィールド)
-4. **`README.md` / `README.ja.md`** 上部にあるバージョンステータスバッジ
+4. **`README.md` / `README_JA.md`** 上部にあるバージョンステータスバッジ
 
 > [!WARNING]
 > バージョンの不整合があると、ビルドエラーや GitHub Actions 上でのドラフトリリース作成の失敗原因となります。

@@ -82,5 +82,5 @@ When the AI proposes source code modifications or additions, strictly adhere to 
   - Aim for a state where the modified code itself speaks.
 - **Specify Line Numbers and Diff Context Clearly**:
   - When using code editing tools or showing diffs in text, include sufficient surrounding code (context) to clearly specify the line numbers and target files of the changes without misunderstanding.
-  - **Strict Avoidance of Garbled Text (Tofu Characters)**:
+- **Strict Avoidance of Garbled Text (Tofu Characters)**:
   - When modifying UI components in `egui`, pay attention to areas where Japanese text is rendered, ensuring that fonts loaded through `theme::setup_custom_fonts` are properly applied and that garbled text (tofu characters) never occurs.

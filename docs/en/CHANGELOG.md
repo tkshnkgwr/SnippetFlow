@@ -4,6 +4,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.14.2] - 2026-08-26
+
+### Added
+- **Additional Computation Offloading to Rust Backend (`src-tauri/src/lib.rs`, `src/hooks/useSnippets.ts`, `src/components/StatsPanel.tsx`)**:
+  - `generate_mock_snippets`: Native Rust generation for large mock datasets (1,000–5,000 items) to eliminate UI thread latency.
+  - `get_snippet_stats`: Native aggregation of total counts, active/deleted counts, copy counts, total saved typing time, file size (KB), and top-3 snippets in Rust.
+  - `benchmark_search`: Precision search engine benchmark calculation (100 iterations) directly in Rust backend.
+
+### Removed
+- **Cleanup of Unnecessary Files**:
+  - Removed unreferenced icon `src-tauri/icons/iusttziusttziust.png`.
+  - Removed obsolete sample file `src-tauri/snippets.json`.
+
+---
+
 ## [1.14.1] - 2026-08-12
 
 ### Added

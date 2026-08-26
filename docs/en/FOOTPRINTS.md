@@ -23,11 +23,11 @@ Records the binary sizes and optimization flag configurations generated in the r
 Memory usage during continuous execution measured by Windows Task Manager or Resource Monitor.
 *Although configuration info is now retained in memory due to the introduction of `settings.json`, its impact on actual RAM is negligible (less than 1 KB).
 
-| Operating State | Memory Usage (Physical Memory/Working Set) | Remarks |
-| :--- | :--- | :--- |
-| **Just after startup (Idle)** | **Approx. 12.7 MB** (Private: Approx. 8.4 MB) | Involves dynamic memory loading of Japanese fonts (TTC) and JSON file I/O operations. |
-| **Searching/Viewing (Active)** | **Approx. 12.7 - 13.2 MB** | Computational load from incremental filtering is applied. |
-| **Adding a snippet (During form input)** | **Approx. 12.7 - 13.2 MB** | Keyword frequency analysis and tag recommendation calculations are executed. |
+| Operating State                          | Memory Usage (Physical Memory/Working Set)    | Remarks                                                                               |
+| :--------------------------------------- | :-------------------------------------------- | :------------------------------------------------------------------------------------ |
+| **Just after startup (Idle)**            | **Approx. 12.7 MB** (Private: Approx. 8.4 MB) | Involves dynamic memory loading of Japanese fonts (TTC) and JSON file I/O operations. |
+| **Searching/Viewing (Active)**           | **Approx. 12.7 - 13.2 MB**                     | Computational load from incremental filtering is applied.                             |
+| **Adding a snippet (During form input)** | **Approx. 12.7 - 13.2 MB**                     | Keyword frequency analysis and tag recommendation calculations are executed.          |
 
 ---
 

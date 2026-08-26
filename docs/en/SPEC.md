@@ -24,13 +24,28 @@ This document defines the specifications, screen designs, technology stack, and 
 * **Styling**: Vanilla CSS, TailwindCSS v4 (Dark Mode support)
 * **Icons**: lucide-react
 
-### Rust (For Desktop Production Version)
-* **GUI Engine**: `egui` / `eframe` (v0.22.0)
-* **Clipboard I/O**: `arboard` (v3.2)
+### Rust (Tauri Desktop Version)
+* **Core**: Tauri v2 (`tauri`, `tauri-plugin-single-instance`, `tauri-plugin-log`)
 * **Serialization**: `serde` (v1.0), `serde_json` (v1.0)
 * **DateTime**: `chrono` (v0.4)
 * **Native Dialogs**: `rfd` (v0.12) - For calling OS-native file dialogs
 * **Cargo Features**: `windows_desktop` (For integrating Windows-specific features like Win32 API and Single Instance; linked with the feature flags in `common_lib`)
+
+#### Tauri IPC Commands Table
+| Command Name             | Description                                                   | Arguments                                                        | Return Type           |
+| :----------------------- | :------------------------------------------------------------ | :--------------------------------------------------------------- | :-------------------- |
+| `load_snippets`          | Transparently loads snippet list from AppData                 | None                                                             | `Vec<TauriSnippet>`   |
+| `save_snippets`          | Atomically encrypts and saves all snippets to AppData         | `snippets`, `encrypt` (optional)                                 | `Result<(), String>`  |
+| `is_storage_encrypted`   | Checks whether the storage file is encrypted                  | None                                                             | `bool`                |
+| `export_snippets_json`   | Exports snippet JSON via native RFD save dialog               | `json_str`                                                       | `Result<(), String>`  |
+| `import_snippets_json`   | Imports snippet JSON via native RFD open dialog               | None                                                             | `Result<String, ...>` |
+| `compute_snippet_diff`   | Computes line-by-line LCS text diff in Rust                   | `old_text`, `new_text`                                           | `Vec<DiffPart>`       |
+| `search_snippets`        | Performs high-speed keyword search, tag filter, and sorting   | `snippets`, `search_text`, `selected_tags`, `show_deleted`, etc. | `SearchResult`        |
+| `suggest_tags_cmd`       | Analyzes input text to suggest top 5 recommended tags         | `snippets`, `title`, `content`, `description`, `current_tags`    | `Vec<String>`         |
+| `merge_snippets`         | Merges selected snippets with chosen separator in order       | `snippets`, `ordered_ids`, `separator`                          | `String`              |
+| `generate_mock_snippets` | High-speed native mock snippet dataset generator              | `count`, `start_id`                                             | `Vec<TauriSnippet>`   |
+| `get_snippet_stats`      | Aggregates database statistics, file size, and top 3 snippets | `snippets`                                                       | `SnippetStats`        |
+| `benchmark_search`       | Measures exact 100-iteration average search execution time    | `snippets`                                                       | `f64`                 |
 
 ---
 

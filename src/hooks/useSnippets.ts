@@ -379,9 +379,20 @@ export function useSnippets() {
     addToast('定型文のピン留め状態を変更しました。', 'success');
   };
 
-  const handleGenerateMock = (count: number) => {
+  const handleGenerateMock = async (count: number) => {
     const start = performance.now();
-    const mockData = generateMockSnippets(count);
+    let mockData: Snippet[] = [];
+    if (isTauri) {
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        mockData = await invoke<Snippet[]>('generate_mock_snippets', { count, startId: 2000 });
+      } catch (e) {
+        console.error('Failed to generate mock snippets via Rust backend:', e);
+        mockData = generateMockSnippets(count);
+      }
+    } else {
+      mockData = generateMockSnippets(count);
+    }
     setSnippets(prev => [...prev, ...mockData]);
     const end = performance.now();
     addToast(`${count}件の検証用ダミーデータを ${(end - start).toFixed(1)}ms で追加しました！`, 'success');
