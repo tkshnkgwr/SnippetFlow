@@ -4,6 +4,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.15.0] - 2026-09-07
+
+### Added
+- **Comprehensive Help & User Guide Overhaul (`src/App.tsx`)**:
+  - Upgraded help dialog modal into a clean 3-tab architecture ("💡 Use Cases & Basics", "🛠️ Feature Deep Dives", and "⌨️ Operations & System").
+  - Added dedicated use case cards for 4 primary workflows: AI prompt management, business email templates, shell scripts/CLI commands, and scratchpad notes.
+  - Added comprehensive feature deep dives for Diff Comparison (LCS algorithm, use cases, controls), Multiple Merging (custom separators, ordering, live preview), and Performance Diagnostics (typing time saved, benchmarks, bulk load tests).
+- **Extensive Documentation Review & Modernization**:
+  - `README.md`, `README_JA.md`: Added recommended use cases section and expanded key features list.
+  - `docs/ja/SPEC.md`, `docs/en/SPEC.md`: Added section "4.6. Help Dialog & Operation Guide".
+  - `docs/ja/USER_GUIDE.md`, `docs/en/USER_GUIDE.md`: Enriched use cases and operational tips.
+  - `docs/ja/TODO.md`, `docs/en/TODO.md`: Updated completed roadmap items.
+- **Full RustDoc / TypeScriptDoc Refinement (`src-tauri/src/lib.rs`, `src/types.ts`)**:
+  - Refined intra-doc link syntax (`[`models`][]`) to eliminate all `-D warnings` in `cargo clippy`.
+
+---
+
 ## [1.14.2] - 2026-08-26
 
 ### Added
