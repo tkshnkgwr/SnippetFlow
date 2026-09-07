@@ -38,8 +38,8 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 No warnings or errors were detected during Clippy static analysis at both the root and `src-tauri` directories (zero warnings with both the `windows_desktop` feature specified and with `--no-default-features`).
 
 ```text
-    Checking common_lib v0.2.4 (C:\Users\632792\Documents\自作\common_lib)
-    Checking snippet_manager v1.9.0 (C:\Users\632792\Documents\自作\SnippetFlow)
+    Checking common_lib v0.2.4 (%USERPROFILE%\Documents\自作\common_lib)
+    Checking snippet_manager v1.9.0 (%USERPROFILE%\Documents\自作\SnippetFlow)
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.00s
 ```
 

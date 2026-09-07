@@ -23,6 +23,21 @@ It features instant search with multiple tag AND filtering, auto tag recommendat
 
 ---
 
+## 💡 Recommended Use Cases
+
+SnippetFlow is designed to accelerate not just coding, but all daily digital productivity:
+
+* 🤖 **AI Prompts & System Roles**:
+  * Store repetitive prompts for ChatGPT, Claude, Gemini, or local LLMs (code review templates, summarization rules, persona definitions) and copy them with one click.
+* ✉️ **Business Emails & Communication**:
+  * Save formal greetings, acknowledgments, follow-up messages, inquiry templates, and email signatures.
+* 💻 **Routine Commands & Shell Scripts**:
+  * Stock frequently used Git commands (rebase, stash, cherry-pick), Docker container commands, and PowerShell/Bash one-liners without searching through terminal history.
+* 📝 **Quick Notes & Temporary Scratchpad**:
+  * Keep handy scratchpad notes, frequently referenced documentation links, API keys/endpoints, or Markdown boilerplates.
+
+---
+
 ## Key Features
 
 - **Dark/Light Theme Toggle**:
@@ -35,14 +50,22 @@ It features instant search with multiple tag AND filtering, auto tag recommendat
   - Repaints once per second when idle to maintain near-zero CPU consumption.
 - **Incremental Text & Tag Cloud Search**:
   - Perform incremental keyword filtering or filter instantly using the new Tag Cloud UI.
+- **Pinning (Favorites)**:
+  - Pin essential snippets (📌) to permanently keep them at the top of the list regardless of sort criteria.
 - **One-Click & Merged Clipboard Copy**:
-  - Direct copy function, plus the ability to select multiple templates and merge-copy them with custom line break separators.
+  - Direct one-click copy, plus a dedicated Merge screen to combine multiple snippets with customizable separators (single newline, double newline, `---`, `===`, comma, or none).
+- **Visual Diff Comparison (Compare)**:
+  - Compare two snippets side-by-side using the Longest Common Subsequence (LCS) algorithm to visualize additions (green) and deletions/edits (red).
+- **Performance Meter & Usage Analytics**:
+  - Track total copies and calculate typing time saved (based on 0.3s/character), measure 100-run search benchmarks, and perform 1,000–5,000 record load tests.
+- **Comprehensive Tabbed Help Guide**:
+  - Click the `?` icon in the header to view use cases, detailed feature deep dives (Compare, Merge, Stats), and keyboard shortcuts.
 - **Intelligent Tag Suggestion**:
   - Analyzes snippet forms in real-time, matching words in title, body, and description with existing tags (giving title occurrences double weight).
 - **Logical Deletion & Restore Actions**:
   - Soft-deletes snippets into an archive log, from which they can be restored or permanently hard-deleted.
 - **Database Backup & Recovery**:
-  - Uses native file system dialogs to import and export the entire JSON database.
+  - Uses native file system dialogs to import (📥) and export (📤) the entire JSON database.
 
 ---
 

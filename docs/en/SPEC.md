@@ -133,6 +133,13 @@ Holds the application behavior and display settings.
 * **Bulk Data Load Test**: Features functionality to batch-generate and batch-cleanup mock data (dummy snippets) in quantities of 1,000, 2,000, and 5,000 items. Used to test memory and rendering overhead.
 * **Backup and Restore**: In both the egui standalone and Tauri desktop versions, the OS-native file dialog (`rfd` crate) is used to securely import (restore) and export (backup) JSON data. To bypass browser download restrictions in the Tauri version, a dedicated backend command is defined in Rust and called from the frontend.
 
+### 4.6. Help Dialog & Operation Guide
+* **Modal Dialog Architecture**: Triggered by clicking the "`?`" icon button on the top-right header, displaying a centered dialog modal (width `max-w-2xl`, dismissible via Esc key or "Close" button).
+* **Tabbed Sub-Navigation UI**: Segmented into 3 tabs for quick, intuitive information retrieval:
+  * **💡 Use Cases & Basics**: Recommended practical use case cards (AI prompts, business emails, CLI commands, scratchpad notes) and core UI workflows (pinning, tag cloud filtering).
+  * **🛠️ Feature Deep Dives**: Comprehensive guidance on Diff Comparison (LCS visualizer, swap, copy), Multiple Merging (custom separators, ordering, live preview), and Performance Diagnostics (cumulative typing time saved, search benchmarks, 1,000–5,000 item load testing).
+  * **⌨️ Operations & System**: Complete keyboard shortcuts list (`Ctrl + N`, `Ctrl + F`, `Esc`), JSON database backup/restore procedures, and runtime initialization system log viewer.
+
 ---
 
 ## 5. Performance and Resource Optimization Specifications

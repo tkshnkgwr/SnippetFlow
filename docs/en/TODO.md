@@ -59,6 +59,11 @@ This document manages the current implementation status (Done), near-term tasks 
 ### 1.8. Development Environment and Agent Rules
 - **Optimization of Verification Process (Skipping checks on Markdown updates)**: Introduced rules in `.agents/AGENTS.md` to skip automated tests and static analysis (`cargo test`, `cargo clippy`, `cargo fmt`) when only Markdown files are updated, reducing redundant verification tasks.
 
+### 1.9. Comprehensive Help Guide & Practical Use Cases
+- **Tabbed Sub-Navigation Help Modal**: Overhauled the help modal into a 3-tab architecture ("💡 Use Cases & Basics", "🛠️ Feature Deep Dives", and "⌨️ Operations & System").
+- **Concrete Practical Use Cases**: Documented clear real-world scenarios for AI prompts, business email templates, shell scripts/CLI commands, and scratchpad notes.
+- **Deep Feature Guides**: Provided detailed guidance for Diff Comparison (LCS visualizer, swap, copy), Multiple Merging (separators, ordering, live preview), and Performance Diagnostics (typing time saved, benchmarks, bulk load tests).
+
 ---
 
 ## 2. Current Tasks (Todo / In Progress)

@@ -4,6 +4,24 @@
 
 This document is the user manual explaining the usage and operation procedures for each function of the "Preset Text Clipboard Manager (SnippetFlow)".
 
+## 💡 Recommended Use Cases
+
+SnippetFlow is a versatile clipboard manager useful not only for programming code, but for all daily desk work and digital workflows.
+
+* 🤖 **AI Prompts & Template Management**:
+  * Store repetitive prompts for ChatGPT, Claude, Gemini, or local LLMs (e.g., code review requests, text summaries, test case generators), along with system roles and constraints.
+  * Categorize them with tags like `AI`, `review`, `prompt` to streamline prompt dispatch.
+* ✉️ **Business Emails & Chat Templates**:
+  * Save common greetings, inquiry acknowledgment replies, follow-ups, and email signatures.
+  * Accelerate daily communication on Email, Slack, Teams, etc.
+* 💻 **Routine Commands & Shell Scripts**:
+  * Stock frequently used but hard-to-remember Git commands (branch cleanup, rebase, diffs), Docker container commands, and long PowerShell/Bash one-liners.
+  * Eliminate the need to search through terminal history or web searches.
+* 📝 **Quick Notes & Information Clips**:
+  * Use as a scratchpad for temporary notes, frequently referenced documentation URLs, API endpoints, environment configs, or Markdown templates.
+* 🔀 **Snippet Composition & Merging (Merge Feature)**:
+  * Combine modular snippets (e.g., "Greeting" + "Agenda" + "Closing") and copy them as a unified text with custom separators.
+
 ---
 
 ## 1. Basic Operations and List Screen (Snippet List / Home)
@@ -47,30 +65,41 @@ This screen is used to add new preset texts, and to edit or delete existing data
 
 ### 3.1. Difference Comparison Screen (Compare)
 * **Overview**: A screen where you can visually compare the differences between exactly two preset texts side by side.
-* **Operation**: Select two preset texts using the checkboxes on the list screen and click "Compare 2 items" to navigate to this screen.
-* **LCS Diff Viewer**: Based on the Longest Common Subsequence (LCS) algorithm, the viewer highlights added text (green background) and deleted/changed text (red background) line by line.
-* **Dynamic Swap & Left-Right Swap**: You can change the comparison targets on the spot using the dropdowns in the screen, or instantly swap their positions using the "⇄ Swap Left/Right" button.
+* **Key Use Cases**:
+  * **AI Prompt Iteration Comparison**: Inspect exact additions or revisions between prompt versions and constraints.
+  * **Email Variation Review**: Compare nuances between formal, polite, or concise drafts.
+  * **Code & Configuration Diffs**: Pinpoint differences in parameters, flags, or configuration snippets.
+* **Operation & Features**:
+  * **Navigate by Selecting 2 Items**: Check two snippets on the list screen and click "Compare 2 items" to open the viewer.
+  * **LCS Diff Viewer**: Based on the Longest Common Subsequence (LCS) algorithm, lines are highlighted with additions (green background) and removals/changes (red background).
+  * **Dynamic Selection & Swap**: Select snippets on the fly via the left/right dropdowns, or flip their sides instantly using the "⇄ Swap Left/Right" button.
+  * **Individual One-Click Copy**: Copy snippet A or snippet B directly from within the comparison screen.
 
 ### 3.2. Multiple Merge Screen (Merge)
 * **Overview**: A screen to merge multiple selected preset texts in any order and with any separator to copy them all at once.
-* **Order Adjustment**: You can dynamically add or remove snippets to merge using checkboxes, and freely change the order of merging using the "↑" and "↓" buttons.
-* **Separator Selection**: 
-  * You can select from 6 types of separators: Single Newline, Double Newline, Divider Line (`---`), Divider Line (`===`), Japanese Comma (`、`), or No Separator.
-* **Preview**: A real-time preview of the merged text is displayed, and you can copy the entire result using the "Copy Result" button.
+* **Key Use Cases**:
+  * **Modular Email Assembly**: Chain "Greeting" + "Main Body / Agenda" + "Closing Remarks" into a complete email.
+  * **Batch Command Chains**: Chain multiple Git or Docker commands into a single executable script or one-liner.
+  * **Composite AI Prompts**: Assemble modular components ("Persona / System Role" + "Formatting Constraints" + "Task Instruction").
+* **Operation & Features**:
+  * **Dynamic Item Selection**: Toggle snippets dynamically using the checkboxes.
+  * **Reordering**: Click "↑" and "↓" buttons to reorder snippets effortlessly.
+  * **6 Separator Types**: Choose from Single Newline, Double Newline, Divider Line (`---`), Divider Line (`===`), Japanese Comma (`、`), or No Separator.
+  * **Live Preview & Batch Copy**: Verify the merged output in the real-time preview box and click "Copy Result" to copy everything in one action.
 
 ---
 
 ## 4. Performance Meter and Usage Statistics (Analytics)
 
-### 4.1. Database Performance Diagnosis
-* **Database Item Count**: You can check the count of active data, deleted data, estimated JSON size, etc.
-* **100-Run Average Benchmark**: Runs the search process 100 times consecutively and measures the real-time search performance in milliseconds.
-* **Large Dataset Load Test**: Automatically generates dummy data of "1,000," "2,000," or "5,000" items temporarily, allowing you to experience and verify that the application runs smoothly and comfortably even under thousands of items.
-
-### 4.2. Usage Statistics (Analytics)
+### 4.1. Usage Statistics (Analytics)
 * **Total Copies**: Counts the cumulative number of times copy operations have been performed through the application.
 * **Cumulative Time Saved**: Based on the character count of copied preset texts, it visualizes how much typing time has been saved in "hours, minutes, and seconds," **assuming that "typing one character takes 0.3 seconds"**.
-* **Top 3 Frequently Used Preset Texts**: Displays the ranking, copy counts, and saved times of the top 3 preset texts with the highest copy counts.
+* **Top 3 Frequently Used Preset Texts**: Displays the ranking, copy counts, and saved times of the top 3 preset texts with the highest copy counts to help identify your most valuable templates.
+
+### 4.2. Database Performance Diagnosis
+* **Database Item Count**: Check the count of active data, deleted data, estimated JSON size, etc.
+* **100-Run Average Benchmark**: Runs the search process 100 times consecutively and measures real-time search performance in milliseconds.
+* **Large Dataset Load Test**: Automatically generates dummy datasets of "1,000," "2,000," or "5,000" items temporarily, verifying that the app remains lightweight, responsive, and blazing fast under thousands of records (can be instantly reverted by clicking "Clear Dummy Data").
 
 ---
 
