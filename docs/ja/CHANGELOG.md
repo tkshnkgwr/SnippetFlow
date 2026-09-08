@@ -4,7 +4,16 @@
 
 プロジェクトのすべての重要な変更が本ファイルに記録されます。
 
-## [1.15.0] - 2026-09-07
+## [1.15.0] - 2026-09-08
+
+### Changed / Refactored
+- **`SnippetList.tsx` のサブコンポーネント分割リファクタリング (`src/components/`)**:
+  - 約 860 行あった `SnippetList.tsx` を、UI責務ごとに4つの独立したサブコンポーネント（`SnippetSearchBar.tsx`, `SnippetCard.tsx`, `SnippetMultiSelectBar.tsx`, `SnippetTooltip.tsx`）へ分割。
+  - 親コンポーネントを 429 行（約50%減）へスリム化し、保守性と可読性を大幅に向上。
+- **全ドキュメントにおける egui 過去記述の完全除去とTauri専用構成への統一 (`docs/`, `README.md`, `README_JA.md`)**:
+  - `ARCHITECTURE.md`, `DIAGRAM.md`, `DEVELOPING.md`, `SPEC.md`, `FOOTPRINTS.md`, `TESTING.md`, `TEST_REPORT.md` 等の全ドキュメントから旧egui（純Rust単体版）の記述やMermaid図を完全に除去・更新し、現行の Tauri 2 デスクトップ構成（React 19 + TypeScript + Rust）へ一本化。
+- **ヘルプ画面のサイズ固定化によるガタつき解消 (`src/App.tsx`)**:
+  - ヘルプダイアログモーダルの高さを固定（`h-[620px]`）し、タブ切り替え時に発生していたレイアウトのガタつきを完全に防止。
 
 ### Added
 - **総合ヘルプ・使い方ガイドの大幅拡充 (`src/App.tsx`)**:

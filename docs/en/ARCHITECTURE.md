@@ -22,21 +22,21 @@ SnippetFlow is an ultra-lightweight desktop utility that safely stores canned te
 
 This project adopts a hybrid configuration to use the right technology for the right job.
 
-### 2.1. Common Core Language
-- **Rust**: A backend and standalone desktop app language that delivers high performance, memory safety, and a low footprint.
-- **TypeScript / JavaScript**: Ensuring frontend UI logic and type safety.
+### 2.1. Core Languages
+- **Rust**: High performance, memory safety, and low resource footprint for desktop backend services.
+- **TypeScript / JavaScript**: Ensuring rich frontend UI logic, safety, and modern user experience.
 
-### 2.2. Frameworks & Libraries by Application
-| Category               | Tauri / Web Version (Rich UI)              | egui Version (Ultra-lightweight Native) |
-| :--------------------- | :----------------------------------------- | :-------------------------------------- |
-| **GUI Framework**      | **Tauri v2** + **Vite 6** + **React 19**   | **egui / eframe** (v0.22.0)             |
-| **Language / Runtime** | TS (React) / Rust (Tauri Backend)          | Pure Rust (Windows native rendering)    |
-| **Styling**            | TailwindCSS v4 / Vanilla CSS               | egui custom theme (custom frame)        |
-| **Clipboard I/O**      | `navigator.clipboard` / simple fallback    | `arboard` (v3.2)                        |
-| **Serialization**      | `JSON.stringify` / `parse`                 | `serde` (v1.0) / `serde_json` (v1.0)    |
-| **Date & Time**        | `new Date().toISOString()`                 | `chrono` (v0.4)                         |
-| **Dialog I/O**         | `rfd` (v0.12) *mediated on Tauri Rust side | `rfd` (v0.12)                           |
-| **Icons**              | `lucide-react`                             | Plain text / Unicode emojis             |
+### 2.2. Frameworks & Libraries
+| Category               | Tauri Desktop Version (Production)         | Web Version (Prototype / UI Verification) |
+| :--------------------- | :----------------------------------------- | :---------------------------------------- |
+| **GUI Framework**      | **Tauri v2** + **Vite 6** + **React 19**   | **Vite 6** + **React 19**                 |
+| **Language / Runtime** | TS (React) / Rust (Tauri Backend)          | TS (React) / Browser Runtime              |
+| **Styling**            | TailwindCSS v4 / Vanilla CSS               | TailwindCSS v4 / Vanilla CSS              |
+| **Data Persistence**   | Encrypted JSON file in `%APPDATA%`         | Browser `localStorage`                    |
+| **Clipboard I/O**      | `navigator.clipboard` / Tauri API          | `navigator.clipboard`                     |
+| **Serialization**      | `serde` (v1.0) / `serde_json` (v1.0)       | `JSON.stringify` / `parse`                |
+| **Dialog I/O**         | `rfd` (v0.12) mediated on Tauri Rust side  | Browser standard Download / Input File API|
+| **Icons**              | `lucide-react`                             | `lucide-react`                            |
 
 ---
 
@@ -130,39 +130,6 @@ sequenceDiagram
     Backend->>OS: std::fs::read_to_string(path)
     Backend-->>UI: Return read JSON data
     UI->>Backend: Call save_snippets(snippets) to update AppData snippets.json
-```
-
-### 4.3. egui Version (Pure Rust) Data Flow
-In the egui version, all processing runs within the native threads of Rust.
-At startup, it loads `snippets.json` and `settings.json` from the local current directory. If the files do not exist, it automatically generates default template data and saves it.
-File I/O for importing and exporting data is also triggered by UI events, invoking the `rfd` crate directly within Rust.
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant UI as egui App (src-egui)
-    participant Storage as storage.rs / settings.rs
-    participant File as Local Config Files (snippets/settings.json)
-    participant OS as OS File System (rfd)
-
-    Note over UI, File: At app startup
-    UI->>Storage: Call load_data() / AppSettings::load()
-    Storage->>File: Check existence and read
-    alt When config file does not exist
-        Storage->>File: Write default template / settings
-    end
-    File-->>Storage: Read JSON data and deserialize
-    Storage-->>UI: Build application state
-
-    Note over UI, File: When editing, saving, or adding copy stats to snippet
-    UI->>Storage: save_data() / settings.save()
-    Storage->>File: std::fs::write() (Synchronous write)
-
-    Note over UI, OS: During backup / restore (Performance screen)
-    UI->>OS: Call RFD dialog
-    OS-->>UI: Determine file path
-    UI->>OS: Execute direct file I/O (std::fs)
-    UI->>File: Write to snippets.json / load to update state
 ```
 
 ---

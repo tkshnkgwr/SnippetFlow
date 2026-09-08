@@ -50,37 +50,37 @@ To prevent the application from crashing suddenly or silently hanging in develop
 ---
 
 ## 3. Component & Module Division Standards
-
-To keep the code highly maintainable and readable, split the code based on its function and role. If a single program source file (`.rs`, `.ts`, `.tsx`, etc.) exceeds 1000 lines, you must implement or propose refactoring to split it into modules by function.
-
-### 3.1. Rust (src-egui)
-- **`main.rs`**: Entry point. Only handles multi-instance checks, NativeOptions configuration, and custom font setup.
-- **`model.rs`**: Stores only data structures (`Snippet`, `AppSettings`, etc.) and enum definitions.
-- **`storage.rs`**: Encapsulates only the input/output (load/save) processing for JSON files.
-- **`theme.rs`**: Stores color palette definitions, style configurations for dark/light modes, custom Japanese font loading, highlighting processing, etc.
-- **`app.rs`**: Handles application state management, the event loop (`update`), and the overall layout skeleton (header, footer, etc.).
-- **`ui.rs`**: Places functions responsible for the specific drawing logic of each screen (List, Form, Compare, Merge, Stats).
-
-### 3.2. TypeScript / React (src-react)
-- **`App.tsx`**: Functions as a skeleton managing only the top-level layout, toast container, top navigation, and footer.
-- **`hooks/useSnippets.ts`**: A custom hook that centrally manages all application state management (copying, saving, logical deletion, physical deletion, restoration, dummy data generation, etc.).
-- **`components/`**: Completely separates files on a screen-by-screen basis.
-  - `SnippetList.tsx`: List screen (search, sorting, pinning, multiple selection actions).
-  - `SnippetForm.tsx`: Add/edit form (including intelligent tag suggestions).
-  - `SnippetCompare.tsx`: Two-column LCS diff display supporting dynamic swapping.
-  - `SnippetMerge.tsx`: Merge order adjustment, separator selection, and live preview.
-  - `StatsPanel.tsx`: Database diagnostics, usage statistics, load testing, and architecture guide.
+If a single program source file (`.rs`, `.ts`, `.tsx`, etc.) exceeds 1,000 lines, you must propose or implement refactoring to split it into modules by function.
+- **Rust (src-tauri)**: Modularize and optimize within `lib.rs`, `main.rs`, and submodules based on concerns.
+- **TypeScript / React (src)**: Modularize and organize across `App.tsx`, `hooks/useSnippets.ts`, and `components/`.
 
 ---
 
-## 4. AI Output Format Specification
+## 4. Automatic Documentation & Synchronization Rules
+When modifying code, adding features, or fixing bugs, update both `docs/ja/` and `docs/en/` documentation to keep them completely synchronized (`CHANGELOG.md`, `SPEC.md`, `TODO.md`, etc.).
+*Note: When modifying only markdown (`*.md`) files, the automatic update and pre-verification processes may be skipped.*
 
-When the AI proposes source code modifications or additions, strictly adhere to the following rules:
+| Target Document             | Role                          | Update Timing                                                                                                              |
+| :-------------------------- | :---------------------------- | :------------------------------------------------------------------------------------------------------------------------- |
+| `CHANGELOG.md`              | Change history tracking       | Append after implementation completion. Group by date (`## [YYYY-MM-DD]`) and category (`Added`, `Fixed`, `Optimized`, etc.).|
+| `SPEC.md`                   | Functional specs & definition | Changes to CLI arguments, calculation logic, precision, UI components, supported OS, etc.                                 |
+| `DIAGRAM.md`                | Architecture visualization    | Update Mermaid diagrams whenever data or UI flows change.                                                                  |
+| `README.md` / `README_JA.md`| Overview & build/run steps    | Changes to startup options, build commands, prerequisites, etc.                                                            |
+| `FOOTPRINTS.md`             | Performance records           | Changes in release build size, optimization profiles, or new performance benchmark results.                               |
+| `ARCHITECTURE.md`           | Design & module structure     | Refreshing internal structure, adding or splitting modules, or updating algorithms.                                        |
+| `INSTRUCTIONS.md`           | AI coding rules & standards   | Maintaining AI guidelines, coding styles, and project conventions.                                                         |
+| `TODO.md`                   | Task management               | Adding or updating Done (implemented), In Progress/Todo (immediate tasks), and Backlog (enhancement ideas).                |
 
-- **Minimize Explanations**:
-  - Do not provide verbose grammar explanations unless they explain implementation intent or key logic changes behind the code.
-  - Aim for a state where the modified code itself speaks.
-- **Specify Line Numbers and Diff Context Clearly**:
-  - When using code editing tools or showing diffs in text, include sufficient surrounding code (context) to clearly specify the line numbers and target files of the changes without misunderstanding.
-- **Strict Avoidance of Garbled Text (Tofu Characters)**:
-  - When modifying UI components in `egui`, pay attention to areas where Japanese text is rendered, ensuring that fonts loaded through `theme::setup_custom_fonts` are properly applied and that garbled text (tofu characters) never occurs.
+---
+
+## 5. Quality Management & Pre-verification Rules
+- **Module Splitting (1,000-Line Rule)**: Proactively propose splitting/refactoring whenever a single source file exceeds **1,000 lines**.
+- **Local Pre-verification 5 Commands** (*Skip when modifying only `.md` files*):
+  1. `cargo test --manifest-path src-tauri/Cargo.toml` (All tests pass)
+  2. `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings` (Zero clippy warnings)
+  3. `cargo fmt --manifest-path src-tauri/Cargo.toml --check` (Formatting matches style rules)
+  4. `cargo doc --manifest-path src-tauri/Cargo.toml --no-deps --document-private-items` (Zero rustdoc warnings)
+  5. `npm run lint && npm run build` (TypeScript type check & Vite production build pass)
+- **Version Management (SSOT)**:
+  - Root `package.json` acts as the SSOT, synchronized with `Cargo.toml` (`src-tauri`).
+

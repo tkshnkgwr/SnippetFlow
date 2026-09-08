@@ -68,11 +68,11 @@ This document manages the current implementation status (Done), near-term tasks 
 
 ## 2. Current Tasks (Todo / In Progress)
 
-### 2.1. Unifying Data Storage and Settings between Tauri and egui Versions
+### 2.1. Unified Data Storage & Settings Reliability
 - [x] **Full Transition of Tauri Storage to Backend**:
   Upgraded the application to load data from `%APPDATA%\com.snippetflow.app\snippets.json` (resolved via `app_data_dir()`) through the Rust backend at Tauri startup, and write data updates directly from Rust. The storage path is now fixed and stable across version upgrades and reinstalls, preventing data loss.
 - [ ] **Full Unification of App Settings**:
-  Unify settings like theme choices and selected sorting orders in `settings.json` (consistent with egui) instead of storing them in Tauri's `localStorage`.
+  Centralize settings like theme choices and selected sorting orders into a desktop configuration file (`settings.json`) independent of browser environments.
 
 ### 2.2. Near-Term Planned Features and Improvements (Short-Term Improvements)
 - [x] **Multiple Tag Selection and Reset Button**:

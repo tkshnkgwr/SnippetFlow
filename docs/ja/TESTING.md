@@ -8,7 +8,7 @@
 
 ## 1. テスト概要
 
-`SnippetFlow` は、Rust（egui / Tauri）および React/TypeScript で構築されたクロスプラットフォームの定型文マネージャーです。
+`SnippetFlow` は、Tauri v2（React 19 / TypeScript + Rust）で構築されたクロスプラットフォームの定型文マネージャーです。
 アプリケーションの安定性と高い品質を維持するため、以下の領域で包括的な検証を行います。
 
 - **コアロジックの検証 (`common_lib`)**:
@@ -16,8 +16,8 @@
   - キーワード出現頻度の解析とタグ自動推薦アルゴリズムの妥当性
 - **データの永続化とモデルの検証**:
   - `DbSnippet` と `TauriSnippet` (キャメルケース/スネークケース) 間の相互シリアライズ・デシリアライズの互換性
+  - 暗号化（`ENC1:` ヘッダー）および平文の安全な読み込み・保存
   - アーカイブ（論理削除）および復元、物理削除処理
-  - `settings.json` の設定永続化とテーマ（ライト/ダーク）保存
 - **フロントエンドの型安全性とビルド整合性**:
   - React/TypeScript における React 19 / Vite 6 向けのビルド整合性
   - `tsconfig.json` の設定による自動生成コードの除外と型エラーの排除
@@ -28,27 +28,27 @@
 
 コードの変更完了時やコミット前には、以下のローカル検証コマンドが全てエラー・警告なしで合格することを確認します。
 
-### 2.1. Rust 側（バックエンド / egui）の検証
+### 2.1. Rust 側（バックエンド）の検証
 
 #### 1. ユニットテストの実行
 ```bash
-cargo test
+cargo test --manifest-path src-tauri/Cargo.toml
 ```
 
 #### 2. 静的解析 (Clippy)
 警告はエラーとして扱われます。すべて解決してください。
 ```bash
-cargo clippy --all-targets -- -D warnings
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
 ```
 
 #### 3. コードフォーマット検証
 ```bash
-cargo fmt --check
+cargo fmt --manifest-path src-tauri/Cargo.toml --check
 ```
 
 #### 4. Rustdoc ビルド検証
 ```bash
-cargo doc --no-deps --document-private-items
+cargo doc --manifest-path src-tauri/Cargo.toml --no-deps --document-private-items
 ```
 
 ### 2.2. TypeScript / React 側（フロントエンド）の検証
@@ -69,8 +69,9 @@ npm run build
 ## 3. テストの記述ガイドライン
 
 1. **ユニットテストの追加**:
-   - コアロジック（`common_lib`）や状態管理モデルに変更を加えた場合は、必ず `src-egui/model.rs` や `common_lib/src/` 配下のテストモジュールにユニットテストを追加・拡充してください。
+   - コアロジック（`common_lib`）や状態管理モデルに変更を加えた場合は、必ず `src-tauri/src/` や `common_lib/src/` 配下のテストモジュールにユニットテストを追加・拡充してください。
 2. **クラッシュフリー設計のテスト**:
-   - `snippets.json` や `settings.json` が破損、または存在しない場合に、パニックせずデフォルトデータへ安全にフォールバックすることを確認するテストを維持します。
+   - `snippets.json` が破損、または存在しない場合に、パニックせずデフォルトデータへ安全にフォールバックすることを確認するテストを維持します。
 3. **OS依存処理の隔離**:
    - Windows 固有の Named Mutex による多重起動防止処理や Win32 API を用いた制御などは、`#[cfg(windows)]` を用いて隔離し、他プラットフォームでのビルド互換性を崩さないようにテストします。
+

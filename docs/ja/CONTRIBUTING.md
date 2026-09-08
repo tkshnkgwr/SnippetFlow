@@ -11,13 +11,11 @@
 
 本プロジェクトの開発や修正を行う際は、以下の原則を遵守してください。
 
-1. **二系統のUIアーキテクチャの維持**:
-   - 本アプリは、Tauri版（React/TypeScript + Rust）と egui版（純Rust）の双方が同一機能で並行して動作する設計になっています。コア機能のロジック（データのパース、LCS差分、統計計算など）を追加・変更する場合は、必ず双方のUIに適用可能か確認してください。
+1. **Tauri 2 デスクトップアーキテクチャの維持**:
+   - 本アプリは、Tauri 2（React 19 / TypeScript + Rust）のハイブリッド構成として設計されています。Web技術による表現力豊かなUIと、Rustによる高速・安全なシステム処理（データ永続化、暗号化、LCS差分等）の責務分離を保って設計してください。
 2. **共有ライブラリ `common_lib` の活用**:
    - 隣接する `common_lib` フォルダに共通の処理（Win32 API制御や文字列処理、LCSアルゴリズムなど）がまとめられています。二重実装を防ぐため、共有できるロジックは積極的に `common_lib` へ移行してください。
-3. **日本語の文字化け（豆腐文字）防止**:
-   - egui版のUI要素を修正・追加する際は、日本語フォントが正しくロードされ適用されるように配慮してください。
-4. **多言語ドキュメントの同期**:
+3. **多言語ドキュメントの同期**:
    - 仕様変更や機能追加、動作フローの変更を行う場合は、必ず `docs/ja/` および `docs/en/` の双方のドキュメントを更新し、内容を完全同期させてください。
 
 ---
@@ -33,14 +31,14 @@
    ├── common_lib/
    └── SnippetFlow/
    ```
-2. **Tauri環境の起動**:
+2. **デスクトップ版（Tauri）の起動**:
    ```bash
    npm install
-   npx tauri dev
+   npm run tauri dev
    ```
-3. **egui版の起動**:
+3. **Web版（プロトタイプ・UI確認）の起動**:
    ```bash
-   cargo run
+   npm run dev
    ```
 
 ---
@@ -61,9 +59,9 @@
 ### プルリクエスト作成前のチェックリスト
 PRを送信する前に、ローカル環境で以下の検証がすべてパスすることを確認してください：
 
-- [ ] `cargo test` （ユニットテスト合格）
-- [ ] `cargo clippy --all-targets -- -D warnings` （静的解析の警告ゼロ）
-- [ ] `cargo fmt --check` （Rustのコードフォーマット準拠）
+- [ ] `cargo test --manifest-path src-tauri/Cargo.toml` （Rustユニットテスト合格）
+- [ ] `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings` （静的解析の警告ゼロ）
+- [ ] `cargo fmt --manifest-path src-tauri/Cargo.toml --check` （Rustのコードフォーマット準拠）
 - [ ] `npm run lint` （TypeScriptの型エラー・警告ゼロ）
 - [ ] `npm run build` （フロントエンドのビルド成功）
 - [ ] `docs/ja/` と `docs/en/` のドキュメント同期

@@ -9,12 +9,10 @@ This document records the measurement results of the application's footprint (co
 ## 1. Build Profiles and Binary Sizes
 
 Records the binary sizes and optimization flag configurations generated in the release build.
-* **Build command (egui version)**: `cargo build --release`
-* **Generated binary (egui version)**: `target/release/snippet_manager.exe`
-* **Binary size (egui version)**: **2.92 MB** (3,063,296 bytes) *Slight increase of about 38 KB due to multi-crate (link boundary) structure with the introduction of the shared crate `common_lib`.
-* **Build command (Tauri version)**: `npx tauri build --no-bundle`
-* **Generated binary (Tauri version)**: `src-tauri/target/release/Snippetflow.exe`
-* **Binary size (Tauri version)**: **2.62 MB** (2,751,488 bytes)
+* **Build command**: `npm run tauri build`
+* **Generated binary**: `src-tauri/target/release/Snippetflow.exe`
+* **Binary size**: **Approx. 2.6 MB** (Optimized native executable binary)
+* **Installer (.msi / .exe)**: **Approx. 4 - 5 MB** (Ultra-lightweight as it shares system Webview2 runtime without bundling)
 
 ---
 
@@ -26,8 +24,8 @@ Memory usage during continuous execution measured by Windows Task Manager or Res
 | Operating State                          | Memory Usage (Physical Memory/Working Set)    | Remarks                                                                               |
 | :--------------------------------------- | :-------------------------------------------- | :------------------------------------------------------------------------------------ |
 | **Just after startup (Idle)**            | **Approx. 12.7 MB** (Private: Approx. 8.4 MB) | Involves dynamic memory loading of Japanese fonts (TTC) and JSON file I/O operations. |
-| **Searching/Viewing (Active)**           | **Approx. 12.7 - 13.2 MB**                     | Computational load from incremental filtering is applied.                             |
-| **Adding a snippet (During form input)** | **Approx. 12.7 - 13.2 MB**                     | Keyword frequency analysis and tag recommendation calculations are executed.          |
+| **Searching/Viewing (Active)**           | **Approx. 12.7 - 13.2 MB**                    | Computational load from incremental filtering is applied.                             |
+| **Adding a snippet (During form input)** | **Approx. 12.7 - 13.2 MB**                    | Keyword frequency analysis and tag recommendation calculations are executed.          |
 
 ---
 
@@ -42,7 +40,8 @@ Memory usage during continuous execution measured by Windows Task Manager or Res
 
 ## 4. Build Optimization Options (Applied)
 
-The configuration profile applied to `Cargo.toml` at the root and in `src-tauri` to reduce binary size and optimize execution performance.
+The configuration profile applied to `src-tauri/Cargo.toml` to reduce binary size and optimize execution performance.
+
 
 ```toml
 [profile.release]

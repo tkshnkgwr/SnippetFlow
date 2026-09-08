@@ -89,60 +89,44 @@ For detailed functional specifications, development guidelines, and diagrams, pl
 
 ## Prerequisites
 
-### Rust Desktop App
 - **OS**: Windows 10 / 11
-- **Rust Compiler**: Rust 1.70 or newer (Stable channel recommended)
-
-### React Web Prototype
-- **Runtime**: Node.js v18 or newer (Vite 6 / React 19)
+- **Development & Runtime Environment**:
+  - Node.js v18 or newer (Vite 6 / React 19)
+  - Rust 1.77 or newer (Tauri v2)
 
 ---
 
 ## Download
 
-Precompiled binaries and installers can be downloaded directly from the GitHub **[Releases](https://github.com/tkshnkgwr/SnippetFlow/releases)** page.
+Precompiled installers can be downloaded directly from the GitHub **[Releases](https://github.com/tkshnkgwr/SnippetFlow/releases)** page.
 
-* **Tauri Desktop Version**: Provided as standard installers (`.msi` or `.exe`) for easy Windows installation.
-* **Rust egui Standalone Version**: Provided as `snippet_manager-windows-x64.zip`. After extraction, simply run `snippet_manager.exe` directly without installation.
+* **Tauri Desktop Version**: Provided as standard installers (`.msi` or `.exe`) for simple Windows installation and setup.
 
 ---
 
 ## Build & Run Instructions
 
-### 1. Rust Desktop App
-```bash
-# Run in development mode
-cargo run
-
-# Build the optimized production binary
-cargo build --release
-```
-The compiled release binary can be found under `target/release/snippet_manager.exe`. Settings and snippet files (`settings.json`, `snippets.json`) will be outputted relative to the execution binary path.
-
-### 2. React Web Prototype
+### 1. Tauri Desktop App (Production & Development)
 ```bash
 # Install dependencies
 npm install
 
+# Run in development mode (launches desktop window with hot-reload)
+npm run tauri dev
+
+# Build production installer (.msi / .exe)
+npm run tauri build
+```
+Once the build completes, the installers will be generated under `src-tauri/target/release/bundle/`.
+
+### 2. React Web Prototype (UI verification)
+```bash
 # Run local development server (port 3000)
 npm run dev
 
-# Build production bundle
+# Verify production bundle build
 npm run build
 ```
-
-### 3. Tauri Desktop App
-```bash
-# Install dependencies
-npm install
-
-# Run in development mode (with hot-reload)
-npx tauri dev
-
-# Build the release binary without creating installers
-npx tauri build --no-bundle
-```
-The compiled release binary can be found under `src-tauri/target/release/Snippetflow.exe`. You can directly run this executable to start the application.
 
 
 ---

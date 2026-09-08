@@ -14,7 +14,7 @@ This document summarizes the security design principles, supported versions, and
    - The application does not communicate with external servers. All registered snippet data (`snippets.json`) and configuration files (`settings.json`) are stored strictly on the user's local filesystem.
    - Backup imports and exports are processed entirely locally via OS-native file dialogs.
 2. **Memory Safety**:
-   - The backend and egui standalone versions are built with Rust. Leveraging Rust's strong ownership system and compile-time memory management, it eliminates critical memory safety vulnerabilities such as buffer overflows and null pointer dereferences.
+   - The backend is built with Rust. Leveraging Rust's strong ownership system and compile-time memory management, it eliminates critical memory safety vulnerabilities such as buffer overflows and null pointer dereferences.
 3. **Sandbox & Secure Bridge**:
    - In the Tauri environment, the frontend (React/HTML) and backend (Rust) communicate exclusively through a secure IPC (Inter-Process Communication) bridge. The Webview context is isolated to prevent unauthorized execution of system commands.
 4. **XSS (Cross-Site Scripting) Prevention**:
@@ -26,10 +26,10 @@ This document summarizes the security design principles, supported versions, and
 
 Security updates are provided for the following versions:
 
-| Version                  | Support Status |
-| :----------------------- | :------------: |
-| Latest Release (`v1.9.x`)|  ✅ Supported  |
-| Older Releases           | ❌ Unsupported |
+| Version                   | Support Status |
+| :------------------------ | :------------: |
+| Latest Release (`v1.9.x`) |  ✅ Supported  |
+| Older Releases            | ❌ Unsupported |
 
 ---
 
@@ -41,7 +41,8 @@ If you discover a potential security vulnerability in `SnippetFlow`, please do n
    - Contact the repository maintainer directly (accessible via Issues/PRs) or use private channels.
 2. **Details to Include**:
    - Affected `SnippetFlow` version and OS environment (Windows 10/11, etc.).
-   - Whether it affects the egui, Tauri, or React Web version.
+   - Whether it affects the Tauri desktop version or the Web prototype version.
    - Details of the vulnerability and steps to reproduce (including JSON data or steps if applicable).
 3. **Response Process**:
    - Upon receiving a report, we will verify the vulnerability, prepare a fix, and release an updated version as soon as possible.
+

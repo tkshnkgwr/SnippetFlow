@@ -35,7 +35,7 @@ This is the main screen displayed when you launch the application. You can searc
 
 ### 1.2. Quick Copy and Notification
 * Clicking the "📋 Copy" button on the right side of each row immediately copies the preset text body to the clipboard.
-* Upon copying, a notification confirming the completion will appear at the top of the screen (a toast notification in the React version, and in the header in the egui version) for a few seconds.
+* Upon copying, a toast notification confirming the completion will appear at the top right of the screen for a few seconds.
 
 ### 1.3. Favorites (Pinning) Feature
 * Clicking the pin icon (📌) placed on each preset text card registers that preset text to your favorites.

@@ -12,8 +12,7 @@
 
 * **OS**: Windows 10 / 11 (低リソース環境を前提とした最適化を行っています)
 * **Node.js**: `v18.x` 以上 (Vite 6 / React 19 ビルド用)
-* **Rust**: `1.75.0` 以上 (egui / eframe v0.22.0 および Tauri v2 ビルド用)
-* **Tauri CLI**: `cargo-tauri` (`v2.x` 以上)
+* **Rust**: `1.77.2` 以上 (Tauri v2 ビルド用)
 
 ---
 
@@ -28,99 +27,72 @@
 ```
 
 > [!IMPORTANT]
-> `Cargo.toml` は相対パス `../common_lib` を用いて共有ライブラリを参照しています。
+> `src-tauri/Cargo.toml` は相対パス `../../common_lib` を用いて共有ライブラリを参照しています。
 > Gitからチェックアウトする際は、必ず同一の親ディレクトリの下に両リポジトリを展開してください。
 > GitHub Actions (CI) では、チェックアウトステップにおいて自動的にこの構造が再現されるようワークフローが構成されています。
 
 ---
 
-## 3. 各環境での開発および実行手順
+## 3. 開発および実行手順
 
-本アプリは、**Tauriデスクトップ環境 (React + Rust)** と **egui単体版デスクトップ環境 (純Rust)** の2系統が共存しています。
+本アプリは、**Tauri 2 デスクトップ環境 (React 19 + Rust)** として設計されています。Webテクノロジーによるリッチで快適なUIと、Rustバックエンドによる高速なファイルI/O・データ処理を両立しています。
 
-### 3.1. Tauri環境 (React + Rust Webview)
-
-Webテクノロジー（React/TypeScript/Vite）を用いた画面描画と、Rustバックエンド（ファイルダイアログ等）のハイブリッド構成です。
-
-#### 1. 依存関係のインストール (フロントエンド)
+### 3.1. デスクトップ版の起動（推奨・本番環境）
 
 ```bash
+# 依存パッケージのインストール
 npm install
+
+# 開発モードでアプリを起動 (フロントエンド + Rustバックエンド連動)
+npm run tauri dev
+
+# プロダクション向けインストーラーのビルド (.msi / .exe)
+npm run tauri build
 ```
 
-#### 2. 開発用ホットリロードサーバーの起動
+### 3.2. Web版（UI確認・プロトタイプ検証用）
 
 ```bash
+# ローカル開発サーバー起動 (ポート 3000)
 npm run dev
-# もしくは Tauri 開発コマンドを実行
-npx tauri dev
-```
 
-#### 3. プロダクションビルド (パッケージング)
-
-```bash
-npx tauri build
-```
-
----
-
-### 3.2. egui環境 (純Rust)
-
-HTML/CSSエンジンを排除し、システムリソース（メモリ/CPU）の消費を極限まで抑えた超軽量・単一バイナリ動作版です。
-
-#### 1. デバッグ実行
-
-```bash
-cargo run
-```
-
-#### 2. リリースビルド
-
-バイナリサイズおよび実行速度の最適化（LTO、パニック巻き戻し除外、strip設定）を適用したリリースバイナリを構築します。
-
-```bash
-cargo build --release
-# 出力バイナリ: target/release/snippet_manager.exe
-```
-
-#### 3. Cargo Features の指定
-
-本プロジェクトでは `windows_desktop` フィーチャーがデフォルトで有効になっています。必要に応じてフィーチャーフラグを指定してビルド・検証が可能です。
-
-```bash
-# デフォルト (windows_desktop 有効)
-cargo build
-
-# デフォルト機能なしでのチェック
-cargo check --no-default-features
+# 静的バンドルのビルド検証
+npm run build
 ```
 
 ---
 
 ## 4. 品質管理と事前検証プロセス
 
-変更をコミットまたはプルリクエストを作成する前に、ローカルで以下の静的解析・テストがすべて合格（エラー・警告ゼロ）することを確認してください。
+変更をコミットする前に、ローカルで以下の静的解析・テストがすべて合格（エラー・警告ゼロ）することを確認してください。
 
-### 1. コードフォーマット規約の準拠
+### 1. フロントエンドの型チェック・ビルド検証
 
 ```bash
-cargo fmt --check
+npm run lint
+npm run build
 ```
 
-- ※フォーマットエラーが出た場合は、`cargo fmt` を実行して自動整形を行ってください。
-
-### 2. 静的解析 (Clippy)
+### 2. Rust コードフォーマット規約の準拠
 
 ```bash
-cargo clippy --all-targets -- -D warnings
+cargo fmt --manifest-path src-tauri/Cargo.toml --check
+```
+
+- ※フォーマットエラーが出た場合は、`cargo fmt --manifest-path src-tauri/Cargo.toml` を実行して自動整形を行ってください。
+
+### 3. Rust 静的解析 (Clippy)
+
+```bash
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
 ```
 
 - ※警告はエラーとして扱われます。すべて解決した上でコンパイルを通してください。
 
-### 3. ユニットテストの実行
+### 4. ユニットテストの実行
 
 ```bash
-cargo test
+cargo test --manifest-path src-tauri/Cargo.toml
 ```
 
-- ※新規機能やロジック変更時は、必ず `src/main.rs` の `mod tests` にテストコードを追加・拡張してください。
+- ※新規機能やロジック変更時は、適切なテストコードを追加・拡張してください。

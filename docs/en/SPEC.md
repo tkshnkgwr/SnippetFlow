@@ -2,7 +2,7 @@
 
 # Template Clipboard Manager Technical and Functional Specifications (SPEC.md)
 
-This document defines the specifications, screen designs, technology stack, and optimization specifications for "Template Clipboard Manager" (Rust / egui & React).
+This document defines the specifications, screen designs, technology stack, and optimization specifications for "Template Clipboard Manager" (Tauri v2 / React 19 + TypeScript + Rust).
 
 ---
 
@@ -66,11 +66,7 @@ The data structure for template texts is common to both React and Rust, consisti
 * `copy_count` / `copyCount` (usize): Cumulative times copied
 * `saved_time_sec` / `savedTimeSec` (usize): Cumulative saved time (seconds)
 
-*Note: In the Tauri version, data is saved to `%APPDATA%\com.snippetflow.app\snippets.json` (resolved via `app_data_dir()`) and persists across version upgrades and reinstalls. In the egui version, data is stored in `snippets.json` within the current working directory. In the browser environment (prototype), it is stored only in `localStorage` (`snippets_db`).*
-
-### 3.2. Application Settings Data (`settings.json` - Rust Version Only)
-Holds the application behavior and display settings.
-* `is_dark_mode` (bool): Theme setting (true = Dark Mode / false = Light Mode)
+*Note: In the Tauri version, data is securely stored in `%APPDATA%\com.snippetflow.app\snippets.json` (resolved via `app_data_dir()`) using encrypted format (`ENC1:` header), persisting across version upgrades and reinstalls. In the browser environment (prototype), it is stored only in `localStorage` (`snippets_db`).*
 
 ---
 
@@ -85,7 +81,7 @@ Holds the application behavior and display settings.
   * When the "Show past/deleted items" toggle is ON, logically deleted snippets (`is_deleted == true`) are also loaded into the list and displayed with a light-red strikethrough styling.
 * **Sorting Feature**:
   * The list can be sorted by "Updated (Newest First)", "Updated (Oldest First)", "Created (Newest First)", "Title", and "Most Used (Copy Count)".
-  * The selected sorting order is automatically persisted to `settings.json` in the Rust version, and to `localStorage` in the React version.
+  * The selected sorting order is automatically persisted to `localStorage`.
 * **Dual Filter Search and Keyword Highlighting**:
   * **Text Search**: Incremental search for partial matches in title, content, or description.
   * **Tag Search**: Partial match search for specified tag strings.
@@ -131,10 +127,10 @@ Holds the application behavior and display settings.
   * Displays a ranking of the top 3 snippets by copy count, showing how many times each was copied and the seconds saved.
 * **Average Speed Benchmark**: Measures and displays the average execution time after running search operations 100 times.
 * **Bulk Data Load Test**: Features functionality to batch-generate and batch-cleanup mock data (dummy snippets) in quantities of 1,000, 2,000, and 5,000 items. Used to test memory and rendering overhead.
-* **Backup and Restore**: In both the egui standalone and Tauri desktop versions, the OS-native file dialog (`rfd` crate) is used to securely import (restore) and export (backup) JSON data. To bypass browser download restrictions in the Tauri version, a dedicated backend command is defined in Rust and called from the frontend.
+* **Backup and Restore**: The OS-native file dialog (`rfd` crate) is used to securely import (restore) and export (backup) JSON data. To bypass browser download restrictions in the Tauri version, a dedicated backend command is defined in Rust and called from the frontend.
 
 ### 4.6. Help Dialog & Operation Guide
-* **Modal Dialog Architecture**: Triggered by clicking the "`?`" icon button on the top-right header, displaying a centered dialog modal (width `max-w-2xl`, dismissible via Esc key or "Close" button).
+* **Modal Dialog Architecture**: Triggered by clicking the "`?`" icon button on the top-right header, displaying a centered dialog modal (fixed width & fixed height, dismissible via Esc key or "Close" button).
 * **Tabbed Sub-Navigation UI**: Segmented into 3 tabs for quick, intuitive information retrieval:
   * **💡 Use Cases & Basics**: Recommended practical use case cards (AI prompts, business emails, CLI commands, scratchpad notes) and core UI workflows (pinning, tag cloud filtering).
   * **🛠️ Feature Deep Dives**: Comprehensive guidance on Diff Comparison (LCS visualizer, swap, copy), Multiple Merging (custom separators, ordering, live preview), and Performance Diagnostics (cumulative typing time saved, search benchmarks, 1,000–5,000 item load testing).
@@ -146,16 +142,12 @@ Holds the application behavior and display settings.
 Since this utility is designed to run continuously, it has been optimized to minimize system resource (CPU/memory) consumption.
 
 * **UI Layout and Theme Specifications**:
-  - **Fixed Header and Footer**: Applies a layout where the header (title/navigation) and footer (multiple selection action bar) remain pinned to their screen positions during vertical list scrolling, and only the central snippet list region scrolls (common to both egui and React versions).
-  - **Custom Theme Frames (egui)**: To prevent `ui.group` from carrying over dark mode colors when switching to light mode, a custom `theme_card_frame` that updates explicitly is applied to all bordered elements (snippet cards, search boxes, metadata editors, comparison/merge borders, etc.). In light mode, it uses a pure white background with a light gray border; in dark mode, it uses a Slate 800 background with a Slate 700 border.
-  - **Window Resizing and Word Wrapping**: Enables resizing and standard OS title bar borders (decorations) in the egui version, allowing users to freely adjust the window size. Implements automatic text wrapping (`wrap(true)`) for labels to prevent titles and descriptions from being clipped when the width is adjusted.
-* **Low-Resource Rendering (Update Constraints)**:
-  - To prevent high CPU loads from `egui`'s immediate mode rendering, updates are constrained to request a redraw at most once per second (`1000ms`).
-  - Additional frames are rendered only when interaction events such as mouse hovering or text input occur. The idle CPU utilization remains virtually at **0.0% to 0.1%**.
+  - **Fixed Header and Footer**: Applies a layout where the header (title/navigation) and footer (multiple selection action bar) remain pinned to their screen positions during vertical list scrolling, and only the central snippet list region scrolls.
+  - **Full Light & Dark Theme Support**: Powered by Tailwind CSS, providing clean visual presentation that smoothly transitions from pure white / light gray backgrounds in light mode to Slate 800/900 in dark mode.
+* **Low-Resource Operation**:
+  - Thanks to an event-driven architecture, the idle CPU utilization remains at **0%** when there are no user interactions (keystrokes, mouse clicks, etc.).
 * **Close Handling**:
-  - In addition to closing via standard OS title bar actions, clicking the "× Close" button in the header terminates the process or closes the window safely, using `std::process::exit(0)` in the egui version, and the Tauri v2 WebviewWindow API (`getCurrentWebviewWindow().close()`) in the Tauri version.
-* **Automatic Japanese Font Registration**:
-  - At startup, the application searches for standard Japanese system fonts (such as Meiryo) on Windows and registers them with high priority, completely preventing Japanese character corruption (tofu characters).
+  - In addition to closing via standard OS title bar actions, clicking the "× Close" button in the header closes the window safely using the Tauri v2 WebviewWindow API (`getCurrentWebviewWindow().close()`).
 
 ---
 
@@ -165,10 +157,10 @@ To guarantee development efficiency and release accuracy, we have established au
 
 * **Continuous Integration (CI - `ci.yml`)**:
   - Triggered by pushes and pull requests to the `main` branch.
-  - Runs build checks for the frontend (Node.js).
-  - Enforces formatting checks, static analysis, and testing using `cargo fmt --check`, `cargo clippy`, and `cargo test` for both egui standalone and Tauri versions of Rust.
+  - Runs linting, type checks, and bundle verification for the frontend (Node.js / Vite / TypeScript).
+  - Enforces formatting checks, static analysis, and testing using `cargo fmt --check`, `cargo clippy`, and `cargo test` for the Rust backend.
 * **Automated Release Asset Packaging (CD - `release.yml`)**:
   - Triggered when a tag matching the `v*` format is pushed.
   - Executes the build process on a Windows runner (`windows-latest`).
-  - **Tauri Application**: Automatically creates a draft release on GitHub via `tauri-apps/tauri-action` and uploads installers (MSI, NSIS, etc.) and binaries.
-  - **egui Standalone Application**: Bundles `snippet_manager.exe` built via `cargo build --release` into a zip archive targeted at Windows-x64, uploading it to the draft release.
+  - **Tauri Application**: Automatically creates a draft release on GitHub via `tauri-apps/tauri-action` and uploads installers (MSI, EXE) and binaries.
+

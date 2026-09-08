@@ -12,34 +12,34 @@ This document records the results of the quality verification process (automated
 ---
 
 ## 2. Unit Test Results (`cargo test`)
-All unit tests for both the egui version (root) and Tauri version (`src-tauri`) passed successfully.
-
-* **egui Version (Root)**:
-```text
-running 6 tests
-test tests::test_highlight_text ... ok
-test tests::test_logical_deletion ... ok
-test tests::test_sorting_snippets ... ok
-test tests::test_settings_persistence ... ok
-test tests::test_snippet_default_data ... ok
-test tests::test_get_suggested_tags ... ok
-
-test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
-```
+All unit tests for the Tauri backend (`src-tauri`) passed successfully.
 
 * **Tauri Version (`src-tauri`)**:
 ```text
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+running 11 tests
+test models::tests::test_db_snippet_conversion ... ok
+test operations::tests::test_compute_snippet_diff_cmd ... ok
+test operations::tests::test_suggest_tags_cmd ... ok
+test models::tests::test_tauri_snippet_deserialization_with_missing_fields ... ok
+test operations::tests::test_get_snippet_stats_cmd ... ok
+test storage::tests::test_crypto_integration ... ok
+test operations::tests::test_search_snippets_cmd ... ok
+test operations::tests::test_merge_snippets_cmd ... ok
+test operations::tests::test_search_snippets_show_deleted_filter ... ok
+test operations::tests::test_generate_mock_snippets_cmd ... ok
+test operations::tests::test_benchmark_search_cmd ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 ```
 
 ---
 
 ## 3. Static Analysis Results (`cargo clippy`)
-No warnings or errors were detected during Clippy static analysis at both the root and `src-tauri` directories (zero warnings with both the `windows_desktop` feature specified and with `--no-default-features`).
+No warnings or errors were detected during Clippy static analysis in `src-tauri`.
 
 ```text
     Checking common_lib v0.2.4 (%USERPROFILE%\Documents\自作\common_lib)
-    Checking snippet_manager v1.9.0 (%USERPROFILE%\Documents\自作\SnippetFlow)
+    Checking SnippetFlow v1.15.0 (%USERPROFILE%\Documents\自作\SnippetFlow\src-tauri)
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.00s
 ```
 

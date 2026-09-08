@@ -89,64 +89,44 @@ SnippetFlow は、プログラミングだけでなく日々のPC作業全般を
 
 ## 動作環境
 
-### Rust デスクトップ版
 - **OS**: Windows 10 / 11
-- **開発言語環境**: Rust 1.70 以上 (Stable推奨)
-
-### React Web版
-- **実行環境**: Node.js v18 以上 (Vite 6 / React 19)
+- **開発言語・実行環境**:
+  - Node.js v18 以上 (Vite 6 / React 19)
+  - Rust 1.77 以上 (Tauri v2)
 
 ---
 
 ## ダウンロード
 
-コンパイル済みのバイナリおよびインストーラーは、GitHub リポジトリの **[Releases](https://github.com/tkshnkgwr/SnippetFlow/releases)** ページから直接ダウンロードしてご利用いただけます。
+コンパイル済みのインストーラーは、GitHub リポジトリの **[Releases](https://github.com/tkshnkgwr/SnippetFlow/releases)** ページから直接ダウンロードしてご利用いただけます。
 
-* **Tauri デスクトップ版**: インストーラー形式（`.msi` や `.exe`）で提供され、通常のWindowsアプリと同様にインストール可能です。
-* **Rust egui単体版**: `snippet_manager-windows-x64.zip` として提供されます。解凍後、中の `snippet_manager.exe` を直接実行して起動できます（インストール不要）。
+* **Tauri デスクトップ版**: インストーラー形式（`.msi` や `.exe`）で提供され、通常のWindowsアプリと同様に簡単にインストール・セットアップ可能です。
 
 ---
 
 ## ビルドおよび起動手順
 
-### 1. Rust デスクトップ版
-ローカル環境でのビルドおよび実行手順は以下の通りです。
-```bash
-# 開発モードでアプリを起動
-cargo run
-
-# リリースビルドの生成 (コード最適化、シンボル削除等)
-cargo build --release
-```
-ビルドが完了すると、`target/release/snippet_manager.exe` に実行可能バイナリが生成されます。
-データの永続化ファイルとして `snippets.json` および `settings.json` が実行バイナリと同じ階層に出力されます。
-
-### 2. React Web版
-ローカル環境での起動およびビルド手順は以下の通りです。
+### 1. Tauri デスクトップ版（本番実行・開発）
 ```bash
 # 依存パッケージのインストール
 npm install
 
+# 開発モードでデスクトップアプリを起動 (フロントエンド + Rustバックエンド連動)
+npm run tauri dev
+
+# プロダクション向けインストーラーのビルド (.msi / .exe)
+npm run tauri build
+```
+ビルドが完了すると、`src-tauri/target/release/bundle/` 配下にインストーラーが生成されます。
+
+### 2. React Web版（UI確認・プロトタイプ検証用）
+```bash
 # ローカル開発サーバー起動 (ポート 3000)
 npm run dev
 
-# プロダクションビルドの生成
+# 静的バンドルのビルド検証
 npm run build
 ```
-
-### 3. Tauri デスクトップ版
-ローカル環境でのビルドおよび実行手順は以下の通りです。
-```bash
-# 依存パッケージのインストール
-npm install
-
-# 開発モードでアプリを起動 (ホットリロード有効)
-npx tauri dev
-
-# リリースビルドの生成 (インストーラーを生成しない場合)
-npx tauri build --no-bundle
-```
-ビルドが完了すると、`src-tauri/target/release/Snippetflow.exe` に実行可能バイナリが生成されます。これを直接実行して起動できます。
 
 
 ---

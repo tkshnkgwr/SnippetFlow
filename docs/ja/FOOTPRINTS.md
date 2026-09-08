@@ -9,12 +9,10 @@
 ## 1. ビルドプロファイルとバイナリサイズ
 
 リリースビルドで生成されたバイナリサイズおよび最適化フラグの構成を記録します。
-* **ビルドコマンド (egui版)**: `cargo build --release`
-* **生成バイナリ (egui版)**: `target/release/snippet_manager.exe`
-* **バイナリサイズ (egui版)**: **2.92 MB** (3,063,296 bytes) ※ 共有クレート `common_lib` 導入に伴うマルチクレート化（リンク境界）の影響で約 38 KB 微増
-* **ビルドコマンド (Tauri版)**: `npx tauri build --no-bundle`
-* **生成バイナリ (Tauri版)**: `src-tauri/target/release/Snippetflow.exe`
-* **バイナリサイズ (Tauri版)**: **2.62 MB** (2,751,488 bytes)
+* **ビルドコマンド**: `npm run tauri build`
+* **生成バイナリ**: `src-tauri/target/release/Snippetflow.exe`
+* **バイナリサイズ**: **約 2.6 MB** (最適化済みネイティブ実行バイナリ)
+* **インストーラー (.msi / .exe)**: **約 4〜5 MB** (Webview2ランタイムを同梱せずシステム共有するため超軽量)
 
 
 ---
@@ -43,7 +41,7 @@ Windowsのタスクマネージャー、またはリソースモニターによ�
 
 ## 4. ビルド最適化オプション (適用済み)
 
-バイナリサイズを削減し、実行パフォーマンスを最適化するためにルートおよび `src-tauri` の `Cargo.toml` に適用した設定プロファイルです。
+バイナリサイズを削減し、実行パフォーマンスを最適化するために `src-tauri/Cargo.toml` に適用した設定プロファイルです。
 
 ```toml
 [profile.release]

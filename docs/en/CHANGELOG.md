@@ -4,7 +4,16 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.15.0] - 2026-09-07
+## [1.15.0] - 2026-09-08
+
+### Changed / Refactored
+- **Subcomponent Split Refactoring for `SnippetList.tsx` (`src/components/`)**:
+  - Divided `SnippetList.tsx` (~860 lines) into 4 standalone subcomponents (`SnippetSearchBar.tsx`, `SnippetCard.tsx`, `SnippetMultiSelectBar.tsx`, `SnippetTooltip.tsx`) based on UI responsibilities.
+  - Reduced parent component size to 429 lines (~50% reduction), significantly improving readability and maintainability.
+- **Complete Removal of egui References & Documentation Unification (`docs/`, `README.md`, `README_JA.md`)**:
+  - Cleared legacy pure Rust/egui references, CLI steps, and diagrams across all documents, fully unifying documentation on the modern Tauri 2 desktop architecture (React 19 + TypeScript + Rust).
+- **Fixed Help Modal Height to Prevent Layout Shifting (`src/App.tsx`)**:
+  - Locked help modal height (`h-[620px]`) to ensure seamless tab transitions without vertical stutter or visual jumping.
 
 ### Added
 - **Comprehensive Help & User Guide Overhaul (`src/App.tsx`)**:

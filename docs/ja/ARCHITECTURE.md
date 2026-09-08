@@ -22,21 +22,21 @@ SnippetFlowは、日常のビジネスメールや定型業務で多用される
 
 本プロジェクトは、適材適所で技術を使い分けるためにハイブリッド構成を採用しています。
 
-### 2.1. 共通コア言語
-- **Rust**: 高いパフォーマンス、メモリ安全性、低フットプリントを実現するバックエンドおよび単体デスクトップアプリ用言語。
+### 2.1. コア言語
+- **Rust**: 高いパフォーマンス、メモリ安全性、低フットプリントを実現するバックエンド言語。
 - **TypeScript / JavaScript**: フロントエンドUIロジックおよび型安全性の確保。
 
-### 2.2. アプリケーション別フレームワーク＆ライブラリ
-| 分類                  | Tauri / Web版 (リッチUI)                   | egui版 (超軽量ネイティブ)             |
-| :-------------------- | :----------------------------------------- | :------------------------------------ |
-| **GUIフレームワーク** | **Tauri v2** + **Vite 6** + **React 19**   | **egui / eframe** (v0.22.0)           |
-| **言語・実行環境**    | TS (React) / Rust (Tauri Backend)          | 純Rust (Windows ネイティブ描画)       |
-| **スタイリング**      | TailwindCSS v4 / Vanilla CSS               | eguiカスタムテーマ (カスタムフレーム) |
-| **クリップボードI/O** | `navigator.clipboard` / 簡易フォールバック | `arboard` (v3.2)                      |
-| **シリアライズ**      | `JSON.stringify` / `parse`                 | `serde` (v1.0) / `serde_json` (v1.0)  |
-| **日付・時刻**        | `new Date().toISOString()`                 | `chrono` (v0.4)                       |
-| **ダイアログI/O**     | `rfd` (v0.12) ※Tauri Rust側で仲介          | `rfd` (v0.12)                         |
-| **アイコン**          | `lucide-react`                             | プレーンテキスト/Unicode絵文字        |
+### 2.2. フレームワーク＆ライブラリ
+| 分類                  | Tauri デスクトップ版 (本番環境)            | Web版 (プロトタイプ・UI検証)           |
+| :-------------------- | :----------------------------------------- | :------------------------------------- |
+| **GUIフレームワーク** | **Tauri v2** + **Vite 6** + **React 19**   | **Vite 6** + **React 19**              |
+| **言語・実行環境**    | TS (React) / Rust (Tauri Backend)          | TS (React) / ブラウザ実行環境          |
+| **スタイリング**      | TailwindCSS v4 / Vanilla CSS               | TailwindCSS v4 / Vanilla CSS           |
+| **データ永続化**      | `%APPDATA%` 内の暗号化 JSON ファイル       | ブラウザ内 `localStorage`              |
+| **クリップボードI/O** | `navigator.clipboard` / Tauri API          | `navigator.clipboard`                  |
+| **シリアライズ**      | `serde` (v1.0) / `serde_json` (v1.0)       | `JSON.stringify` / `parse`             |
+| **ダイアログI/O**     | `rfd` (v0.12) ※Tauri Rust側で仲介          | ブラウザ標準 Download / Input File API |
+| **アイコン**          | `lucide-react`                             | `lucide-react`                         |
 
 ---
 
@@ -130,39 +130,6 @@ sequenceDiagram
     Backend->>OS: std::fs::read_to_string(path)
     Backend-->>UI: 読み込んだ JSON データを返却
     UI->>Backend: save_snippets(snippets) を呼び出して AppData の snippets.json を更新
-```
-
-### 4.3. egui版（純Rust）のデータフロー
-egui版では、すべての処理がRustのネイティブスレッド内で動作します。
-起動時にローカルのカレントディレクトリから `snippets.json` および `settings.json` をロードします。もしファイルが存在しない場合は、組み込まれた初期テンプレートデータを自動生成してファイル保存します。
-データのインポートおよびエクスポートも、UIイベントをトリガーにRust内の `rfd` クレートを呼び出して直接ファイルをI/Oします。
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant UI as egui App (src-egui)
-    participant Storage as storage.rs / settings.rs
-    participant File as Local Config Files (snippets/settings.json)
-    participant OS as OS File System (rfd)
-
-    Note over UI, File: アプリ起動時
-    UI->>Storage: load_data() / AppSettings::load() 呼び出し
-    Storage->>File: 存在チェックと読み込み
-    alt 設定ファイルが存在しない場合
-        Storage->>File: デフォルトテンプレート/設定の書き込み
-    end
-    File-->>Storage: JSONデータを読み込みデシリアライズ
-    Storage-->>UI: アプリケーション状態の構築
-
-    Note over UI, File: 定型文の編集・保存・コピー統計加算時
-    UI->>Storage: save_data() / settings.save()
-    Storage->>File: std::fs::write() (同期書き込み)
-
-    Note over UI, OS: バックアップ / 復元実行時 (性能メーター画面)
-    UI->>OS: RFD ダイアログの呼び出し
-    OS-->>UI: ファイルパスの決定
-    UI->>OS: 直接ファイル I/O を実行 (std::fs)
-    UI->>File: snippets.json に書き込み / 読み込んで状態更新
 ```
 
 ---

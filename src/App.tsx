@@ -107,9 +107,9 @@ export default function App() {
       {/* ヘルプダイアログモーダル */}
       {showHelpModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in" id="help-modal">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[88vh]">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full h-[620px] max-h-[88vh] overflow-hidden flex flex-col">
             {/* ヘッダー */}
-            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/50">
+            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/50 shrink-0">
               <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400">
                 <HelpCircle className="w-5 h-5" />
                 <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">SnippetFlow 使い方・ヘルプガイド</h3>
@@ -124,7 +124,7 @@ export default function App() {
             </div>
 
             {/* サブナビゲーションタブ */}
-            <div className="flex items-center border-b border-slate-200 dark:border-slate-800 px-6 bg-slate-50/30 dark:bg-slate-950/30 text-xs font-semibold gap-1">
+            <div className="flex items-center border-b border-slate-200 dark:border-slate-800 px-6 bg-slate-50/30 dark:bg-slate-950/30 text-xs font-semibold gap-1 shrink-0">
               <button
                 onClick={() => setHelpTab('usecases')}
                 className={`px-3.5 py-2.5 border-b-2 transition cursor-pointer flex items-center space-x-1.5 ${
@@ -161,7 +161,7 @@ export default function App() {
             </div>
 
             {/* モーダルコンテンツ */}
-            <div className="p-6 overflow-y-auto space-y-5 text-xs text-slate-600 dark:text-slate-300 font-sans leading-relaxed">
+            <div className="p-6 overflow-y-auto space-y-5 text-xs text-slate-600 dark:text-slate-300 font-sans leading-relaxed flex-1">
               {/* タブ1: 活用シーン・基本 */}
               {helpTab === 'usecases' && (
                 <>
@@ -378,7 +378,7 @@ export default function App() {
             </div>
 
             {/* フッター */}
-            <div className="px-6 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 flex justify-between items-center">
+            <div className="px-6 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 flex justify-between items-center shrink-0">
               <div className="text-[11px] text-slate-400 dark:text-slate-500">
                 {helpTab === 'usecases' && '💡 活用シーンと基本操作'}
                 {helpTab === 'features' && '🛠️ 差分比較・複数結合・性能メーター解説'}
