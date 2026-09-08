@@ -4,7 +4,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.15.0] - 2026-09-08
+## [1.16.0] - 2026-09-08
 
 ### Changed / Refactored
 - **Subcomponent Split Refactoring for `SnippetList.tsx` (`src/components/`)**:

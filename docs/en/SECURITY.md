@@ -28,7 +28,7 @@ Security updates are provided for the following versions:
 
 | Version                   | Support Status |
 | :------------------------ | :------------: |
-| Latest Release (`v1.9.x`) |  ✅ Supported  |
+| Latest Release (`v1.16.x`) |  ✅ Supported  |
 | Older Releases            | ❌ Unsupported |
 
 ---

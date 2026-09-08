@@ -1,6 +1,6 @@
 # SnippetFlow (SnippetManager)
 
-[![Version](https://img.shields.io/badge/version-1.15.0-blue.svg)](package.json)
+[![Version](https://img.shields.io/badge/version-1.16.0-blue.svg)](package.json)
 [![GitHub Release](https://img.shields.io/github/v/release/tkshnkgwr/SnippetFlow)](https://github.com/tkshnkgwr/SnippetFlow/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license)
 [![Platform](https://img.shields.io/badge/platform-windows-lightgrey.svg)](#prerequisites)
