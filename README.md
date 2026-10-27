@@ -1,8 +1,8 @@
 # SnippetFlow (SnippetManager)
 
-[![Version](https://img.shields.io/badge/version-1.16.1-blue.svg)](package.json)
+[![Version](https://img.shields.io/badge/version-1.17.0-blue.svg)](package.json)
 [![GitHub Release](https://img.shields.io/github/v/release/tkshnkgwr/SnippetFlow)](https://github.com/tkshnkgwr/SnippetFlow/releases)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](#license)
+[![License](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](#license)
 [![Platform](https://img.shields.io/badge/platform-windows-lightgrey.svg)](#prerequisites)
 [![Rust Version](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](#prerequisites)
 
@@ -232,4 +232,4 @@ Here are some practical snippet examples that you can register in SnippetFlow to
 
 ## 📄 License
 
-This project is licensed under the MIT License - Copyright (c) 2026 tkshnkgwr. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU General Public License v3.0 or later (GPL-3.0-or-later) - Copyright (c) 2026 tkshnkgwr. See the [LICENSE](LICENSE) file for details.

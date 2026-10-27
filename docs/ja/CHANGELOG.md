@@ -4,6 +4,15 @@
 
 プロジェクトのすべての重要な変更が本ファイルに記録されます。
 
+## [1.17.0] - 2026-10-27
+
+### Changed
+- **ライセンスを GPLv3 (GPL-3.0-or-later) へ移行**:
+  - プロジェクトのオープンソースライセンスを MIT License から GNU General Public License v3.0 or later (GPL-3.0-or-later) へ変更。
+  - LICENSE、package.json、src-tauri/Cargo.toml、README.md、README_JA.md のライセンス記述およびステータスバッジを更新。
+
+---
+
 ## [1.16.1] - 2026-10-27
 
 ### Fixed

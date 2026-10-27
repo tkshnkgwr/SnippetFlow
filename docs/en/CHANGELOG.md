@@ -4,6 +4,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.17.0] - 2026-10-27
+
+### Changed
+- **Migrated License to GPLv3 (GPL-3.0-or-later)**:
+  - Transitioned project license from the MIT License to GNU General Public License v3.0 or later (GPL-3.0-or-later).
+  - Updated license files, identifiers, documentation references, and status badges across LICENSE, package.json, src-tauri/Cargo.toml, README.md, and README_JA.md.
+
+---
+
 ## [1.16.1] - 2026-10-27
 
 ### Fixed
