@@ -4,6 +4,26 @@
 
 プロジェクトのすべての重要な変更が本ファイルに記録されます。
 
+## [1.16.1] - 2026-10-27
+
+### Fixed
+- **`README.md` および `README_JA.md` の主要コンテンツ欠落の完全復旧**:
+  - ライセンス表記改定時に意図せず削られていた機能一覧、スクリーンショット、ユースケース、ビルド手順、スニペット例の全コンテンツを完全復旧。
+- **`LICENSE` ファイルの UTF-8 BOM 除去**:
+  - ファイル先頭の BOM（`EF BB BF`）を除去し、クロスプラットフォーム標準の UTF-8 (Without BOM) に正常化。
+- **ドキュメント内残存旧パス (`src-react`) の修正 (`docs/ja/`, `docs/en/`)**:
+  - `ARCHITECTURE.md` のシーケンス図、および `TEST_REPORT.md` 内に残存していた旧パス `src-react` の記述を現行の `src` に統一。
+
+### Changed
+- **共有ライブラリ `common_lib` への追従更新 (`Cargo.lock`)**:
+  - `common_lib` 0.3.0 へのバージョン更新に伴う Cargo ロックファイルの整合。
+- **エージェント指示書および開発共通ルールの拡充 (`RULES.md`, `GEMINI.md`)**:
+  - 高速 CLI ツール（ripgrep / fd / jq）の標準利用原則の追加。
+- **新規ワークスペーススキルの追加 (`.agents/skills/vault-memo/`)**:
+  - Obsidian Vault 一時メモ保存スキルの導入。
+
+---
+
 ## [1.16.0] - 2026-09-08
 
 ### Changed / Refactored

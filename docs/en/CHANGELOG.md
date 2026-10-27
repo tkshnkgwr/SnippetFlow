@@ -4,6 +4,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.16.1] - 2026-10-27
+
+### Fixed
+- **Full Restoration of Truncated Content in `README.md` & `README_JA.md`**:
+  - Restored comprehensive feature overviews, screenshots, use cases, build instructions, and sample snippets that were inadvertently truncated during license text updates.
+- **Removed UTF-8 BOM from `LICENSE`**:
+  - Eliminated byte-order mark (`EF BB BF`) from the `LICENSE` file for standard UTF-8 compliance across operating systems.
+- **Fixed Legacy Directory References (`src-react`) in Docs (`docs/ja/`, `docs/en/`)**:
+  - Replaced remaining instances of `src-react` with current `src` directory in sequence diagrams (`ARCHITECTURE.md`) and test logs (`TEST_REPORT.md`).
+
+### Changed
+- **Synchronized Dependencies with `common_lib` (`Cargo.lock`)**:
+  - Updated lockfile reflecting the `common_lib` 0.3.0 dependency upgrade.
+- **Updated Agent Rules & Instructions (`RULES.md`, `GEMINI.md`)**:
+  - Integrated high-speed CLI tool guidelines (ripgrep / fd / jq).
+- **Added New Workspace Skill (`.agents/skills/vault-memo/`)**:
+  - Introduced the Obsidian Vault fleeting memo creation skill.
+
+---
+
 ## [1.16.0] - 2026-09-08
 
 ### Changed / Refactored

@@ -47,11 +47,11 @@ test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fin
 
 ## 4. フロントエンドビルドおよび型チェック検証結果 (`npm run lint` / `npm run build`)
 `tsconfig.json` に `include` と `exclude` を設定したことにより、`npm run lint` (`tsc --noEmit`) が `src-tauri/target/` 以下の自動生成アセットを検査範囲から正しく除外し、型エラーゼロで正常に通過することを確認しました。
-また、React/TypeScript（`src-react/`）のViteビルドも、エラーなく完全にパスしたことを確認しました。
+また、React/TypeScript（`src/`）のViteビルドも、エラーなく完全にパスしたことを確認しました。
 
 * **型チェック (`npm run lint`)**:
 ```text
-> snippetflow@1.9.0 lint
+> snippetflow@1.16.0 lint
 > tsc --noEmit
 
 (エラー出力なし、正常終了)

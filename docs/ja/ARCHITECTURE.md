@@ -102,7 +102,7 @@ Tauri版では、起動時にTauriのIPC（Tauri Command）を介してRustバ�
 ```mermaid
 sequenceDiagram
     autonumber
-    participant UI as React UI (src-react)
+    participant UI as React UI (src)
     participant Backend as Tauri Backend (src-tauri)
     participant File as AppData File (%APPDATA%\com.snippetflow.app\snippets.json)
     participant OS as OS File System (rfd)

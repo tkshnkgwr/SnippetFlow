@@ -1,6 +1,6 @@
 # SnippetFlow (SnippetManager)
 
-[![Version](https://img.shields.io/badge/version-1.16.0-blue.svg)](package.json)
+[![Version](https://img.shields.io/badge/version-1.16.1-blue.svg)](package.json)
 [![GitHub Release](https://img.shields.io/github/v/release/tkshnkgwr/SnippetFlow)](https://github.com/tkshnkgwr/SnippetFlow/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#ライセンス)
 [![Platform](https://img.shields.io/badge/platform-windows-lightgrey.svg)](#動作環境)
@@ -225,6 +225,6 @@ SnippetFlowで管理・再利用するのに適したスニペットのサンプ
 
 ---
 
-## ライセンス
+## 📄 ライセンス
 
-本プロジェクトは MIT ライセンスの下で提供されています。
+本プロジェクトは MIT License のもとで公開されています - Copyright (c) 2026 tkshnkgwr。詳細は [LICENSE](LICENSE) をご覧ください。

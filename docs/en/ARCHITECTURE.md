@@ -102,7 +102,7 @@ Persistence of theme settings is currently completed within the browser's `local
 ```mermaid
 sequenceDiagram
     autonumber
-    participant UI as React UI (src-react)
+    participant UI as React UI (src)
     participant Backend as Tauri Backend (src-tauri)
     participant File as AppData File (%APPDATA%\com.snippetflow.app\snippets.json)
     participant OS as OS File System (rfd)
