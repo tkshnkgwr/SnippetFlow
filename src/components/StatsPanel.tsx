@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Database, Zap, HardDrive, BarChart3, ShieldAlert, Sparkles } from 'lucide-react';
+import { Database, Zap, BarChart3, ShieldAlert, Sparkles } from 'lucide-react';
 import { Snippet, SnippetStats } from '../types';
 
 /**

@@ -56,7 +56,7 @@ This screen is used to add new preset texts, and to edit or delete existing data
 * **Delete (Logical Deletion)**: 
   * Deleting preset texts that are no longer needed moves them to the trash can (past log archive), hiding them from the standard list.
 * **Restoration / Permanent Deletion**:
-  * Turning on the "Show deleted preset texts (past logs)" checkbox on the list screen loads the deleted data with a strikethrough.
+  * Turning on the "Show deleted preset texts" checkbox on the list screen loads the deleted data with a strikethrough.
   * From the edit screen, you can choose to either revert to the original state using "🔄 Restore from Archive" or completely and permanently purge the data from the database using "🗑️ Delete Permanently".
 
 ---

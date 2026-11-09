@@ -84,7 +84,7 @@ stateDiagram-v2
 ```mermaid
 classDiagram
     class Snippet {
-        +string id
+        +number id
         +string title
         +string content
         +string description
@@ -93,42 +93,51 @@ classDiagram
         +string deletedAt
         +boolean isDeleted
         +string[] tags
-        +number copyCount
         +boolean isPinned
+        +number copyCount
+        +number savedTimeSec
     }
 
-    class SnippetSettings {
-        +boolean isDarkMode
-        +boolean isEncrypted
-        +string sortOption
-        +string searchQuery
-        +string selectedTag
+    class SnippetStats {
+        +number totalCount
+        +number activeCount
+        +number deletedCount
+        +number totalCopies
+        +number totalSavedSec
+        +string kbSize
+        +TopSnippet[] topSnippets
     }
 
     class TauriBackend {
-        +load_snippets() Result~Vec~Snippet~~
-        +save_snippets(Vec~Snippet~) Result~()~
-        +export_snippets_json(String) Result~bool~
-        +import_snippets_json() Result~Option~String~~
-        +get_memory_usage() Result~MemoryInfo~
+        +load_snippets() Result~Vec~TauriSnippet~~
+        +save_snippets(Vec~TauriSnippet~, Option~bool~) Result~()~
+        +is_storage_encrypted() Result~bool~
+        +export_snippets_json(String) Result~()~
+        +import_snippets_json() Result~String~
+        +compute_snippet_diff(String, String) Vec~DiffPart~
+        +search_snippets(...) SearchResult
+        +suggest_tags_cmd(...) Vec~String~
+        +merge_snippets(Vec~TauriSnippet~, Vec~usize~, String) String
+        +generate_mock_snippets(usize, usize) Vec~TauriSnippet~
+        +get_snippet_stats(Vec~TauriSnippet~) SnippetStats
+        +benchmark_search(Vec~TauriSnippet~) f64
     }
 
     class useSnippetsHook {
         +Snippet[] snippets
-        +Snippet[] filteredSnippets
-        +SnippetSettings settings
-        +addSnippet(Snippet) void
-        +updateSnippet(Snippet) void
-        +deleteSnippet(string id) void
-        +restoreSnippet(string id) void
-        +permanentlyDelete(string id) void
-        +copyToClipboard(string content) void
-        +exportData() void
-        +importData() void
+        +ThemeMode themeMode
+        +boolean isDarkMode
+        +ActiveTab activeTab
+        +SortCriterion sortCriterion
+        +handleSaveSnippet(...) void
+        +handleSoftDeleteSnippet(number id) void
+        +handleRestoreSnippet(number id) void
+        +handleHardDeleteSnippet(number id) void
+        +handleCopyText(...) void
+        +handleTogglePin(number id) void
     }
 
-    useSnippetsHook "1" *-- "many" Snippet : contains
-    useSnippetsHook "1" *-- "1" SnippetSettings : state
+    useSnippetsHook "1" *-- "many" Snippet : manages
     useSnippetsHook ..> TauriBackend : invokes commands
 ```
 

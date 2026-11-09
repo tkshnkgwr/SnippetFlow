@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ClipboardList,
   Layers,
@@ -16,9 +16,6 @@ import {
   AlertCircle,
   Activity,
   FileText,
-  // UPDATE 2026-06-30: ダークモード切り替え用の太陽・月アイコンを追加
-  Sun,
-  Moon,
   X,
   Bot,
   Mail,
@@ -26,7 +23,6 @@ import {
   Sparkles,
   Pin,
   BarChart3,
-  Zap
 } from 'lucide-react';
 import { useSnippets } from './hooks/useSnippets';
 import packageJson from '../package.json';
@@ -77,6 +73,54 @@ export default function App() {
 
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [helpTab, setHelpTab] = useState<'usecases' | 'features' | 'shortcuts'>('usecases');
+
+  // グローバルキーボードショートカットの登録（Ctrl+N: 新規作成, Ctrl+F: 検索フォーカス, Esc: モーダル/タブ復帰）
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+N / Cmd+N: 新規作成画面へ遷移
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        setShowHelpModal(false);
+        setSelectedSnippetId(undefined);
+        setActiveTab('create');
+        return;
+      }
+
+      // Ctrl+F / Cmd+F: 検索キーワード入力欄へフォーカス
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        setShowHelpModal(false);
+        if (activeTab !== 'list') {
+          setActiveTab('list');
+        }
+        setTimeout(() => {
+          const input = document.getElementById('list-search-input') as HTMLInputElement | null;
+          if (input) {
+            input.focus();
+            input.select();
+          }
+        }, 50);
+        return;
+      }
+
+      // Esc: ヘルプモーダルを閉じる、または一覧画面へ戻る
+      if (e.key === 'Escape') {
+        if (showHelpModal) {
+          e.preventDefault();
+          setShowHelpModal(false);
+          return;
+        }
+        // 新規作成・編集画面以外（比較、結合、性能メーター）から一覧へ戻る
+        if (activeTab === 'compare' || activeTab === 'merge' || activeTab === 'performance') {
+          e.preventDefault();
+          setActiveTab('list');
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeTab, showHelpModal, setActiveTab, setSelectedSnippetId]);
 
   return (
     // UPDATE 2026-06-30: isDarkMode変数に応じて .dark クラスをルートに追加。Tailwind v4のダークモード制御を有効化します。
@@ -628,13 +672,12 @@ export default function App() {
       </main>
 
       {/* デスクトップアプリ用のフッター */}
-      {/* UPDATE 2026-06-30: フッターの配色をダークモード（dark:bg-slate-900 dark:border-slate-800）に対応。全体のトーンを均一にします */}
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-150 dark:border-slate-800 py-3.5 px-6 text-center text-xs text-slate-400 dark:text-slate-500 font-sans flex flex-col sm:flex-row items-center justify-between gap-2 shrink-0">
-        <span>© 2026 定型文クリップボード・マネージャー • すべてのデータは安全にローカル保存されます</span>
+        <span>© 2026 SnippetFlow • すべてのデータは安全にローカル保存されます</span>
         <div className="flex items-center space-x-3 text-slate-400 dark:text-slate-500">
           <span className="flex items-center">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
-            データベース接続中 (LocalStorage)
+            {isTauri ? 'ネイティブ暗号化ストレージ (%APPDATA%)' : 'ブラウザ LocalStorage'}
           </span>
         </div>
       </footer>

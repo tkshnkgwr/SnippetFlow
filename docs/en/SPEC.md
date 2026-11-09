@@ -78,7 +78,7 @@ The data structure for template texts is common to both React and Rust, consisti
   * Pinning can be toggled using the "📌" button on each snippet card.
   * Pinned snippets are always fixed to the top of the list, regardless of the selected sorting criteria, and the border and background color of the card are highlighted in an Indigo style.
 * **Toggle Display of Past (Deleted) Data**:
-  * When the "Show past/deleted items" toggle is ON, logically deleted snippets (`is_deleted == true`) are also loaded into the list and displayed with a light-red strikethrough styling.
+  * When the "Show deleted preset texts" toggle is ON, logically deleted snippets (`is_deleted == true`) are also loaded into the list and displayed with a light-red strikethrough styling.
 * **Sorting Feature**:
   * The list can be sorted by "Updated (Newest First)", "Updated (Oldest First)", "Created (Newest First)", "Title", and "Most Used (Copy Count)".
   * The selected sorting order is automatically persisted to `localStorage`.

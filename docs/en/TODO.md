@@ -64,6 +64,14 @@ This document manages the current implementation status (Done), near-term tasks 
 - **Concrete Practical Use Cases**: Documented clear real-world scenarios for AI prompts, business email templates, shell scripts/CLI commands, and scratchpad notes.
 - **Deep Feature Guides**: Provided detailed guidance for Diff Comparison (LCS visualizer, swap, copy), Multiple Merging (separators, ordering, live preview), and Performance Diagnostics (typing time saved, benchmarks, bulk load tests).
 
+### 1.10. Licensing, Architecture, and Agent Environments
+- **License Migration to GPLv3 (v1.17.0)**:
+  Migrated the project open-source license from MIT License to GNU General Public License v3.0 or later (GPL-3.0-or-later), updating all repository documentation and status badges.
+- **Component Decomposition Refactoring (v1.16.0)**:
+  Decomposed the monolithic `SnippetList.tsx` into 4 dedicated sub-components (`SnippetSearchBar`, `SnippetCard`, `SnippetMultiSelectBar`, `SnippetTooltip`) to improve readability and maintainability.
+- **Standard Fast CLI Tools & Vault Memo Skill (v1.16.1)**:
+  Established standard usage principles for `ripgrep`, `fd`, `jq`, and `bat`, and introduced Obsidian Vault scratchpad memo automation (`.agents/skills/vault-memo`).
+
 ---
 
 ## 2. Current Tasks (Todo / In Progress)
@@ -74,7 +82,19 @@ This document manages the current implementation status (Done), near-term tasks 
 - [ ] **Full Unification of App Settings**:
   Centralize settings like theme choices and selected sorting orders into a desktop configuration file (`settings.json`) independent of browser environments.
 
-### 2.2. Near-Term Planned Features and Improvements (Short-Term Improvements)
+### 2.2. Quality, Robustness, and Documentation Consistency (Review Issues)
+- [x] **Implement Keyboard Shortcuts (Restoring Documentation Consistency)**:
+  Fully implemented global shortcut event listeners in the frontend (`src/App.tsx`) for `Ctrl + N` (New snippet), `Ctrl + F` (Focus search input), and `Esc` (Close dialog/modal or return to list) as documented in the user guide and specifications.
+- [x] **Footer Branding & Dynamic Storage Connection Status**:
+  Updated the footer copyright text to "SnippetFlow" and dynamically switch the connection indicator between `Native Encrypted Storage (%APPDATA%)` (desktop Tauri environment) and `Browser LocalStorage` (web runtime).
+- [x] **Atomic File Write Transaction & Failsafe Enhancement (`src-tauri/src/storage.rs`)**:
+  Enhanced `atomic_write` with temporary backup creation, rollback protection on rename errors, and unit test (`test_atomic_write_flow`) to ensure data safety.
+- [x] **Clean Up Obsolete npm Dependencies & Scripts (`package.json`)**:
+  Uninstalled legacy dependencies (`@google/genai`, `dotenv`, `express`, `@types/express`) from prototype stages and cleaned up the `clean` script in `package.json`.
+- [ ] **Introduce Frontend Unit Testing Environment (Vitest / Testing Library)**:
+  Supplement backend `cargo test` with frontend React/TypeScript unit tests using Vitest and React Testing Library to strengthen CI/CD validation.
+
+### 2.3. Near-Term Planned Features and Improvements (Short-Term Improvements)
 - [x] **Multiple Tag Selection and Reset Button**:
   Enhance tag cloud filtering in the list view to support selecting multiple tags simultaneously, and add a "Reset Selection" button to clear all active tag filters in one click.
 - [x] **Fix/Improve Fixed Tag Suggestions in Create/Edit Form**:

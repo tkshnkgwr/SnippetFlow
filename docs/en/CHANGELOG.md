@@ -4,6 +4,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.17.1] - 2026-11-09
+
+### Added
+- **Full Keyboard Shortcut Implementation (`src/App.tsx`)**:
+  - Implemented global event listeners for documented shortcuts: `Ctrl + N` (New snippet), `Ctrl + F` (Focus search input & select all), and `Esc` (Close modal / return to list view).
+- **Atomic File Write Transaction & Rollback Protection (`src-tauri/src/storage.rs`)**:
+  - Enhanced `atomic_write` by backing up existing files to `.old` before replacing with `.tmp`, and rolling back immediately upon any failure. Added `test_atomic_write_flow` unit test.
+
+### Changed
+- **Footer Branding & Dynamic Storage Connection Status (`src/App.tsx`)**:
+  - Updated footer application name to "SnippetFlow".
+  - Dynamically switches storage indicator between `Native Encrypted Storage (%APPDATA%)` (Tauri desktop) and `Browser LocalStorage` (web runtime).
+- **Uninstalled Obsolete npm Dependencies & Cleaned Scripts (`package.json`)**:
+  - Uninstalled 121 unused packages (`@google/genai`, `dotenv`, `express`, `@types/express`) from prototype stages to slim down project dependencies.
+  - Removed reference to non-existent `server.js` from the `clean` script.
+- **Cleaned Up Unused Imports (`src/App.tsx`, `src/components/StatsPanel.tsx`)**:
+  - Removed unused icon imports (`Sun`, `Moon`, `Zap`, `HardDrive`).
+
+### Fixed
+- **Resolved Document Inconsistencies (`docs/ja/`, `docs/en/`)**:
+  - `USER_GUIDE.md`, `SPEC.md`: Standardized deleted snippet toggle labels with UI implementation.
+  - `DIAGRAM.md`: Corrected `Snippet.id` type to `number`, added `savedTimeSec`, and synchronized IPC command and hook structures.
+  - `ARCHITECTURE.md`: Synchronized sequence diagram data serialization formats with current code.
+
+---
+
 ## [1.17.0] - 2026-10-27
 
 ### Changed

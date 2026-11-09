@@ -109,12 +109,12 @@ sequenceDiagram
 
     Note over UI, File: During normal operation (load / save data)
     UI->>Backend: Call load_snippets()
-    Backend->>File: Load snippets.json
-    File-->>Backend: Saved data (snake_case)
-    Backend-->>UI: Return snippet data converted to camelCase
+    Backend->>File: Load snippets.json (transparent decryption)
+    File-->>Backend: Saved data (camelCase / compatible snake_case)
+    Backend-->>UI: Return snippet data in camelCase format
     
     UI->>Backend: Call save_snippets(snippets)
-    Backend->>File: Write snippet data converted to snake_case
+    Backend->>File: Write snippet data in camelCase format (transparent encryption)
 
     Note over UI, OS: During backup (export) execution
     UI->>Backend: Call export_snippets_json(json_str)

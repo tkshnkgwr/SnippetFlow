@@ -109,12 +109,12 @@ sequenceDiagram
 
     Note over UI, File: 通常動作時（データのロード・保存）
     UI->>Backend: load_snippets() 呼び出し
-    Backend->>File: snippets.json をロード
-    File-->>Backend: 保存データ (snake_case)
-    Backend-->>UI: camelCase 変換した snippets データを返却
+    Backend->>File: snippets.json をロード（透過的復号）
+    File-->>Backend: 保存データ (camelCase / 互換snake_case)
+    Backend-->>UI: camelCase 形式の snippets データを返却
     
     UI->>Backend: save_snippets(snippets) 呼び出し
-    Backend->>File: snake_case 変換した snippets データを書き込み
+    Backend->>File: camelCase 形式で snippets データを書き込み（透過的暗号化）
 
     Note over UI, OS: バックアップ（エクスポート）実行時
     UI->>Backend: export_snippets_json(json_str) 呼び出し

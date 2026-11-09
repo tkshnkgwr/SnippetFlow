@@ -4,22 +4,67 @@ use tauri::Manager;
 
 use crate::models::{DbSnippet, TauriSnippet};
 
-/// 一時ファイルを経由したアトミック保存処理。Windowsでの上書き移動失敗に対する保護を含みます。
+/// 一時ファイルを経由したアトミック保存処理。
+/// 既存ファイルを一時退避し、リネーム失敗時のロールバック保護を備えた堅牢なトランザクション書き込みを行います。
 pub fn atomic_write<P: AsRef<std::path::Path>>(path: P, content: &str) -> Result<(), String> {
     let path = path.as_ref();
     let tmp_path = path.with_extension("json.tmp");
+    let old_backup = path.with_extension("json.old");
+
+    // 1. 一時ファイルへ書き込み
     fs::write(&tmp_path, content).map_err(|e| format!("一時保存に失敗: {e}"))?;
 
-    if path.exists() {
-        let _ = fs::remove_file(path);
+    // 2. 既存ファイルが存在する場合、一旦安全に .old へ退避
+    let has_existing = path.exists();
+    if has_existing {
+        if old_backup.exists() {
+            let _ = fs::remove_file(&old_backup);
+        }
+        if let Err(e) = fs::rename(path, &old_backup) {
+            // renameが失敗した場合（別プロセスロック等）、copy + remove を試みる
+            if let Err(copy_err) = fs::copy(path, &old_backup) {
+                let _ = fs::remove_file(&tmp_path);
+                return Err(format!(
+                    "既存ファイルの退避に失敗: {copy_err} (rename error: {e})"
+                ));
+            }
+            let _ = fs::remove_file(path);
+        }
     }
 
-    if let Err(e) = fs::rename(&tmp_path, path) {
-        fs::copy(&tmp_path, path)
-            .map_err(|err| format!("ファイル保存に失敗: {err} (rename error: {e})"))?;
-        let _ = fs::remove_file(&tmp_path);
+    // 3. 一時ファイルを目的のパスへ配置
+    let replace_res = if let Err(rename_err) = fs::rename(&tmp_path, path) {
+        // renameが失敗した場合は copy を試みる
+        if let Err(copy_err) = fs::copy(&tmp_path, path) {
+            Err(format!(
+                "ファイル置換に失敗: {copy_err} (rename error: {rename_err})"
+            ))
+        } else {
+            let _ = fs::remove_file(&tmp_path);
+            Ok(())
+        }
+    } else {
+        Ok(())
+    };
+
+    // 4. 置換結果の処理
+    match replace_res {
+        Ok(()) => {
+            // 成功時は一時退避ファイルを削除
+            if has_existing && old_backup.exists() {
+                let _ = fs::remove_file(&old_backup);
+            }
+            Ok(())
+        }
+        Err(err) => {
+            // 失敗時は元のファイルをロールバック復元
+            if has_existing && old_backup.exists() {
+                let _ = fs::rename(&old_backup, path);
+            }
+            let _ = fs::remove_file(&tmp_path);
+            Err(err)
+        }
     }
-    Ok(())
 }
 
 /// アプリデータディレクトリ内の snippets.json へのパスを返す。
@@ -182,6 +227,8 @@ pub fn import_snippets_json() -> Result<String, String> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
     fn test_crypto_integration() {
         let plain = "Hello SnippetFlow";
@@ -193,5 +240,24 @@ mod tests {
             common_lib::crypto::decrypt_data(&encrypted, common_lib::crypto::DEFAULT_SECRET_KEY)
                 .expect("Decryption failed");
         assert_eq!(decrypted, plain);
+    }
+
+    #[test]
+    fn test_atomic_write_flow() {
+        let temp_dir = std::env::temp_dir();
+        let test_file = temp_dir.join("test_snippetflow_atomic.json");
+
+        // 初回書き込み
+        let res1 = atomic_write(&test_file, "Initial Data");
+        assert!(res1.is_ok());
+        assert_eq!(std::fs::read_to_string(&test_file).unwrap(), "Initial Data");
+
+        // 上書き（更新）
+        let res2 = atomic_write(&test_file, "Updated Data");
+        assert!(res2.is_ok());
+        assert_eq!(std::fs::read_to_string(&test_file).unwrap(), "Updated Data");
+
+        // 一時ファイルのクリーンアップ
+        let _ = std::fs::remove_file(&test_file);
     }
 }
