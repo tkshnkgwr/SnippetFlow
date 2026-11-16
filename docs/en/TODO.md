@@ -134,3 +134,25 @@ This document manages the current implementation status (Done), near-term tasks 
   In addition to tag clouds, introduce a folder tree sidebar (e.g., Business, Personal, Development) to organize snippets in category hierarchies.
 - [ ] **Automated Pasting (Auto-fill)**:
   A feature that automatically hides the application window upon clicking the "Copy" button, and pastes the text directly into the previously focused active window (by sending a Ctrl+V key event).
+
+---
+
+## 4. Ver.2.0 Lightweight Optimization & Code Audit Backlog
+
+Cleanup and optimization tasks identified during the full source code audit on 2026-11-16 to eliminate JS/Rust double execution, redundant IPC round-trips, excessive re-renders, unused dependencies, and dead code.
+
+### ⚡ Performance, Re-render & IPC Optimization
+- [ ] **Eliminate JS / Rust Double Execution (`SnippetList.tsx`, `StatsPanel.tsx`, `SnippetForm.tsx`)**:
+  Stop running `fallbackSearch`, `fallbackStats`, and `scoredTags`/`fallbackSuggestedTags` in JS only to overwrite them immediately with Rust `invoke` results under Tauri; also wrap `scoredTags` in `useMemo` and unify `suggest_tags_cmd` with `common_lib::text::suggest_tags`.
+- [ ] **Reduce IPC Payload & Frequency (`lib.rs`, `operations.rs`, `useSnippets.ts`)**:
+  Avoid sending the entire `snippets` array across IPC on every search, tag suggestion, merge, and stats call; add debouncing to search input, form tag suggestion, and `save_snippets` (including `copyCount` updates), and centralize repeated dynamic `import('@tauri-apps/api/core')` calls.
+- [ ] **Prevent Full List Re-renders on Hover (`SnippetList.tsx`, `SnippetCard.tsx`)**:
+  Decouple `setHoveredTooltip` mouse-move updates from `SnippetList` so all `SnippetCard` items (up to 5,000+ in load tests) do not re-render on cursor movement; add `React.memo`/virtualization, fix `highlightText` per-render `new RegExp` & stateful `/gi` `RegExp.test()`, deduplicate `filteredSnippets.filter(...)`, avoid per-render `Math.max(...snippets.map(...))`, and clear `setTimeout` timers properly.
+
+### 🧹 Blur/CSS, Dependency & Dead Code Cleanup
+- [ ] **Clean Up Blur, Animations, External Font Imports & Undefined CSS (`index.css`, `index.html`, `SnippetTooltip.tsx`, etc.)**:
+  Remove `backdrop-blur-md` on cursor-tracking tooltips, continuous `animate-pulse`/`animate-bounce`, undefined animation/color classes (`animate-slide-in`, `emerald-555`, etc.), external Google Fonts `@import` in `index.css`, and leftover `My Google AI Studio App` title in `index.html`.
+- [ ] **Trim Unused Packages & Cargo Features (`package.json`, `Cargo.toml`)**:
+  Remove unused `motion`, duplicate `vite` / build tools in `dependencies`, and unused `autoprefixer` / `tsx`. Disable the unused `common_lib/windows_desktop` feature in `Cargo.toml` and scope `tauri`'s `devtools` feature out of release builds.
+- [ ] **Consolidate Duplicated Models & Dead Code (`models.rs`, `storage.rs`, `utils.ts`, `types.ts`)**:
+  Deduplicate identical `DbSnippet`/`TauriSnippet` structs, dual sample/mock/diff implementations, unused `is_storage_encrypted` IPC command, and unused `PerformanceStats` type; also align startup window visibility (`visible: false` until initialized).

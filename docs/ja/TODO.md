@@ -134,3 +134,25 @@
   タグクラウドによる管理に加え、サイドバーにフォルダツリー（ビジネス、プライベート、開発用等）を表示し、定型文をカテゴリ階層で整理できる機能。
 - [ ] **ペースト自動化（オートフィル）**:
   「コピー」ボタンをクリックした際、クリップボードに格納すると同時に自動でアプリウィンドウを非表示にし、直前までフォーカスが当たっていたアクティブウィンドウにテキストを自動ペースト（Ctrl+Vキーイベント送信）する機能。
+
+---
+
+## 4. Ver.2.0 軽量化・コード監査による改善課題 (Code Audit Backlog)
+
+2026-11-16 の全ソースコード監査で検出された「JS/Rust二重実行・冗長IPC・高頻度再レンダリング・過剰依存・デッドコード」の解消タスク。
+
+### ⚡ パフォーマンス・再レンダリング・IPC最適化
+- [ ] **JS / Rust 二重実行の解消 (`SnippetList.tsx`, `StatsPanel.tsx`, `SnippetForm.tsx`)**:
+  Tauri 環境で毎回 `fallbackSearch`・`fallbackStats`・`scoredTags`/`fallbackSuggestedTags` を計算した直後に Rust `invoke` 結果で上書きしている二重計算を解消し、Tauri 実行時は JS 側計算をスキップする（あわせて `SnippetForm.tsx` の `scoredTags` を `useMemo` 化）。
+- [ ] **Rust 側ステート管理と IPC 転送量・頻度の削減 (`lib.rs`, `operations.rs`, `useSnippets.ts`)**:
+  検索・タグ提案・統計・結合のたびに全件 `snippets` を JSON 往復させるステートレス設計を見直し、検索入力・タグ提案・コピー回数更新時の `save_snippets` にデバウンスを導入する。また、各コンポーネントの都度動的 `import('@tauri-apps/api/core')` と環境判定を共通化する。
+- [ ] **ツールチップ追従時の全カード再レンダリング防止 (`SnippetList.tsx`, `SnippetCard.tsx`)**:
+  マウス移動ごとの `setHoveredTooltip` で非メモ化・非仮想化の全 `SnippetCard` が再レンダリングされる問題を解消する（ツールチップ状態の分離、`React.memo` 化、大量件数時の仮想化）。また `highlightText` の毎レンダー `new RegExp` 生成と `/gi` フラグ付き `RegExp.test()` の `lastIndex` 潜在バグ、全選択チェックボックスの重複 `filter`、`useSnippets.ts` の毎レンダー `Math.max(...snippets.map(...))`、未クリア `setTimeout` を修正する。
+
+### 🧹 ぼかし・CSS・過剰依存・デッドコード整理
+- [ ] **不要なぼかし・アニメーション・外部通信・未定義CSSの整理 (`index.css`, `index.html`, `SnippetTooltip.tsx` 等)**:
+  マウス追従ツールチップの `backdrop-blur-md` や常時 `animate-pulse` / `animate-bounce`、未定義アニメクラス（`animate-slide-in` 等）・存在しない Tailwind 色名（`emerald-555` 等）、`index.css` 冒頭の外部 Google Fonts `@import`、`index.html` の `My Google AI Studio App` テンプレート表記を整理する。
+- [ ] **過剰パッケージ・Cargo 依存の削減 (`package.json`, `Cargo.toml`)**:
+  完全未使用の `motion`、`dependencies` への `vite` 重複やビルドツール混入、Tailwind v4 環境で不要な `autoprefixer` / `tsx` を整理する。Rust 側も未使用の `common_lib/windows_desktop` feature 有効化を外し、`tauri` の `devtools` feature をリリースビルドから分離する。
+- [ ] **重複データ定義・未使用コードの統合削除 (`models.rs`, `storage.rs`, `utils.ts`, `types.ts`)**:
+  完全同一の `DbSnippet` / `TauriSnippet` 二重構造、初期サンプル（`DEFAULT_SNIPPETS` vs `storage.rs`）・モック生成・差分計算の二重実装、未使用 IPC `is_storage_encrypted`、未使用型 `PerformanceStats` を整理し、起動時ウィンドウ表示制御（`visible: false` → 初期化後 `show()`）も整備する。
