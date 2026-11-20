@@ -4,6 +4,31 @@
 
 プロジェクトのすべての重要な変更が本ファイルに記録されます。
 
+## [1.17.2] - 2026-11-20
+
+### Fixed
+- **Rust ビルド障害の解消と依存関係整理 (`Cargo.lock`, `src-tauri/Cargo.toml`)**:
+  - Rust 1.100 環境でビルドエラーを引き起こしていた `cc` クレートを `v1.11.2` へ更新。
+  - 重複していた `src-tauri/Cargo.lock` を削除し、`src-tauri/Cargo.toml` のメタデータ（`description`, `authors`, `repository`, `rust-version = "1.85"`）を適正化、リリース不要の `devtools` feature を除外。
+- **フロントエンドの不具合および未定義 Tailwind クラスの一括修正 (`src/`)**:
+  - 一覧画面の「フィルターをリセット」ボタンで `showDeleted` が `true` になっていた不具合を `false` へ修正 (`SnippetList.tsx`)。
+  - 検索ハイライト（`highlightText`）で `g` フラグ付き正規表現の再利用により連続一致時にハイライトが抜ける不具合を修正 (`SnippetCard.tsx`)。
+  - ボタンやエラー枠の背景色が透明化していた `bg-indigo-550` / `bg-rose-550` を含む未定義 Tailwind クラスを全コンポーネントで正規クラスへ修正。
+  - フォームの「キャンセル」ボタンも未保存変更確認ダイアログを経由するよう統一 (`SnippetForm.tsx`)。
+  - ダミーデータ連続生成時の ID 重複防止、大量データ時の `nextId` 算出の `reduce` 化、非推奨 `.substr()` の `.slice()` 置換、ダミー一括削除ボタンの無効化条件改善 (`useSnippets.ts`, `utils.ts`, `StatsPanel.tsx`)。
+- **Rust バックエンドの安全性・パフォーマンス改善 (`src-tauri/src/`)**:
+  - `get_snippet_stats` / `generate_mock_snippets` の加算を `saturating_add` 化しオーバーフローを防止、`merge_snippets` を `HashMap` 参照化 (`operations.rs`)。
+  - `atomic_write` / `.bak` 退避のパス生成を拡張子非依存の末尾サフィックス追記へ改善し、doc コメントの文字化けを修正 (`storage.rs`, `operations.rs`)。
+
+### Changed
+- **未使用 npm パッケージの整理とライセンスヘッダ統一 (`package.json`, `src/`)**:
+  - 未使用の `motion`, `autoprefixer`, `esbuild`, `tsx` をアンインストールし、重複していた `vite` 宣言を整理。
+  - `src/` 配下全ソースファイルの SPDX ライセンスヘッダを `GPL-3.0-or-later` に統一。
+- **日英ドキュメントの全面同期 (`README.md`, `README_JA.md`, `docs/`)**:
+  - `README` / `SPEC.md` / `FOOTPRINTS.md` / `SECURITY.md` / `DEVELOPING.md` / `TEST_REPORT.md` から旧 egui 版の残存記述を除去し、現行 Tauri v2 実装および最新検証結果へ完全同期。
+
+---
+
 ## [1.17.1] - 2026-11-09
 
 ### Added

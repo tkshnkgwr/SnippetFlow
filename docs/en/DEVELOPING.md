@@ -12,7 +12,7 @@ To build and run this project, the following environment must be installed in ad
 
 * **OS**: Windows 10 / 11 (Optimized for low-resource environments)
 * **Node.js**: `v18.x` or higher (For Vite 6 / React 19 builds)
-* **Rust**: `1.77.2` or higher (For Tauri v2 builds)
+* **Rust**: `1.85` or higher (For Tauri v2 and `common_lib` Rust 2024 edition builds)
 
 ---
 

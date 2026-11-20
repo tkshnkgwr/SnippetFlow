@@ -155,7 +155,7 @@ export function useSnippets() {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const addToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
-    const id = Math.random().toString(36).substr(2, 9);
+    const id = Math.random().toString(36).slice(2, 11);
     setToasts(prev => [...prev, { id, message, type }]);
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
@@ -180,7 +180,7 @@ export function useSnippets() {
     }
   };
 
-  const nextId = snippets.length > 0 ? Math.max(...snippets.map(s => s.id)) + 1 : 1001;
+  const nextId = snippets.reduce((max, s) => Math.max(max, s.id), 1000) + 1;
 
   const handleCopyText = async (text: string, label: string, id?: number | number[]) => {
     let success = false;
@@ -381,17 +381,18 @@ export function useSnippets() {
 
   const handleGenerateMock = async (count: number) => {
     const start = performance.now();
+    const startId = Math.max(2000, nextId);
     let mockData: Snippet[] = [];
     if (isTauri) {
       try {
         const { invoke } = await import('@tauri-apps/api/core');
-        mockData = await invoke<Snippet[]>('generate_mock_snippets', { count, startId: 2000 });
+        mockData = await invoke<Snippet[]>('generate_mock_snippets', { count, startId });
       } catch (e) {
         console.error('Failed to generate mock snippets via Rust backend:', e);
-        mockData = generateMockSnippets(count);
+        mockData = generateMockSnippets(count, startId);
       }
     } else {
-      mockData = generateMockSnippets(count);
+      mockData = generateMockSnippets(count, startId);
     }
     setSnippets(prev => [...prev, ...mockData]);
     const end = performance.now();

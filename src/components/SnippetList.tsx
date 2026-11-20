@@ -1,6 +1,6 @@
 /**
  * @license
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -434,7 +434,7 @@ export default function SnippetList({
                   onClick={() => {
                     setSearchText('');
                     setSelectedTags([]);
-                    setShowDeleted(true);
+                    setShowDeleted(false);
                   }}
                   className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs rounded-lg transition cursor-pointer"
                 >

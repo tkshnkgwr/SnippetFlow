@@ -1,6 +1,6 @@
 /**
  * @license
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 import React, { useState, useEffect } from 'react';
@@ -314,7 +314,7 @@ export default function SnippetCompare({
           )}
         </div>
         {/* UPDATE 2026-06-30: 差分ビューアーのヘルプフッターをダークモード（dark:bg-slate-950 dark:border-slate-850 dark:text-slate-400）に対応 */}
-        <div className="bg-slate-50 dark:bg-slate-950 px-4 py-2.5 border-t border-slate-100 dark:border-slate-850 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-sans">
+        <div className="bg-slate-50 dark:bg-slate-950 px-4 py-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-sans">
           <span>※行全体の差分で計算されるため、少しの変更でも行全体が差分として検出されます。</span>
           <span className="flex space-x-4">
             <span className="flex items-center"><span className="w-2.5 h-2.5 bg-emerald-500 rounded-sm mr-1"></span>追加された行</span>

@@ -4,12 +4,18 @@ use tauri::Manager;
 
 use crate::models::{DbSnippet, TauriSnippet};
 
+fn append_suffix(path: &std::path::Path, suffix: &str) -> PathBuf {
+    let mut os_str = path.as_os_str().to_os_string();
+    os_str.push(suffix);
+    PathBuf::from(os_str)
+}
+
 /// 一時ファイルを経由したアトミック保存処理。
 /// 既存ファイルを一時退避し、リネーム失敗時のロールバック保護を備えた堅牢なトランザクション書き込みを行います。
 pub fn atomic_write<P: AsRef<std::path::Path>>(path: P, content: &str) -> Result<(), String> {
     let path = path.as_ref();
-    let tmp_path = path.with_extension("json.tmp");
-    let old_backup = path.with_extension("json.old");
+    let tmp_path = append_suffix(path, ".tmp");
+    let old_backup = append_suffix(path, ".old");
 
     // 1. 一時ファイルへ書き込み
     fs::write(&tmp_path, content).map_err(|e| format!("一時保存に失敗: {e}"))?;
@@ -101,7 +107,7 @@ pub fn load_snippets(app: tauri::AppHandle) -> Result<Vec<TauriSnippet>, String>
         }
 
         // ファイル破損時：安全のため既存ファイルを .bak にバックアップ保存
-        let bak_path = path.with_extension("json.bak");
+        let bak_path = append_suffix(&path, ".bak");
         let _ = fs::copy(&path, &bak_path);
     }
 
@@ -149,8 +155,8 @@ pub fn load_snippets(app: tauri::AppHandle) -> Result<Vec<TauriSnippet>, String>
 /// スニペット全件データをアトミックに保存します。必要に応じて暗号化保存を適用します。
 ///
 /// # Arguments
-/// * snippets - 保存するスニペット配列
-/// * ncrypt - 明示的な暗号化フラグ（指定なしの場合は既存ファイルの保存状態を維持）
+/// * `snippets` - 保存するスニペット配列
+/// * `encrypt` - 明示的な暗号化フラグ（指定なしの場合は既存ファイルの保存状態を維持）
 #[tauri::command]
 pub fn save_snippets(
     app: tauri::AppHandle,

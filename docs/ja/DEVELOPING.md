@@ -12,7 +12,7 @@
 
 * **OS**: Windows 10 / 11 (低リソース環境を前提とした最適化を行っています)
 * **Node.js**: `v18.x` 以上 (Vite 6 / React 19 ビルド用)
-* **Rust**: `1.77.2` 以上 (Tauri v2 ビルド用)
+* **Rust**: `1.85` 以上 (Tauri v2 および `common_lib` の Rust 2024 edition ビルド用)
 
 ---
 

@@ -11,7 +11,7 @@ This document summarizes the security design principles, supported versions, and
 `SnippetFlow` guarantees high security and reliability through the following design principles:
 
 1. **Local-First Operations**:
-   - The application does not communicate with external servers. All registered snippet data (`snippets.json`) and configuration files (`settings.json`) are stored strictly on the user's local filesystem.
+   - The application does not communicate with external servers. All registered snippet data (`snippets.json`) and UI preferences (`localStorage`) are stored strictly on the user's local environment.
    - Backup imports and exports are processed entirely locally via OS-native file dialogs.
 2. **Memory Safety**:
    - The backend is built with Rust. Leveraging Rust's strong ownership system and compile-time memory management, it eliminates critical memory safety vulnerabilities such as buffer overflows and null pointer dereferences.
@@ -26,10 +26,10 @@ This document summarizes the security design principles, supported versions, and
 
 Security updates are provided for the following versions:
 
-| Version                   | Support Status |
-| :------------------------ | :------------: |
-| Latest Release (`v1.16.x`) |  ✅ Supported  |
-| Older Releases            | ❌ Unsupported |
+| Version                    | Support Status |
+| :------------------------- | :------------: |
+| Latest Release (`v1.17.x`) |  ✅ Supported  |
+| Older Releases             | ❌ Unsupported |
 
 ---
 

@@ -1,6 +1,6 @@
 /**
  * @license
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -165,28 +165,28 @@ export default function StatsPanel({
           <span>📈 使用統計 (アナリティクス)</span>
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-150 dark:border-slate-850">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
             <div className="text-xs text-slate-400 font-sans">総コピー回数</div>
             <div className="text-xl font-bold text-slate-700 dark:text-slate-200 mt-1 font-mono">{stats.totalCopies} 回</div>
           </div>
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-150 dark:border-slate-850">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
             <div className="text-xs text-slate-400 font-sans">累計短縮（節約）時間</div>
             <div className="text-xl font-bold text-slate-700 dark:text-slate-200 mt-1 font-mono">{formatSavedTime(stats.totalSavedSec)}</div>
             <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">※1文字あたり0.3秒のタイピング時間を想定</div>
           </div>
         </div>
         
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-150 dark:border-slate-850">
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
           <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 font-sans">よく使う定型文トップ3</h4>
           {stats.topSnippets.length > 0 ? (
             <div className="space-y-2">
               {stats.topSnippets.map((s, index) => (
-                <div key={s.id} className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-350 border-b border-slate-100 dark:border-slate-850 pb-1.5 last:border-0 last:pb-0">
+                <div key={s.id} className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800 pb-1.5 last:border-0 last:pb-0">
                   <div className="flex items-center space-x-2 truncate">
                     <span className="font-bold text-indigo-500 font-mono w-4">{index + 1}.</span>
                     <span className="truncate font-sans font-medium">{s.title}</span>
                   </div>
-                  <div className="shrink-0 text-slate-450 dark:text-slate-550 text-[11px] font-mono">
+                  <div className="shrink-0 text-slate-500 dark:text-slate-400 text-[11px] font-mono">
                     {s.copyCount}回コピー (短縮: {formatSavedTime(s.savedTimeSec || 0)})
                   </div>
                 </div>
@@ -258,7 +258,7 @@ export default function StatsPanel({
         <div className="flex flex-wrap gap-2 items-center">
           <button
             onClick={() => onGenerateMock(1000)}
-            className="px-3 py-1.5 bg-indigo-550 hover:bg-indigo-600 text-white rounded-lg text-xs font-medium transition cursor-pointer"
+            className="px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-xs font-medium transition cursor-pointer"
             id="btn-mock-1000"
           >
             +1,000件追加
@@ -277,10 +277,10 @@ export default function StatsPanel({
           >
             +5,000件追加
           </button>
-          {/* UPDATE 2026-06-30: 一括削除ボタン背景をダークモード（dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-300）に対応 */}
+          {/* UPDATE 2026-06-30: 一括削除ボタン背景をダークモード（dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300）に対応 */}
           <button
             onClick={onClearMock}
-            disabled={snippets.length <= 5}
+            disabled={!snippets.some(s => s.id >= 2000)}
             className="px-3 py-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium transition cursor-pointer"
             id="btn-mock-clear"
           >
@@ -310,7 +310,7 @@ export default function StatsPanel({
             <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
               <strong>推奨構成：JSON / localStorage</strong>
               <br />
-              ファイルサイズ is 1MB 未満に収まり、メモリ上での検索は常に <strong className="text-emerald-600 dark:text-emerald-400 font-mono">1ms未満</strong> で完了します。インフラやバックエンドは一切不要で、動作が重くなる心配はありません。
+              ファイルサイズは 1MB 未満に収まり、メモリ上での検索は常に <strong className="text-emerald-600 dark:text-emerald-400 font-mono">1ms未満</strong> で完了します。インフラやバックエンドは一切不要で、動作が重くなる心配はありません。
             </p>
           </div>
 

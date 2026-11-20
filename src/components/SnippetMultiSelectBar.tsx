@@ -1,6 +1,6 @@
 /**
  * @license
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 import React from 'react';
@@ -64,8 +64,8 @@ export const SnippetMultiSelectBar: React.FC<SnippetMultiSelectBarProps> = ({
           }}
           className={`inline-flex items-center space-x-1 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
             selectedIds.length === 2
-              ? 'bg-slate-800 text-slate-100 hover:bg-slate-750 hover:text-white cursor-pointer'
-              : 'bg-slate-850 text-slate-500 cursor-not-allowed opacity-50'
+              ? 'bg-slate-800 text-slate-100 hover:bg-slate-700 hover:text-white cursor-pointer'
+              : 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-50'
           }`}
           title="2件を選択して差分比較"
         >

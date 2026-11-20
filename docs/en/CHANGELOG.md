@@ -4,6 +4,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.17.2] - 2026-11-20
+
+### Fixed
+- **Resolved Rust Build Failure & Cleaned Cargo Configuration (`Cargo.lock`, `src-tauri/Cargo.toml`)**:
+  - Updated `cc` crate to `v1.11.2` to fix compilation errors on Rust 1.100.
+  - Removed duplicate `src-tauri/Cargo.lock`, updated crate metadata (`description`, `authors`, `repository`, `rust-version = "1.85"`), and removed the unnecessary `devtools` feature from release dependencies.
+- **Fixed Frontend Bugs & Invalid Tailwind CSS Classes (`src/`)**:
+  - Fixed the "Reset Filters" button setting `showDeleted` to `true` instead of `false` (`SnippetList.tsx`).
+  - Fixed alternating missed highlights in `highlightText` caused by reusing a global regex (`SnippetCard.tsx`).
+  - Replaced invalid Tailwind color classes (including `bg-indigo-550` and `bg-rose-550` that caused transparent backgrounds) with valid palette classes across all components.
+  - Wired the form "Cancel" button through the unsaved changes confirmation dialog (`SnippetForm.tsx`).
+  - Prevented duplicate IDs on repeated mock generation, switched `nextId` calculation to `reduce` to avoid stack overflow on large datasets, replaced deprecated `.substr()` with `.slice()`, and fixed mock-clear button disabled state (`useSnippets.ts`, `utils.ts`, `StatsPanel.tsx`).
+- **Improved Rust Backend Safety & Performance (`src-tauri/src/`)**:
+  - Used `saturating_add` in `get_snippet_stats` and `generate_mock_snippets` to prevent integer overflow, and optimized `merge_snippets` with `HashMap` lookup (`operations.rs`).
+  - Improved `atomic_write` / `.bak` temporary path generation to append suffixes regardless of file extension, and fixed garbled doc comments (`storage.rs`, `operations.rs`).
+
+### Changed
+- **Cleaned Unused npm Dependencies & Unified License Headers (`package.json`, `src/`)**:
+  - Uninstalled unused packages (`motion`, `autoprefixer`, `esbuild`, `tsx`) and removed duplicate `vite` entry.
+  - Unified SPDX license headers across all `src/` files to `GPL-3.0-or-later`.
+- **Full Bilingual Documentation Synchronization (`README.md`, `README_JA.md`, `docs/`)**:
+  - Removed remaining legacy egui references from `README`, `SPEC.md`, `FOOTPRINTS.md`, `SECURITY.md`, `DEVELOPING.md`, and `TEST_REPORT.md`, syncing all docs with the current Tauri v2 implementation and latest test results.
+
+---
+
 ## [1.17.1] - 2026-11-09
 
 ### Added

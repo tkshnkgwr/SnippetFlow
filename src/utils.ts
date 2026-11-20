@@ -1,6 +1,6 @@
 /**
  * @license
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 import { Snippet } from './types';
@@ -125,7 +125,7 @@ export const DEFAULT_SNIPPETS: Snippet[] = [
  * @param count - 生成するスニペットの件数（例: 1000, 5000）
  * @returns 生成されたスニペットオブジェクト配列
  */
-export function generateMockSnippets(count: number): Snippet[] {
+export function generateMockSnippets(count: number, startId: number = 2000): Snippet[] {
   const baseTags = ["ビジネス", "開発", "サポート", "マーケティング", "プライベート", "テンプレ", "SNS", "重要"];
   const templates = [
     {
@@ -146,7 +146,6 @@ export function generateMockSnippets(count: number): Snippet[] {
   ];
 
   const mockData: Snippet[] = [];
-  const startId = 2000;
 
   for (let i = 0; i < count; i++) {
     const tpl = templates[i % templates.length];

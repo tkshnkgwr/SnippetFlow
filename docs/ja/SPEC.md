@@ -10,10 +10,10 @@
 * **目的**: ビジネスメールや定型業務で多用される定型テキスト（挨拶、日程、謝罪文など）をローカルに安全に蓄積し、瞬時に呼び出してクリップボードにコピーできる超軽量デスクトップ・ユーティリティ。
 * **ターゲット環境**: Windows 10 / 11 (低リソース環境 / メモリ・CPU制限下)
 * **主要特性**:
-  * 常時最前面 (Always on Top)
-  * ウィンドウタイトルバー非表示 (Decorated: false)
-  * ウィンドウ背景透過 (Transparent: true)
-  * システムトレイ・タスクバーの挙動に配慮した設計
+  * ウィンドウタイトルバー非表示 (Decorations: false / カスタムドラッグヘッダー)
+  * 単一インスタンス制御 (二重起動時は既存ウィンドウを前面にフォーカス)
+  * 透過的暗号化ローカルストレージ (`ENC1:` 形式 + アトミック保存)
+  * タスクバー最小化・ダーク/ライト/OS設定の3モードテーマ対応
 
 ---
 
@@ -63,8 +63,8 @@
 * `is_deleted` (bool): 論理削除フラグ
 * `tags` (Vec<String>): スニペットに紐付けられたタグリスト
 * `is_pinned` / `isPinned` (bool): ピン留めフラグ（お気に入り）
-* `copy_count` / `copyCount` (usize): コピーされた累計回数
-* `saved_time_sec` / `savedTimeSec` (usize): 累計短縮時間（秒）
+* `copy_count` / `copyCount` (u32): コピーされた累計回数
+* `saved_time_sec` / `savedTimeSec` (u32): 累計短縮時間（秒）
 
 ※ Tauri版では、データは `app_data_dir()` で解決される `%APPDATA%\com.snippetflow.app\snippets.json` に暗号化形式（`ENC1:` ヘッダー）で安全に保存されます。バージョンアップや再インストール後もデータが保持されます。ブラウザ環境（プロトタイプ）でのみ `localStorage` (`snippets_db`) に保存されます。
 

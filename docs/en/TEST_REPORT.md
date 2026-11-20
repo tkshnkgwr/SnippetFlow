@@ -6,8 +6,9 @@ This document records the results of the quality verification process (automated
 
 ## 1. Execution Environment
 * **OS**: Windows (Local Environment)
-* **Rust Version**: `rustc 1.80+` (local stable version)
-* **Execution Date/Time**: 2026-11-09
+* **Rust Version**: `rustc 1.100.0` (local stable version)
+* **Node.js / npm**: `v26.4.0` / `11.4.2`
+* **Execution Date/Time**: 2026-11-20
 
 ---
 
@@ -40,7 +41,7 @@ No warnings or errors were detected during Clippy static analysis in `src-tauri`
 
 ```text
     Checking common_lib v0.4.0 (%USERPROFILE%\Documents\自作\common_lib)
-    Checking SnippetFlow v1.17.1 (%USERPROFILE%\Documents\自作\SnippetFlow\src-tauri)
+    Checking SnippetFlow v1.17.2 (%USERPROFILE%\Documents\自作\SnippetFlow\src-tauri)
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.50s
 ```
 
@@ -52,7 +53,7 @@ Additionally, we confirmed that the Vite production build for React/TypeScript (
 
 * **Type Check (`npm run lint`)**:
 ```text
-> snippetflow@1.17.1 lint
+> snippetflow@1.17.2 lint
 > tsc --noEmit
 
 (No error output, completed successfully)
@@ -60,7 +61,7 @@ Additionally, we confirmed that the Vite production build for React/TypeScript (
 
 * **Build (`npm run build`)**:
 ```text
-> snippetflow@1.17.1 build
+> snippetflow@1.17.2 build
 > vite build
 
 vite v6.4.3 building for production...
@@ -69,11 +70,11 @@ transforming...
 rendering chunks...
 computing gzip size...
 dist/index.html                          0.41 kB │ gzip:  0.28 kB
-dist/assets/index-C4tX-9A3.css          52.11 kB │ gzip:  8.91 kB
+dist/assets/index-DMayBjQu.css          52.42 kB │ gzip:  8.95 kB
 dist/assets/core-DhEqZVGG.js             2.44 kB │ gzip:  0.98 kB
 dist/assets/webviewWindow-Dn9rmk0h.js   19.06 kB │ gzip:  4.18 kB
-dist/assets/index-dHSSDRoT.js          325.36 kB │ gzip: 93.36 kB
-✓ built in 8.33s
+dist/assets/index-DXjRQd9L.js          325.98 kB │ gzip: 93.55 kB
+✓ built in 9.73s
 ```
 
 ---

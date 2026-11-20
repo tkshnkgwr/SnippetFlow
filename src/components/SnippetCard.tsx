@@ -1,6 +1,6 @@
 /**
  * @license
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 import React from 'react';
@@ -11,16 +11,17 @@ import { Snippet } from '../types';
  * 検索キーワードに一致する文字列をカラーハイライト表示する関数。
  */
 export const highlightText = (text: string, highlight: string) => {
-  if (!highlight.trim()) {
+  const trimmed = highlight.trim();
+  if (!trimmed) {
     return <span>{text}</span>;
   }
-  const regex = new RegExp(`(${highlight.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi');
+  const regex = new RegExp(`(${trimmed.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi');
   const parts = text.split(regex);
   return (
     <span>
       {parts.map((part, i) =>
-        regex.test(part) ? (
-          <mark key={i} className="bg-yellow-250 dark:bg-yellow-800 text-slate-900 dark:text-slate-100 rounded-sm px-0.5">
+        i % 2 === 1 ? (
+          <mark key={i} className="bg-yellow-200 dark:bg-yellow-800 text-slate-900 dark:text-slate-100 rounded-sm px-0.5">
             {part}
           </mark>
         ) : (
@@ -84,7 +85,7 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({
           ? 'border-indigo-400 dark:border-indigo-500/80 bg-indigo-50/10 dark:bg-indigo-950/20 shadow-sm'
           : snippet.isPinned
           ? 'border-indigo-300 dark:border-indigo-500 bg-indigo-50/5 dark:bg-indigo-950/10 shadow-sm'
-          : 'border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
+          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
       }`}
     >
       {/* チェックボックスと左側コンテンツ */}
@@ -137,7 +138,7 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({
                     e.stopPropagation();
                     onToggleTag(t);
                   }}
-                  className="text-[10px] px-2 py-0.2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-350 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium font-sans"
+                  className="text-[10px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium font-sans"
                 >
                   #{t}
                 </span>

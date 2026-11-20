@@ -1,10 +1,10 @@
 # SnippetFlow (SnippetManager)
 
-[![Version](https://img.shields.io/badge/version-1.17.1-blue.svg)](package.json)
+[![Version](https://img.shields.io/badge/version-1.17.2-blue.svg)](package.json)
 [![GitHub Release](https://img.shields.io/github/v/release/tkshnkgwr/SnippetFlow)](https://github.com/tkshnkgwr/SnippetFlow/releases)
 [![License](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](#license)
 [![Platform](https://img.shields.io/badge/platform-windows-lightgrey.svg)](#prerequisites)
-[![Rust Version](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](#prerequisites)
+[![Rust Version](https://img.shields.io/badge/rust-1.85%2B-orange.svg)](#prerequisites)
 
 English | [日本語版 (Japanese)](README_JA.md)
 
@@ -40,30 +40,30 @@ SnippetFlow is designed to accelerate not just coding, but all daily digital pro
 
 ## Key Features
 
-- **Dark/Light Theme Toggle**:
-  - Dynamically switch between dark and light themes using the header toggle button (`☀ Light` / `🌙 Dark`). Preferences are auto-saved to `settings.json`.
-- **Beautiful Glassmorphism UI**:
-  - Semi-transparent, window-decorated Slate border layout without standard OS titlebars.
-- **Always on Top**:
-  - Stays on top of other workspace apps for instant clipboard template retrieval.
-- **Low-Resource Operations**:
-  - Repaints once per second when idle to maintain near-zero CPU consumption.
+- **3-Mode Theme Support (Light / Dark / System)**:
+  - Dynamically switch between Light (`☀️ Light`), Dark (`🌙 Dark`), and OS-synced (`💻 System`) themes from the header selector. Preferences are automatically persisted in `localStorage`.
+- **Clean Frameless Window & Single-Instance Protection**:
+  - Custom frameless title bar (`decorations: false`) with drag region support and `tauri-plugin-single-instance` so launching a second instance focuses the existing window.
+- **Transparent Local Storage Encryption & Atomic Saves**:
+  - Snippets are stored locally in `%APPDATA%\com.snippetflow.app\snippets.json` with transparent `ENC1:` encryption and transactional atomic writes (`.tmp` / `.old` rollback protection).
+- **High-Speed Rust Backend Processing**:
+  - Search/filtering, LCS diff calculation, tag suggestion scoring, snippet merging, statistics aggregation, and 100-run search benchmarks are executed natively in Rust via Tauri v2 IPC.
 - **Incremental Text & Tag Cloud Search**:
-  - Perform incremental keyword filtering or filter instantly using the new Tag Cloud UI.
+  - Perform incremental keyword filtering (title, content, description, ID, tags) with keyword highlighting, or filter instantly using multi-tag AND selection in the Tag Cloud UI.
 - **Pinning (Favorites)**:
   - Pin essential snippets (📌) to permanently keep them at the top of the list regardless of sort criteria.
 - **One-Click & Merged Clipboard Copy**:
   - Direct one-click copy, plus a dedicated Merge screen to combine multiple snippets with customizable separators (single newline, double newline, `---`, `===`, comma, or none).
 - **Visual Diff Comparison (Compare)**:
-  - Compare two snippets side-by-side using the Longest Common Subsequence (LCS) algorithm to visualize additions (green) and deletions/edits (red).
+  - Compare two snippets side-by-side line-by-line using the Longest Common Subsequence (LCS) algorithm to visualize additions (green) and deletions/edits (red).
 - **Performance Meter & Usage Analytics**:
   - Track total copies and calculate typing time saved (based on 0.3s/character), measure 100-run search benchmarks, and perform 1,000–5,000 record load tests.
 - **Comprehensive Tabbed Help Guide**:
-  - Click the `?` icon in the header to view use cases, detailed feature deep dives (Compare, Merge, Stats), and keyboard shortcuts.
+  - Click the `?` icon in the header to view use cases, detailed feature deep dives (Compare, Merge, Stats), and keyboard shortcuts (`Ctrl+N`, `Ctrl+F`, `Esc`).
 - **Intelligent Tag Suggestion**:
   - Analyzes snippet forms in real-time, matching words in title, body, and description with existing tags (giving title occurrences double weight).
 - **Logical Deletion & Restore Actions**:
-  - Soft-deletes snippets into an archive log, from which they can be restored or permanently hard-deleted.
+  - Soft-deletes snippets into an archive log, from which they can be restored or permanently hard-deleted (individually or in bulk).
 - **Database Backup & Recovery**:
   - Uses native file system dialogs to import (📥) and export (📤) the entire JSON database.
 
@@ -73,6 +73,7 @@ SnippetFlow is designed to accelerate not just coding, but all daily digital pro
 
 For detailed functional specifications, development guidelines, and diagrams, please refer to the documents in the `docs/en/` folder:
 - [Functional Specifications (SPEC.md)](docs/en/SPEC.md)
+- [System Architecture (ARCHITECTURE.md)](docs/en/ARCHITECTURE.md)
 - [Architecture & Sequence Diagrams (DIAGRAM.md)](docs/en/DIAGRAM.md)
 - [Resource Footprints & Performance (FOOTPRINTS.md)](docs/en/FOOTPRINTS.md)
 - [Quality Verification & Test Report (TEST_REPORT.md)](docs/en/TEST_REPORT.md)
@@ -92,7 +93,7 @@ For detailed functional specifications, development guidelines, and diagrams, pl
 - **OS**: Windows 10 / 11
 - **Development & Runtime Environment**:
   - Node.js v18 or newer (Vite 6 / React 19)
-  - Rust 1.77 or newer (Tauri v2)
+  - Rust 1.85 or newer (Tauri v2 / Rust 2024 edition support for `common_lib`)
 
 ---
 

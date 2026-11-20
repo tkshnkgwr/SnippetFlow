@@ -1,6 +1,6 @@
 /**
  * @license
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 import React, { useState, useEffect } from 'react';
@@ -134,15 +134,15 @@ export default function App() {
             // UPDATE 2026-06-30: トーストポップアップもダークモードの配色（dark:bg-slate-900 dark:border-slate-800）に対応
             className={`p-3.5 rounded-xl shadow-lg border text-xs font-sans font-medium flex items-start space-x-2.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 transform transition-all duration-300 animate-slide-in ${
               toast.type === 'success'
-                ? 'border-emerald-200 dark:border-emerald-900/50 text-emerald-850 dark:text-emerald-400'
+                ? 'border-emerald-200 dark:border-emerald-900/50 text-emerald-800 dark:text-emerald-400'
                 : toast.type === 'error'
-                ? 'border-rose-200 dark:border-rose-900/50 text-rose-850 dark:text-rose-400'
-                : 'border-blue-200 dark:border-blue-900/50 text-blue-850 dark:text-blue-400'
+                ? 'border-rose-200 dark:border-rose-900/50 text-rose-800 dark:text-rose-400'
+                : 'border-blue-200 dark:border-blue-900/50 text-blue-800 dark:text-blue-400'
             }`}
           >
-            {toast.type === 'success' && <CheckCircle className="w-4 h-4 text-emerald-555 shrink-0 mt-0.5" />}
-            {toast.type === 'error' && <AlertCircle className="w-4 h-4 text-rose-555 shrink-0 mt-0.5" />}
-            {toast.type === 'info' && <Activity className="w-4 h-4 text-blue-555 shrink-0 mt-0.5" />}
+            {toast.type === 'success' && <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />}
+            {toast.type === 'error' && <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />}
+            {toast.type === 'info' && <Activity className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />}
             <span className="flex-1">{toast.message}</span>
           </div>
         ))}
@@ -672,7 +672,7 @@ export default function App() {
       </main>
 
       {/* デスクトップアプリ用のフッター */}
-      <footer className="bg-white dark:bg-slate-900 border-t border-slate-150 dark:border-slate-800 py-3.5 px-6 text-center text-xs text-slate-400 dark:text-slate-500 font-sans flex flex-col sm:flex-row items-center justify-between gap-2 shrink-0">
+      <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-3.5 px-6 text-center text-xs text-slate-400 dark:text-slate-500 font-sans flex flex-col sm:flex-row items-center justify-between gap-2 shrink-0">
         <span>© 2026 SnippetFlow • すべてのデータは安全にローカル保存されます</span>
         <div className="flex items-center space-x-3 text-slate-400 dark:text-slate-500">
           <span className="flex items-center">

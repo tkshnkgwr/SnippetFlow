@@ -90,11 +90,11 @@ pub fn search_snippets(
 /// 最適なおすすめタグ Top 5 をRust側で高速生成して返します。
 ///
 /// # Arguments
-/// * snippets - スニペットデータ全件
-/// * 	itle - 入力・編集中のタイトル
-/// * content - 入力・編集中の本文
-/// * description - 入力・編集中の説明文
-/// * current_tags - 現在すでに登録されているタグ（候補から除外）
+/// * `snippets` - スニペットデータ全件
+/// * `title` - 入力・編集中のタイトル
+/// * `content` - 入力・編集中の本文
+/// * `description` - 入力・編集中の説明文
+/// * `current_tags` - 現在すでに登録されているタグ（候補から除外）
 #[tauri::command]
 pub fn suggest_tags_cmd(
     snippets: Vec<TauriSnippet>,
@@ -156,10 +156,16 @@ pub fn merge_snippets(
     ordered_ids: Vec<usize>,
     separator: String,
 ) -> String {
+    use std::collections::HashMap;
+
+    let snippet_map: HashMap<usize, &str> = snippets
+        .iter()
+        .map(|item| (item.id, item.content.as_str()))
+        .collect();
     let mut selected_contents = Vec::with_capacity(ordered_ids.len());
     for id in ordered_ids {
-        if let Some(s) = snippets.iter().find(|item| item.id == id) {
-            selected_contents.push(s.content.as_str());
+        if let Some(&content) = snippet_map.get(&id) {
+            selected_contents.push(content);
         }
     }
     selected_contents.join(&separator)
@@ -220,10 +226,18 @@ pub fn generate_mock_snippets(count: usize, start_id: usize) -> Vec<TauriSnippet
             .to_string();
 
         mock_data.push(TauriSnippet {
-            id: start_id + i,
-            title: format!("{} #{}", tpl.0, i + 1),
-            content: format!("{}\n\n[管理用シリアル: SN-{}]", tpl.1, 100000 + i),
-            description: format!("{} (シミュレーション用データ #{})", tpl.2, i + 1),
+            id: start_id.saturating_add(i),
+            title: format!("{} #{}", tpl.0, i.saturating_add(1)),
+            content: format!(
+                "{}\n\n[管理用シリアル: SN-{}]",
+                tpl.1,
+                100000usize.saturating_add(i)
+            ),
+            description: format!(
+                "{} (シミュレーション用データ #{})",
+                tpl.2,
+                i.saturating_add(1)
+            ),
             created_at: item_time.clone(),
             updated_at: item_time,
             deleted_at: None,
@@ -247,8 +261,8 @@ pub fn get_snippet_stats(snippets: Vec<TauriSnippet>) -> SnippetStats {
     let total_count = snippets.len();
     let mut active_count = 0;
     let mut deleted_count = 0;
-    let mut total_copies = 0;
-    let mut total_saved_sec = 0;
+    let mut total_copies: u32 = 0;
+    let mut total_saved_sec: u32 = 0;
 
     let mut copied_snippets: Vec<TopSnippet> = Vec::new();
 
@@ -258,8 +272,8 @@ pub fn get_snippet_stats(snippets: Vec<TauriSnippet>) -> SnippetStats {
         } else {
             active_count += 1;
         }
-        total_copies += s.copy_count;
-        total_saved_sec += s.saved_time_sec;
+        total_copies = total_copies.saturating_add(s.copy_count);
+        total_saved_sec = total_saved_sec.saturating_add(s.saved_time_sec);
 
         if s.copy_count > 0 {
             copied_snippets.push(TopSnippet {

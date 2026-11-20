@@ -10,10 +10,10 @@ This document defines the specifications, screen designs, technology stack, and 
 * **Purpose**: An ultra-lightweight desktop utility that safely stores template texts (greetings, schedules, apology letters, etc.) frequently used in business emails and routine tasks locally, allowing users to call and copy them to the clipboard instantly.
 * **Target Environment**: Windows 10 / 11 (low-resource environments / memory & CPU constraints)
 * **Key Characteristics**:
-  * Always on Top
-  * Title bar hidden (Decorated: false)
-  * Transparent window background (Transparent: true)
-  * Designed with system tray and taskbar behaviors in mind
+  * Title bar hidden (`decorations: false` with custom draggable header)
+  * Single-instance enforcement (focuses existing window on second launch)
+  * Transparent encrypted local storage (`ENC1:` format + atomic writes)
+  * Taskbar minimize support and 3-mode theme (Light / Dark / System)
 
 ---
 
@@ -63,8 +63,8 @@ The data structure for template texts is common to both React and Rust, consisti
 * `is_deleted` (bool): Logical deletion flag
 * `tags` (Vec<String>): List of tags associated with the snippet
 * `is_pinned` / `isPinned` (bool): Pin flag (favorites)
-* `copy_count` / `copyCount` (usize): Cumulative times copied
-* `saved_time_sec` / `savedTimeSec` (usize): Cumulative saved time (seconds)
+* `copy_count` / `copyCount` (u32): Cumulative times copied
+* `saved_time_sec` / `savedTimeSec` (u32): Cumulative saved time (seconds)
 
 *Note: In the Tauri version, data is securely stored in `%APPDATA%\com.snippetflow.app\snippets.json` (resolved via `app_data_dir()`) using encrypted format (`ENC1:` header), persisting across version upgrades and reinstalls. In the browser environment (prototype), it is stored only in `localStorage` (`snippets_db`).*
 

@@ -1,6 +1,6 @@
 /**
  * @license
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 import React from 'react';
@@ -78,7 +78,7 @@ export const SnippetSearchBar: React.FC<SnippetSearchBarProps> = ({
   onGoToPerformance,
 }) => {
   return (
-    <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-100 dark:border-slate-850 shadow-sm space-y-4 shrink-0" id="list-search-section">
+    <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4 shrink-0" id="list-search-section">
       {/* 検索入力欄 & コントロール行 */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">

@@ -18,29 +18,29 @@ Records the binary sizes and optimization flag configurations generated in the r
 
 ## 2. Memory Footprint (RAM)
 
-Memory usage during continuous execution measured by Windows Task Manager or Resource Monitor.
-*Although configuration info is now retained in memory due to the introduction of `settings.json`, its impact on actual RAM is negligible (less than 1 KB).
+Memory usage of the Tauri Rust backend during continuous execution measured by Windows Task Manager or Resource Monitor.
+*UI preferences (theme mode and sort order) are persisted in WebView2 `localStorage`, adding no extra memory overhead to the Rust backend.*
 
-| Operating State                          | Memory Usage (Physical Memory/Working Set)    | Remarks                                                                               |
-| :--------------------------------------- | :-------------------------------------------- | :------------------------------------------------------------------------------------ |
-| **Just after startup (Idle)**            | **Approx. 12.7 MB** (Private: Approx. 8.4 MB) | Involves dynamic memory loading of Japanese fonts (TTC) and JSON file I/O operations. |
-| **Searching/Viewing (Active)**           | **Approx. 12.7 - 13.2 MB**                    | Computational load from incremental filtering is applied.                             |
-| **Adding a snippet (During form input)** | **Approx. 12.7 - 13.2 MB**                    | Keyword frequency analysis and tag recommendation calculations are executed.          |
+| Operating State                          | Memory Usage (Physical Memory/Working Set)    | Remarks                                                                      |
+| :--------------------------------------- | :-------------------------------------------- | :--------------------------------------------------------------------------- |
+| **Just after startup (Idle)**            | **Approx. 12.7 MB** (Private: Approx. 8.4 MB) | Involves Rust backend startup and initial encrypted JSON file loading.       |
+| **Searching/Viewing (Active)**           | **Approx. 12.7 - 13.2 MB**                    | Computational load from IPC-based incremental filtering and sorting.         |
+| **Adding a snippet (During form input)** | **Approx. 12.7 - 13.2 MB**                    | Keyword frequency analysis and tag recommendation calculations are executed. |
 
 ---
 
 ## 3. CPU Usage
 
 * **Idle state**: **0%**
-  - When the application is inactive or there is no user interaction, the frame rendering refresh rate is reduced to once per second, so no CPU spikes occur.
+  - Because the backend follows an event-driven IPC architecture, no CPU spikes occur while idle.
 * **Active state (User input, consecutive copying, etc.)**: **0.1% - 1.0%**
-  - The CPU operates temporarily only when redrawing is triggered by event-driven activities such as keyboard inputs or clicks.
+  - The CPU operates briefly only when triggered by user interactions such as keyboard input or clicks.
 
 ---
 
 ## 4. Build Optimization Options (Applied)
 
-The configuration profile applied to `src-tauri/Cargo.toml` to reduce binary size and optimize execution performance.
+The configuration profile applied to the workspace root `Cargo.toml` to reduce binary size and optimize execution performance.
 
 
 ```toml
